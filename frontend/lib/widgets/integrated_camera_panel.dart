@@ -32,6 +32,7 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
   CameraController? _controller;
   bool _isCameraInitialized = false;
   bool _isPermissionGranted = false;
+  bool _isPermanentlyDenied = false;
   bool _isRequestingPermissions = false;
   bool _isInitializingCamera = false;
   String? _permissionError;
@@ -78,6 +79,26 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
     if (state == AppLifecycleState.inactive) {
       _disposeCamera();
     } else if (state == AppLifecycleState.resumed) {
+      if (!_isPermissionGranted) {
+        // The user may have just granted permissions in system settings.
+        _recheckPermissionStatus();
+      } else if (_showCameraPreview) {
+        _initializeCamera();
+      }
+    }
+  }
+
+  Future<void> _recheckPermissionStatus() async {
+    final cameraStatus = await Permission.camera.status;
+    final locationStatus = await Permission.location.status;
+    if (!mounted) return;
+
+    if (cameraStatus.isGranted && locationStatus.isGranted) {
+      setState(() {
+        _isPermissionGranted = true;
+        _isPermanentlyDenied = false;
+        _permissionError = null;
+      });
       if (_showCameraPreview) {
         _initializeCamera();
       }
@@ -119,6 +140,12 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
           _initializeCamera();
         }
       } else {
+        // Once a permission is permanently denied (iOS: any denial;
+        // Android: "don't ask again"), request() returns immediately without
+        // showing a dialog — the only way forward is the system settings.
+        final permanentlyDenied = cameraStatus.isPermanentlyDenied ||
+            locationStatus.isPermanentlyDenied;
+
         String error = 'Required permissions:\n';
         if (!cameraStatus.isGranted) {
           error += '• Camera access needed to take photos\n';
@@ -126,9 +153,13 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
         if (!locationStatus.isGranted) {
           error += '• Location access needed to tag artwork location';
         }
+        if (permanentlyDenied) {
+          error += '\n\nPlease enable them in system settings.';
+        }
 
         setState(() {
           _isPermissionGranted = false;
+          _isPermanentlyDenied = permanentlyDenied;
           _permissionError = error;
         });
       }
@@ -437,13 +468,17 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
-                    onPressed: _requestPermissions,
+                    onPressed: _isPermanentlyDenied
+                        ? openAppSettings
+                        : _requestPermissions,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade100,
                       foregroundColor: Colors.orange.shade700,
                       elevation: 0,
                     ),
-                    child: const Text('Grant Permissions'),
+                    child: Text(_isPermanentlyDenied
+                        ? 'Open Settings'
+                        : 'Grant Permissions'),
                   ),
                 ],
               ),
@@ -576,14 +611,18 @@ class _IntegratedCameraPanelState extends State<IntegratedCameraPanel>
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _requestPermissions,
+              onPressed: _isPermanentlyDenied
+                  ? openAppSettings
+                  : _requestPermissions,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 16,
                 ),
               ),
-              child: const Text('Grant Permissions'),
+              child: Text(_isPermanentlyDenied
+                  ? 'Open Settings'
+                  : 'Grant Permissions'),
             ),
           ],
         ),

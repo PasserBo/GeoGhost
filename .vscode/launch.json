@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "GeoGhost (debug)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "GeoGhost (profile)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "GeoGhost (release)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "flutterMode": "release"
+    },
+    {
+      "name": "GeoGhost (Android emulator)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "frontend",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "deviceId": "emulator-5554"
+    }
+  ]
+}
