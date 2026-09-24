@@ -95,39 +95,88 @@ final class CaptureFlowModel {
     var hasSelection: Bool { !selection.isEmpty || !pointRegions.isEmpty }
     var canUndo: Bool { !history.isEmpty }
 
-    /// Pick whatever is under a normalized point: a Vision instance if there is one, else grow a region there.
+    /// Vision instances larger than this share of the frame are probably the wall/pole, not the piece.
+    private let largeInstanceArea = 0.35
+
+    /// Pick whatever is under a normalized point.
+    ///
+    /// Order of preference: a point region the user already added (hold again → remove) · a Vision
+    /// instance that isn't selected yet (select it, unless it's huge — then try to grow a smaller region
+    /// first) · a Vision instance that *is* selected (drill down: replace it with the region under the
+    /// finger, so a sticker sitting on a detected pole can still be isolated) · grow a region.
     func pick(atNormalized point: CGPoint) {
         lastPickFailed = false
-        if let analysis, let idx = analysis.instance(atNormalized: point) {
-            if selection.contains(idx) {
-                selection.remove(idx)
-                history.removeAll { if case .instance(let i) = $0 { return i == idx }; return false }
-            } else {
-                selection.insert(idx)
-                history.append(.instance(idx))
-                if let buffer = try? analysis.scaledMask(for: [idx]), let rect = analysis.boundingRect(of: [idx]) {
-                    makeHighlight(mask: CIImage(cvPixelBuffer: buffer), rect: rect)
-                }
-            }
+        guard let fullImage, !isPicking else { return }
+
+        if let regionIndex = pointRegions.lastIndex(where: { $0.contains(point) }) {
+            pointRegions.remove(at: regionIndex)
+            if let h = history.lastIndex(where: { if case .region = $0 { return true }; return false }) { history.remove(at: h) }
             selectionWasAdjusted = true
             refreshPreview()
             return
         }
-        guard let fullImage, !isPicking else { return }
-        isPicking = true
-        Task.detached(priority: .userInitiated) {
-            let region = PointSegmenter.segment(image: fullImage, atNormalized: point)
-            await MainActor.run {
-                self.isPicking = false
-                if let region {
-                    self.pointRegions.append(region)
-                    self.history.append(.region)
-                    self.selectionWasAdjusted = true
-                    self.makeHighlight(mask: MaskCompositor.sharpened(MaskCompositor.feathered(CIImage(cgImage: region.mask), radius: 1.0)), rect: region.boundingRect)
+
+        let instance = analysis?.instance(atNormalized: point)
+        if let analysis, let idx = instance {
+            let instanceArea = analysis.area(of: [idx])
+            let alreadySelected = selection.contains(idx)
+            if !alreadySelected && instanceArea < largeInstanceArea {
+                select(instance: idx, in: analysis)
+                return
+            }
+            // Selected already, or suspiciously large: try to isolate the smaller piece under the finger.
+            growRegion(at: point, in: fullImage) { [weak self] region in
+                guard let self else { return }
+                if let region, region.area < instanceArea * 0.6 {
+                    if alreadySelected { self.deselect(instance: idx) }
+                    self.add(region: region)
+                } else if alreadySelected {
+                    self.deselect(instance: idx)
                     self.refreshPreview()
                 } else {
-                    self.lastPickFailed = true
+                    self.select(instance: idx, in: analysis)
                 }
+            }
+            return
+        }
+
+        growRegion(at: point, in: fullImage) { [weak self] region in
+            guard let self else { return }
+            if let region { self.add(region: region) } else { self.lastPickFailed = true }
+        }
+    }
+
+    private func select(instance idx: Int, in analysis: SegmentationAnalysis) {
+        selection.insert(idx)
+        history.append(.instance(idx))
+        if let buffer = try? analysis.scaledMask(for: [idx]), let rect = analysis.boundingRect(of: [idx]) {
+            makeHighlight(mask: CIImage(cvPixelBuffer: buffer), rect: rect)
+        }
+        selectionWasAdjusted = true
+        refreshPreview()
+    }
+
+    private func deselect(instance idx: Int) {
+        selection.remove(idx)
+        history.removeAll { if case .instance(let i) = $0 { return i == idx }; return false }
+        selectionWasAdjusted = true
+    }
+
+    private func add(region: PointSegmentation) {
+        pointRegions.append(region)
+        history.append(.region)
+        selectionWasAdjusted = true
+        makeHighlight(mask: MaskCompositor.sharpened(MaskCompositor.feathered(CIImage(cgImage: region.mask), radius: 1.0)), rect: region.boundingRect)
+        refreshPreview()
+    }
+
+    private func growRegion(at point: CGPoint, in image: CGImage, completion: @escaping @MainActor (PointSegmentation?) -> Void) {
+        isPicking = true
+        Task.detached(priority: .userInitiated) {
+            let region = PointSegmenter.segment(image: image, atNormalized: point)
+            await MainActor.run {
+                self.isPicking = false
+                completion(region)
             }
         }
     }

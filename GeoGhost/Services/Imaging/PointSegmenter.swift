@@ -9,6 +9,14 @@ struct PointSegmentation: @unchecked Sendable {
     let boundingRect: CGRect
     /// Fraction of the image covered (0…1).
     let area: Double
+
+    /// Whether a normalized point falls on the selected pixels.
+    func contains(_ p: CGPoint) -> Bool {
+        guard boundingRect.contains(p), let data = mask.dataProvider?.data, let ptr = CFDataGetBytePtr(data) else { return false }
+        let x = min(mask.width - 1, max(0, Int(p.x * CGFloat(mask.width))))
+        let y = min(mask.height - 1, max(0, Int(p.y * CGFloat(mask.height))))
+        return ptr[y * mask.bytesPerRow + x] > 127
+    }
 }
 
 /// Seed-point segmentation for when Vision's subject model finds nothing.
