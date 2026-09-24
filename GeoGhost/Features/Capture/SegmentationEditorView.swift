@@ -19,6 +19,10 @@ struct SegmentationEditorView: View {
                             .frame(width: fitted.width, height: fitted.height)
                             .position(x: fitted.midX, y: fitted.midY)
                             .overlay { PickGestureView { pt in handlePick(pt, in: fitted, container: geo.size) } }
+                        if let hl = model.lastPickHighlight {
+                            PickPopView(highlight: hl, fitted: fitted)
+                                .allowsHitTesting(false)
+                        }
                     }
                     if model.isPicking {
                         ProgressView().tint(.white).controlSize(.large)
@@ -47,7 +51,7 @@ struct SegmentationEditorView: View {
     private var hintBubble: some View {
         VStack(spacing: 6) {
             Image(systemName: "hand.tap.fill").font(.title2)
-            Text("Long-press the piece to lift it").font(.subheadline.weight(.semibold))
+            Text("Hold your finger on the piece to lift it").font(.subheadline.weight(.semibold))
             Text("Press again to add more").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
         .foregroundStyle(.white)
@@ -63,7 +67,7 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.hasSelection ? "Press to add · press a selection to remove" : "Press the piece you want").font(.subheadline.weight(.semibold))
+                Text(model.hasSelection ? "Hold to add · hold a selection to remove" : "Hold on the piece you want").font(.subheadline.weight(.semibold))
                 if model.lastPickFailed {
                     Text("Couldn't isolate that spot — try its edge or crop by hand").font(.caption).foregroundStyle(.yellow)
                 } else if model.instanceCount > 1 {
@@ -138,17 +142,16 @@ struct SegmentationEditorView: View {
     }
 }
 
-/// Tap *or* long-press, both reporting the touch location. UIKit recognizers give us the point reliably.
+/// Long-press only (a plain tap does nothing, so panning/looking doesn't accidentally select).
 private struct PickGestureView: UIViewRepresentable {
     let onPick: (CGPoint) -> Void
 
     func makeUIView(context: Context) -> UIView {
         let v = UIView()
         v.backgroundColor = .clear
-        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
         let long = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.pressed(_:)))
-        long.minimumPressDuration = 0.3
-        v.addGestureRecognizer(tap)
+        long.minimumPressDuration = 0.35
+        long.allowableMovement = 12
         v.addGestureRecognizer(long)
         return v
     }
@@ -159,11 +162,49 @@ private struct PickGestureView: UIViewRepresentable {
     final class Coordinator: NSObject {
         var onPick: (CGPoint) -> Void
         init(onPick: @escaping (CGPoint) -> Void) { self.onPick = onPick }
-        @objc func tapped(_ g: UITapGestureRecognizer) { onPick(g.location(in: g.view?.superview)) }
         @objc func pressed(_ g: UILongPressGestureRecognizer) {
             guard g.state == .began else { return }
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onPick(g.location(in: g.view?.superview))
         }
+    }
+}
+
+/// One-shot "pop": the freshly lifted piece scales up with a white glow, then settles back and fades.
+private struct PickPopView: View {
+    let highlight: CaptureFlowModel.PickHighlight
+    let fitted: CGRect
+
+    private struct Pop { var scale: CGFloat = 1; var opacity: Double = 1; var glow: CGFloat = 0 }
+
+    var body: some View {
+        let r = highlight.rect
+        let frame = CGRect(x: fitted.minX + r.minX * fitted.width, y: fitted.minY + r.minY * fitted.height,
+                           width: r.width * fitted.width, height: r.height * fitted.height)
+        Image(decorative: highlight.image, scale: 1)
+            .resizable()
+            .frame(width: frame.width, height: frame.height)
+            .keyframeAnimator(initialValue: Pop(), trigger: highlight.id) { view, pop in
+                view
+                    .shadow(color: .white.opacity(Double(pop.glow)), radius: 6)
+                    .shadow(color: .white.opacity(Double(pop.glow) * 0.8), radius: 14)
+                    .scaleEffect(pop.scale)
+                    .opacity(pop.opacity)
+            } keyframes: { _ in
+                KeyframeTrack(\.scale) {
+                    SpringKeyframe(1.18, duration: 0.22, spring: .snappy)
+                    SpringKeyframe(1.0, duration: 0.35, spring: .bouncy)
+                }
+                KeyframeTrack(\.glow) {
+                    LinearKeyframe(1.0, duration: 0.15)
+                    LinearKeyframe(1.0, duration: 0.25)
+                    LinearKeyframe(0.0, duration: 0.3)
+                }
+                KeyframeTrack(\.opacity) {
+                    LinearKeyframe(1.0, duration: 0.55)
+                    LinearKeyframe(0.0, duration: 0.25)
+                }
+            }
+            .position(x: frame.midX, y: frame.midY)
     }
 }

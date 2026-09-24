@@ -35,6 +35,9 @@ final class CaptureFlowModel {
     private(set) var isRenderingPreview = false
     private(set) var isPicking = false
     private(set) var lastPickFailed = false
+    /// The most recently added piece, rendered alone so the editor can animate it.
+    struct PickHighlight: Identifiable { let id = UUID(); let image: CGImage; let rect: CGRect }
+    private(set) var lastPickHighlight: PickHighlight?
     private var selectionWasAdjusted = false
 
     /// Final cutout ready for saving.
@@ -102,6 +105,9 @@ final class CaptureFlowModel {
             } else {
                 selection.insert(idx)
                 history.append(.instance(idx))
+                if let buffer = try? analysis.scaledMask(for: [idx]), let rect = analysis.boundingRect(of: [idx]) {
+                    makeHighlight(mask: CIImage(cvPixelBuffer: buffer), rect: rect)
+                }
             }
             selectionWasAdjusted = true
             refreshPreview()
@@ -117,6 +123,7 @@ final class CaptureFlowModel {
                     self.pointRegions.append(region)
                     self.history.append(.region)
                     self.selectionWasAdjusted = true
+                    self.makeHighlight(mask: MaskCompositor.sharpened(MaskCompositor.feathered(CIImage(cgImage: region.mask), radius: 1.0)), rect: region.boundingRect)
                     self.refreshPreview()
                 } else {
                     self.lastPickFailed = true
@@ -181,6 +188,18 @@ final class CaptureFlowModel {
         return u.insetBy(dx: -0.004, dy: -0.004).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
     }
 
+    /// Render just the newly picked piece at preview resolution for the pop animation.
+    private func makeHighlight(mask: CIImage, rect: CGRect) {
+        guard let fullImage else { return }
+        Task.detached(priority: .userInitiated) {
+            let small = ImageProcessing.downsample(fullImage, maxLongEdge: 1280)
+            let size = CGSize(width: small.width, height: small.height)
+            guard let scaled = MaskCompositor.union([mask], size: size),
+                  let cg = MaskCompositor.cutout(image: small, mask: scaled, normalizedRect: rect) else { return }
+            await MainActor.run { self.lastPickHighlight = PickHighlight(image: cg, rect: rect) }
+        }
+    }
+
     private var previewTask: Task<Void, Never>?
     private var previewGeneration = 0
     private func refreshPreview() {
@@ -240,6 +259,7 @@ final class CaptureFlowModel {
         selection = []
         pointRegions = []
         history = []
+        lastPickHighlight = nil
         previewImage = nil
         cutout = nil
         metadata = CaptureMetadata()
