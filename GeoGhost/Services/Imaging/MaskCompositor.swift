@@ -50,25 +50,37 @@ enum MaskCompositor {
     }
 
     /// Dimmed image with committed selection at full brightness and a tentative (still-held) selection tinted.
-    static func preview(image: CGImage, mask: CIImage?, tentative: CIImage? = nil, tint: CIColor = CIColor(red: 1.0, green: 0.42, blue: 0.17), maxLongEdge: Int = 1280) -> CGImage? {
+    static func preview(image: CGImage, mask: CIImage?, dimWhenEmpty: Bool = false, maxLongEdge: Int = 1280) -> CGImage? {
         let base = CIImage(cgImage: image)
         var out: CIImage = base
-        if mask != nil || tentative != nil {
+        if mask != nil || dimWhenEmpty {
             let dimmed = base.applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: -1.6])
                 .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.45])
             out = dimmed
             if let mask {
                 out = base.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: mask])
             }
-            if let tentative {
-                // Bright image washed with the accent colour so it reads as "not yet committed".
-                let tinted = CIImage(color: CIColor(red: tint.red, green: tint.green, blue: tint.blue, alpha: 0.35)).cropped(to: base.extent).composited(over: base)
-                out = tinted.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: tentative])
-            }
         }
         let scale = min(1, CGFloat(maxLongEdge) / max(base.extent.width, base.extent.height))
         let scaled = out.transformed(by: .init(scaleX: scale, y: scale))
         return ImageProcessing.ciContext.createCGImage(scaled, from: scaled.extent.integral)
+    }
+
+    /// White ring hugging the mask's edge (for the shimmering "lift" outline), cropped to `normalizedRect`.
+    static func outline(mask: CIImage, imageSize: CGSize, normalizedRect r: CGRect, thickness: Double) -> CGImage? {
+        let grown = mask.applyingFilter("CIMorphologyMaximum", parameters: [kCIInputRadiusKey: thickness])
+        let shrunk = mask.applyingFilter("CIMorphologyMinimum", parameters: [kCIInputRadiusKey: max(0.5, thickness * 0.4)])
+        // ring = grown − shrunk (CISubtractBlendMode computes background − input), clamped to 0…1
+        let ring = shrunk.applyingFilter("CISubtractBlendMode", parameters: [kCIInputBackgroundImageKey: grown])
+            .applyingFilter("CIColorClamp", parameters: [
+                "inputMinComponents": CIVector(x: 0, y: 0, z: 0, w: 0), "inputMaxComponents": CIVector(x: 1, y: 1, z: 1, w: 1)])
+        let white = CIImage(color: .white).cropped(to: mask.extent)
+        let clear = CIImage(color: .clear).cropped(to: mask.extent)
+        let out = white.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: clear, kCIInputMaskImageKey: ring])
+        let W = imageSize.width, H = imageSize.height
+        let crop = CGRect(x: r.minX * W, y: H - r.maxY * H, width: r.width * W, height: r.height * H).integral.intersection(mask.extent)
+        guard !crop.isEmpty else { return nil }
+        return ImageProcessing.ciContext.createCGImage(out, from: crop, format: .RGBA8, colorSpace: CGColorSpace(name: CGColorSpace.sRGB))
     }
 
     /// Transparent cutout of `image` under `mask`, cropped to `normalizedRect` (origin top-left).

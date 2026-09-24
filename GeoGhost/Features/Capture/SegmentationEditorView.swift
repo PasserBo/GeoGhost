@@ -44,6 +44,9 @@ struct SegmentationEditorView: View {
                                 .frame(width: fitted.width, height: fitted.height)
                                 .position(x: fitted.midX, y: fitted.midY)
                         }
+                        if let tv = model.tentativeVisual, model.hold != nil {
+                            LiftedPieceView(visual: tv, fitted: fitted).allowsHitTesting(false)
+                        }
                         if let hl = model.lastPickHighlight {
                             PickPopView(highlight: hl, fitted: fitted).allowsHitTesting(false)
                         }
@@ -424,6 +427,43 @@ private struct EditorGestureView: UIViewRepresentable {
         func gestureRecognizer(_ a: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith b: UIGestureRecognizer) -> Bool {
             (a is UIPinchGestureRecognizer && b is UIPanGestureRecognizer) || (a is UIPanGestureRecognizer && b is UIPinchGestureRecognizer)
         }
+    }
+}
+
+/// Tentative selection while the finger is down: the piece in its own colours, lifted a little,
+/// with a white light sweeping around its edge (like the system's subject lift).
+private struct LiftedPieceView: View {
+    let visual: CaptureFlowModel.TentativeVisual
+    let fitted: CGRect
+    @State private var appeared = false
+
+    var body: some View {
+        let r = visual.rect
+        let frame = CGRect(x: fitted.minX + r.minX * fitted.width, y: fitted.minY + r.minY * fitted.height,
+                           width: r.width * fitted.width, height: r.height * fitted.height)
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            let angle = Angle.degrees((t * 120).truncatingRemainder(dividingBy: 360))
+            ZStack {
+                Image(decorative: visual.cutout, scale: 1)
+                    .resizable()
+                    .shadow(color: .black.opacity(0.45), radius: 10, y: 6)
+                // Edge ring: a soft steady glow plus a brighter sweep travelling around it.
+                Image(decorative: visual.outline, scale: 1)
+                    .resizable()
+                    .opacity(0.55)
+                    .blur(radius: 1.5)
+                AngularGradient(colors: [.white.opacity(0), .white, .white.opacity(0), .white.opacity(0), .white.opacity(0.7), .white.opacity(0)],
+                                center: .center, angle: angle)
+                    .mask(Image(decorative: visual.outline, scale: 1).resizable())
+                    .blendMode(.plusLighter)
+            }
+            .frame(width: frame.width, height: frame.height)
+            .scaleEffect(appeared ? 1.03 : 1.0)
+            .position(x: frame.midX, y: frame.midY)
+        }
+        .onAppear { withAnimation(.spring(duration: 0.3)) { appeared = true } }
+        .transition(.opacity)
     }
 }
 

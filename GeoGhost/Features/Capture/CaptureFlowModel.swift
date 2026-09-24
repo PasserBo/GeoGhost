@@ -66,6 +66,10 @@ final class CaptureFlowModel {
     /// The most recently committed piece, rendered alone so the editor can animate it.
     struct PickHighlight: Identifiable { let id = UUID(); let image: CGImage; let rect: CGRect }
     private(set) var lastPickHighlight: PickHighlight?
+    /// The tentative piece rendered for the "lift" effect: original colours plus a white edge ring.
+    struct TentativeVisual: Identifiable { let id: UUID; let cutout: CGImage; let outline: CGImage; let rect: CGRect }
+    private(set) var tentativeVisual: TentativeVisual?
+    private var tentativeVisualTask: Task<Void, Never>?
 
     /// Final cutout ready for saving.
     private(set) var cutout: CGImage?
@@ -380,21 +384,42 @@ final class CaptureFlowModel {
         return u.insetBy(dx: -0.004, dy: -0.004).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
     }
 
+    /// Render the tentative piece (original colours) and its edge ring at preview resolution.
+    private func refreshTentativeVisual() {
+        tentativeVisualTask?.cancel()
+        guard let fullImage, let piece = hold?.tentative else { tentativeVisual = nil; return }
+        if tentativeVisual?.id == piece.id { return }
+        tentativeVisualTask = Task.detached(priority: .userInitiated) {
+            let small = ImageProcessing.downsample(fullImage, maxLongEdge: 1280)
+            let size = CGSize(width: small.width, height: small.height)
+            guard let mask = piece.mask(fullSize: size),
+                  let cutout = MaskCompositor.cutout(image: small, mask: mask, normalizedRect: piece.rect),
+                  let outline = MaskCompositor.outline(mask: mask, imageSize: size, normalizedRect: piece.rect, thickness: 3) else { return }
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard self.hold?.tentative?.id == piece.id else { return }
+                self.tentativeVisual = TentativeVisual(id: piece.id, cutout: cutout, outline: outline, rect: piece.rect)
+            }
+        }
+    }
+
     private var previewTask: Task<Void, Never>?
     private var previewGeneration = 0
     private func refreshPreview() {
         guard let fullImage else { return }
         previewGeneration += 1
         let gen = previewGeneration
+        refreshTentativeVisual()
         // Masks are built on the main thread (they only reference Vision/CI objects), rendered off it.
         let committed = combinedMask(of: pieces)
-        let tentativeMask = hold?.tentative.flatMap { combinedMask(of: [$0]) }
         let hidingTarget = hold?.target.map { t in pieces.filter { $0.id != t.id } }
         let committedShown = (hold?.intent == .replace || hold?.intent == .delete) ? hidingTarget.flatMap { combinedMask(of: $0) } : committed
+        // When something is only tentatively selected, dim the rest so the lifted piece stands out.
+        let dimAll = hold?.tentative != nil && committedShown == nil
         previewTask?.cancel()
         isRenderingPreview = true
         previewTask = Task.detached(priority: .userInitiated) {
-            let img = MaskCompositor.preview(image: fullImage, mask: committedShown, tentative: tentativeMask)
+            let img = MaskCompositor.preview(image: fullImage, mask: committedShown, dimWhenEmpty: dimAll)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 if self.previewGeneration == gen { self.previewImage = img; self.isRenderingPreview = false }
