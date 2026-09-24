@@ -7,14 +7,17 @@ import Vision
 /// Holds the Vision handler so cutouts can be generated at full resolution later.
 final class SegmentationAnalysis: @unchecked Sendable {
     let image: CGImage
+    /// Normalized rect of the full photo this analysis covers (a viewport crop when zoomed in).
+    let frame: CGRect
     let observation: VNInstanceMaskObservation
     private let handler: VNImageRequestHandler
     private let maskWidth: Int
     private let maskHeight: Int
     private let maskLabels: [UInt8]
 
-    init(image: CGImage, observation: VNInstanceMaskObservation, handler: VNImageRequestHandler) {
+    init(image: CGImage, frame: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1), observation: VNInstanceMaskObservation, handler: VNImageRequestHandler) {
         self.image = image
+        self.frame = frame
         self.observation = observation
         self.handler = handler
 
@@ -37,25 +40,32 @@ final class SegmentationAnalysis: @unchecked Sendable {
     var allInstances: IndexSet { observation.allInstances }
     var hasInstances: Bool { !observation.allInstances.isEmpty }
 
-    /// Instance under a normalized point (origin top-left), or nil for background.
-    func instance(atNormalized p: CGPoint) -> Int? {
-        guard hasInstances else { return nil }
+    /// Instance under a normalized full-photo point (origin top-left), or nil for background / outside frame.
+    func instance(atNormalized full: CGPoint) -> Int? {
+        guard hasInstances, frame.contains(full) else { return nil }
+        let p = CGPoint(x: (full.x - frame.minX) / frame.width, y: (full.y - frame.minY) / frame.height)
         let x = min(maskWidth - 1, max(0, Int(p.x * CGFloat(maskWidth))))
         let y = min(maskHeight - 1, max(0, Int(p.y * CGFloat(maskHeight))))
         let label = Int(maskLabels[y * maskWidth + x])
         return label == 0 ? nil : label
     }
 
-    /// Normalized pixel area (0…1) of an instance set.
+    /// Area of an instance set as a fraction of the full photo.
     func area(of instances: IndexSet) -> Double {
         guard maskLabels.count > 0 else { return 0 }
         var count = 0
         for l in maskLabels where l != 0 && instances.contains(Int(l)) { count += 1 }
-        return Double(count) / Double(maskLabels.count)
+        return Double(count) / Double(maskLabels.count) * Double(frame.width * frame.height)
     }
 
-    /// Normalized bounding rect (origin top-left) of an instance set.
+    /// Bounding rect of an instance set in normalized full-photo coordinates (origin top-left).
     func boundingRect(of instances: IndexSet) -> CGRect? {
+        guard let local = localBoundingRect(of: instances) else { return nil }
+        return CGRect(x: frame.minX + local.minX * frame.width, y: frame.minY + local.minY * frame.height,
+                      width: local.width * frame.width, height: local.height * frame.height)
+    }
+
+    private func localBoundingRect(of instances: IndexSet) -> CGRect? {
         var minX = Int.max, minY = Int.max, maxX = -1, maxY = -1
         for y in 0..<maskHeight {
             for x in 0..<maskWidth {
@@ -71,10 +81,10 @@ final class SegmentationAnalysis: @unchecked Sendable {
                       width: CGFloat(maxX - minX + 1) / CGFloat(maskWidth), height: CGFloat(maxY - minY + 1) / CGFloat(maskHeight))
     }
 
-    /// Default pick: the instance under the image center, else the largest one.
+    /// Default pick: the instance under the frame center, else the largest one.
     func defaultSelection() -> IndexSet {
         guard hasInstances else { return [] }
-        if let center = instance(atNormalized: CGPoint(x: 0.5, y: 0.5)) { return [center] }
+        if let center = instance(atNormalized: CGPoint(x: frame.midX, y: frame.midY)) { return [center] }
         var best = 0, bestArea = -1.0
         for i in allInstances {
             let a = area(of: [i])
@@ -124,11 +134,18 @@ enum SegmentationError: LocalizedError {
 
 enum SegmentationService {
     /// Run foreground instance segmentation. Heavy; call off the main thread.
-    static func analyze(_ image: CGImage) throws -> SegmentationAnalysis {
+    /// - Parameter frame: normalized sub-rect of the photo to analyse (the zoomed viewport); nil = whole photo.
+    static func analyze(_ fullImage: CGImage, frame: CGRect? = nil) throws -> SegmentationAnalysis {
+        var image = fullImage
+        var f = CGRect(x: 0, y: 0, width: 1, height: 1)
+        if let frame, frame != f, let cropped = ImageProcessing.crop(fullImage, normalized: frame) {
+            image = cropped
+            f = frame
+        }
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(cgImage: image, orientation: .up)
         try handler.perform([request])
         guard let observation = request.results?.first else { throw SegmentationError.noResult }
-        return SegmentationAnalysis(image: image, observation: observation, handler: handler)
+        return SegmentationAnalysis(image: image, frame: f, observation: observation, handler: handler)
     }
 }

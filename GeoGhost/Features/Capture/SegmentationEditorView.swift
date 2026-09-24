@@ -1,64 +1,217 @@
 import SwiftUI
 import UIKit
 
-/// Shows the photo; tap or long-press a piece to lift it. Works with or without Vision instances.
+/// The subject picker.
+///
+/// Gestures — press is *try*, release is *commit*, swipe down is *throw away*:
+/// - hold: tentative selection appears (Vision instance or grown region); release to add
+/// - hold on a selected piece: tentative drill-down into the smaller piece under the finger; release to replace
+/// - hold + drag left/right: tighten / loosen the region tolerance live
+/// - hold + swipe down: discard (or delete the piece under the finger)
+/// - hold + swipe up: absorb enclosing shapes (sticker border around its artwork)
+/// - tap a selected piece: remove it
+/// - pinch / drag: zoom & pan; double-tap: zoom in at point or reset
+/// - two-finger tap: undo
+///
+/// Zooming also scopes detection: Vision re-runs on the visible crop and region growth can't leave it.
 struct SegmentationEditorView: View {
     @Bindable var model: CaptureFlowModel
     @State private var isFinishing = false
     @State private var showHint = true
 
+    // Viewport transform (about the container centre).
+    @State private var zoom: CGFloat = 1
+    @State private var pan: CGSize = .zero
+    @State private var gestureStartZoom: CGFloat = 1
+    @State private var gestureStartPan: CGSize = .zero
+    @State private var viewportSettleTask: Task<Void, Never>?
+
+    private let maxZoom: CGFloat = 4
+
     var body: some View {
         VStack(spacing: 0) {
             header
             GeometryReader { geo in
+                let container = geo.size
+                let imageSize = model.fullImage.map { CGSize(width: $0.width, height: $0.height) } ?? .zero
+                let fitted = fittedRect(imageSize: imageSize, in: container)
                 ZStack {
-                    if let preview = model.previewImage ?? model.fullImage {
-                        let fitted = fittedRect(imageSize: CGSize(width: preview.width, height: preview.height), in: geo.size)
-                        Image(decorative: preview, scale: 1)
-                            .resizable()
-                            .frame(width: fitted.width, height: fitted.height)
-                            .position(x: fitted.midX, y: fitted.midY)
-                            .overlay { PickGestureView { pt in handlePick(pt, in: fitted, container: geo.size) } }
+                    Color.black
+                    Group {
+                        if let preview = model.previewImage ?? model.fullImage {
+                            Image(decorative: preview, scale: 1)
+                                .resizable()
+                                .frame(width: fitted.width, height: fitted.height)
+                                .position(x: fitted.midX, y: fitted.midY)
+                        }
                         if let hl = model.lastPickHighlight {
-                            PickPopView(highlight: hl, fitted: fitted)
-                                .allowsHitTesting(false)
+                            PickPopView(highlight: hl, fitted: fitted).allowsHitTesting(false)
                         }
                     }
-                    if model.isPicking {
-                        ProgressView().tint(.white).controlSize(.large)
-                            .padding(18).background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 14))
+                    .scaleEffect(zoom)
+                    .offset(pan)
+                    .animation(.easeOut(duration: 0.18), value: zoom)
+
+                    EditorGestureView(
+                        onHoldBegan: { pt in beginHold(pt, fitted: fitted, container: container) },
+                        onHoldChanged: { t in model.updateHold(translation: t) },
+                        onHoldEnded: { model.endHold() },
+                        onHoldCancelled: { model.cancelHold() },
+                        onTap: { pt in if let n = normalized(pt, fitted: fitted, container: container) { model.tap(at: n) } },
+                        onDoubleTap: { pt in toggleZoom(at: pt, fitted: fitted, container: container) },
+                        onPinch: { scale, state in pinch(scale, state: state, fitted: fitted, container: container) },
+                        onPan: { t, state in drag(t, state: state, fitted: fitted, container: container) },
+                        onTwoFingerTap: { model.undo() }
+                    )
+
+                    if model.isPicking || model.isAnalyzingViewport {
+                        ProgressView().tint(.white).controlSize(.regular)
+                            .padding(12).background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 12))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                            .padding(12)
+                            .allowsHitTesting(false)
                     }
-                    if showHint && !model.hasSelection && !model.isPicking {
-                        hintBubble
+                    if showHint && !model.hasSelection && model.hold == nil && !model.isPicking {
+                        hintBubble.allowsHitTesting(false)
+                    }
+                    if let hold = model.hold {
+                        holdStatus(hold).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom).padding(.bottom, 14).allowsHitTesting(false)
                     }
                 }
-                .frame(width: geo.size.width, height: geo.size.height)
+                .frame(width: container.width, height: container.height)
+                .clipped()
+                .onChange(of: zoom) { _, _ in scheduleViewportUpdate(fitted: fitted, container: container) }
+                .onChange(of: pan) { _, _ in scheduleViewportUpdate(fitted: fitted, container: container) }
             }
             footer
         }
         .background(Color.black)
-        .sensoryFeedback(.selection, trigger: model.selectedArea)
+        .sensoryFeedback(.impact(weight: .medium), trigger: model.pieces.count)
         .sensoryFeedback(.error, trigger: model.lastPickFailed) { _, new in new }
+        .sensoryFeedback(.selection, trigger: model.hold?.intent)
     }
 
-    private func handlePick(_ location: CGPoint, in fitted: CGRect, container: CGSize) {
-        let p = CGPoint(x: (location.x - fitted.minX) / fitted.width, y: (location.y - fitted.minY) / fitted.height)
-        guard (0...1).contains(p.x), (0...1).contains(p.y) else { return }
-        showHint = false
-        model.pick(atNormalized: p)
+    // MARK: Coordinate mapping
+
+    private func fittedRect(imageSize: CGSize, in container: CGSize) -> CGRect {
+        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
+        let scale = min(container.width / imageSize.width, container.height / imageSize.height)
+        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        return CGRect(x: (container.width - size.width) / 2, y: (container.height - size.height) / 2, width: size.width, height: size.height)
     }
+
+    /// Container point → unzoomed layout point.
+    private func unzoomed(_ c: CGPoint, container: CGSize) -> CGPoint {
+        let center = CGPoint(x: container.width / 2, y: container.height / 2)
+        return CGPoint(x: center.x + (c.x - pan.width - center.x) / zoom, y: center.y + (c.y - pan.height - center.y) / zoom)
+    }
+
+    private func normalized(_ c: CGPoint, fitted: CGRect, container: CGSize) -> CGPoint? {
+        guard fitted.width > 0 else { return nil }
+        let u = unzoomed(c, container: container)
+        let n = CGPoint(x: (u.x - fitted.minX) / fitted.width, y: (u.y - fitted.minY) / fitted.height)
+        guard (0...1).contains(n.x), (0...1).contains(n.y) else { return nil }
+        return n
+    }
+
+    private func visibleRect(fitted: CGRect, container: CGSize) -> CGRect {
+        let a = unzoomed(.zero, container: container)
+        let b = unzoomed(CGPoint(x: container.width, y: container.height), container: container)
+        let r = CGRect(x: (a.x - fitted.minX) / fitted.width, y: (a.y - fitted.minY) / fitted.height,
+                       width: (b.x - a.x) / fitted.width, height: (b.y - a.y) / fitted.height)
+        return r.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+    }
+
+    private func clampPan(_ p: CGSize, fitted: CGRect, container: CGSize) -> CGSize {
+        let maxX = max(0, (fitted.width * zoom - container.width) / 2 + fitted.minX * zoom)
+        let maxY = max(0, (fitted.height * zoom - container.height) / 2 + fitted.minY * zoom)
+        return CGSize(width: min(max(p.width, -maxX), maxX), height: min(max(p.height, -maxY), maxY))
+    }
+
+    private func scheduleViewportUpdate(fitted: CGRect, container: CGSize) {
+        viewportSettleTask?.cancel()
+        viewportSettleTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+            model.setViewport(visibleRect(fitted: fitted, container: container))
+        }
+    }
+
+    // MARK: Gesture handlers
+
+    private func beginHold(_ pt: CGPoint, fitted: CGRect, container: CGSize) {
+        guard let n = normalized(pt, fitted: fitted, container: container) else { return }
+        showHint = false
+        model.beginHold(at: n)
+    }
+
+    private func toggleZoom(at pt: CGPoint, fitted: CGRect, container: CGSize) {
+        if zoom > 1.01 {
+            zoom = 1; pan = .zero
+        } else {
+            let target: CGFloat = 2.5
+            let center = CGPoint(x: container.width / 2, y: container.height / 2)
+            // Keep the tapped point under the finger.
+            zoom = target
+            pan = clampPan(CGSize(width: (center.x - pt.x) * (target - 1), height: (center.y - pt.y) * (target - 1)), fitted: fitted, container: container)
+        }
+    }
+
+    private func pinch(_ scale: CGFloat, state: UIGestureRecognizer.State, fitted: CGRect, container: CGSize) {
+        switch state {
+        case .began:
+            gestureStartZoom = zoom; gestureStartPan = pan
+        case .changed:
+            let z = min(max(gestureStartZoom * scale, 1), maxZoom)
+            zoom = z
+            pan = clampPan(CGSize(width: gestureStartPan.width * z / gestureStartZoom, height: gestureStartPan.height * z / gestureStartZoom), fitted: fitted, container: container)
+        default:
+            if zoom < 1.05 { zoom = 1; pan = .zero }
+        }
+    }
+
+    private func drag(_ t: CGSize, state: UIGestureRecognizer.State, fitted: CGRect, container: CGSize) {
+        guard zoom > 1.01 else { return }
+        switch state {
+        case .began: gestureStartPan = pan
+        case .changed: pan = clampPan(CGSize(width: gestureStartPan.width + t.width, height: gestureStartPan.height + t.height), fitted: fitted, container: container)
+        default: break
+        }
+    }
+
+    // MARK: Chrome
 
     private var hintBubble: some View {
         VStack(spacing: 6) {
             Image(systemName: "hand.tap.fill").font(.title2)
             Text("Hold your finger on the piece to lift it").font(.subheadline.weight(.semibold))
-            Text("Press again to add more").font(.caption).foregroundStyle(.white.opacity(0.7))
+            Text("Pinch to zoom in on small pieces").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
         .foregroundStyle(.white)
         .padding(16)
         .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .allowsHitTesting(false)
         .transition(.opacity)
+    }
+
+    @ViewBuilder private func holdStatus(_ hold: CaptureFlowModel.Hold) -> some View {
+        let text: LocalizedStringResource = switch hold.intent {
+        case .add: hold.tentative == nil ? "Looking…" : "Release to add · swipe down to cancel"
+        case .replace: hold.tentative == nil ? "Looking for something smaller…" : "Release to replace with this"
+        case .discard: "Release to cancel"
+        case .delete: "Release to remove this piece"
+        case .expand: "Expanding ×\(hold.layers)"
+        }
+        VStack(spacing: 8) {
+            if hold.axis == .horizontal {
+                ToleranceBar(value: hold.tolerance)
+            }
+            Text(text)
+                .font(.footnote.weight(.semibold))
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .background(.black.opacity(0.6), in: Capsule())
+        }
+        .foregroundStyle(.white)
+        .animation(.easeOut(duration: 0.15), value: hold.intent)
     }
 
     private var header: some View {
@@ -67,9 +220,11 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.hasSelection ? "Hold to add · hold a selection to remove" : "Hold on the piece you want").font(.subheadline.weight(.semibold))
+                Text(model.hasSelection ? "Hold to add · tap a piece to remove" : "Hold on the piece you want").font(.subheadline.weight(.semibold))
                 if model.lastPickFailed {
-                    Text("Couldn't isolate that spot — try its edge or crop by hand").font(.caption).foregroundStyle(.yellow)
+                    Text("Couldn't isolate that spot — zoom in or drag right while holding").font(.caption).foregroundStyle(.yellow)
+                } else if zoom > 1.01 {
+                    Text("Detecting within view · \(model.instanceCount) subjects").font(.caption).foregroundStyle(.white.opacity(0.7))
                 } else if model.instanceCount > 1 {
                     Text("\(model.instanceCount) subjects found").font(.caption).foregroundStyle(.white.opacity(0.7))
                 }
@@ -81,7 +236,10 @@ struct SegmentationEditorView: View {
                     Button { model.selectAll() } label: { Label("Select all subjects", systemImage: "square.stack.3d.up") }
                 }
                 Button { model.clearSelection() } label: { Label("Clear selection", systemImage: "xmark.circle") }
+                Button { zoom = 1; pan = .zero } label: { Label("Reset zoom", systemImage: "arrow.down.right.and.arrow.up.left") }
                 Button { model.switchToManualCrop() } label: { Label("Crop by hand", systemImage: "crop") }
+                Divider()
+                NavigationLink { GestureHelpView() } label: { Label("Gesture guide", systemImage: "questionmark.circle") }
             } label: {
                 Image(systemName: "ellipsis.circle").font(.title3.weight(.semibold)).frame(width: 44, height: 44)
             }
@@ -94,23 +252,18 @@ struct SegmentationEditorView: View {
     private var footer: some View {
         VStack(spacing: 10) {
             if model.selectedArea > 0 && model.selectedArea < 0.005 {
-                Label("Quite small — get closer for a sharper cutout", systemImage: "arrow.up.left.and.arrow.down.right")
+                Label("Quite small — zoom in for a sharper cutout", systemImage: "plus.magnifyingglass")
                     .font(.caption).foregroundStyle(.yellow)
             }
             HStack(spacing: 12) {
                 Button { model.undo() } label: {
-                    Image(systemName: "arrow.uturn.backward")
-                        .font(.headline)
-                        .frame(width: 52, height: 52)
+                    Image(systemName: "arrow.uturn.backward").font(.headline).frame(width: 52, height: 52)
                         .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .disabled(!model.canUndo)
-                .opacity(model.canUndo ? 1 : 0.4)
+                .disabled(!model.canUndo).opacity(model.canUndo ? 1 : 0.4)
                 .accessibilityLabel("Undo")
                 Button { model.switchToManualCrop() } label: {
-                    Image(systemName: "crop")
-                        .font(.headline)
-                        .frame(width: 52, height: 52)
+                    Image(systemName: "crop").font(.headline).frame(width: 52, height: 52)
                         .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .accessibilityLabel("Crop by hand")
@@ -124,7 +277,7 @@ struct SegmentationEditorView: View {
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview)
+                .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview || model.hold != nil)
                 .opacity(model.hasSelection ? 1 : 0.5)
             }
         }
@@ -133,39 +286,143 @@ struct SegmentationEditorView: View {
         .padding(.top, 12)
         .padding(.bottom, 20)
     }
+}
 
-    private func fittedRect(imageSize: CGSize, in container: CGSize) -> CGRect {
-        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
-        let scale = min(container.width / imageSize.width, container.height / imageSize.height)
-        let size = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        return CGRect(x: (container.width - size.width) / 2, y: (container.height - size.height) / 2, width: size.width, height: size.height)
+/// Live tolerance readout while dragging horizontally during a hold.
+private struct ToleranceBar: View {
+    let value: Float
+    var body: some View {
+        let range = PointSegmenter.Parameters.toleranceRange
+        let t = CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound))
+        HStack(spacing: 8) {
+            Image(systemName: "minus.magnifyingglass").font(.caption2)
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(.white.opacity(0.25))
+                    Capsule().fill(Theme.accent).frame(width: max(6, g.size.width * t))
+                }
+            }
+            .frame(width: 140, height: 6)
+            Image(systemName: "plus.magnifyingglass").font(.caption2)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .background(.black.opacity(0.6), in: Capsule())
     }
 }
 
-/// Long-press only (a plain tap does nothing, so panning/looking doesn't accidentally select).
-private struct PickGestureView: UIViewRepresentable {
-    let onPick: (CGPoint) -> Void
+/// Short reference sheet, reachable from the editor menu.
+struct GestureHelpView: View {
+    var body: some View {
+        List {
+            Section("Selecting") {
+                row("hand.tap.fill", "Hold on a piece", "Shows what will be selected. Release to add it.")
+                row("arrow.left.and.right", "Hold, then drag sideways", "Right selects more of the surrounding colour, left selects less.")
+                row("arrow.up", "Hold, then swipe up", "Also take the shape wrapping it — a sticker's border around its artwork.")
+                row("arrow.down", "Hold, then swipe down", "Cancel without selecting.")
+            }
+            Section("Editing") {
+                row("hand.point.up.left.fill", "Hold on a selected piece", "Drill into the smaller piece under your finger and replace the large one.")
+                row("hand.tap", "Tap a selected piece", "Remove it.")
+                row("hand.tap.fill", "Hold a selected piece, swipe down", "Remove it.")
+                row("arrow.uturn.backward", "Two-finger tap", "Undo.")
+            }
+            Section("Looking closer") {
+                row("plus.magnifyingglass", "Pinch or double-tap", "Zoom. Detection re-runs on what's visible, so small stickers become selectable.")
+            }
+        }
+        .navigationTitle("Gestures")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func row(_ icon: String, _ title: LocalizedStringResource, _ detail: LocalizedStringResource) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon).frame(width: 24).foregroundStyle(Theme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.subheadline.weight(.semibold))
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// All touch handling in one UIKit view so recognizers can arbitrate against each other reliably.
+private struct EditorGestureView: UIViewRepresentable {
+    var onHoldBegan: (CGPoint) -> Void
+    var onHoldChanged: (CGSize) -> Void
+    var onHoldEnded: () -> Void
+    var onHoldCancelled: () -> Void
+    var onTap: (CGPoint) -> Void
+    var onDoubleTap: (CGPoint) -> Void
+    var onPinch: (CGFloat, UIGestureRecognizer.State) -> Void
+    var onPan: (CGSize, UIGestureRecognizer.State) -> Void
+    var onTwoFingerTap: () -> Void
 
     func makeUIView(context: Context) -> UIView {
         let v = UIView()
         v.backgroundColor = .clear
-        let long = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.pressed(_:)))
-        long.minimumPressDuration = 0.35
-        long.allowableMovement = 12
-        v.addGestureRecognizer(long)
+        v.isMultipleTouchEnabled = true
+        let c = context.coordinator
+
+        let hold = UILongPressGestureRecognizer(target: c, action: #selector(Coordinator.hold(_:)))
+        hold.minimumPressDuration = 0.3
+        hold.allowableMovement = .greatestFiniteMagnitude   // we track the drag ourselves
+        let tap = UITapGestureRecognizer(target: c, action: #selector(Coordinator.tap(_:)))
+        let doubleTap = UITapGestureRecognizer(target: c, action: #selector(Coordinator.doubleTap(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        let twoFingerTap = UITapGestureRecognizer(target: c, action: #selector(Coordinator.twoFingerTap(_:)))
+        twoFingerTap.numberOfTouchesRequired = 2
+        let pinch = UIPinchGestureRecognizer(target: c, action: #selector(Coordinator.pinch(_:)))
+        let pan = UIPanGestureRecognizer(target: c, action: #selector(Coordinator.pan(_:)))
+        pan.minimumNumberOfTouches = 1
+        pan.maximumNumberOfTouches = 2
+
+        tap.require(toFail: doubleTap)
+        pan.require(toFail: hold)   // a hold that starts wins over panning
+        pinch.delegate = c
+        pan.delegate = c
+
+        [hold, tap, doubleTap, twoFingerTap, pinch, pan].forEach(v.addGestureRecognizer)
         return v
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.onPick = onPick }
-    func makeCoordinator() -> Coordinator { Coordinator(onPick: onPick) }
+    func updateUIView(_ uiView: UIView, context: Context) { context.coordinator.parent = self }
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
-    final class Coordinator: NSObject {
-        var onPick: (CGPoint) -> Void
-        init(onPick: @escaping (CGPoint) -> Void) { self.onPick = onPick }
-        @objc func pressed(_ g: UILongPressGestureRecognizer) {
-            guard g.state == .began else { return }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            onPick(g.location(in: g.view?.superview))
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var parent: EditorGestureView
+        private var holdStart: CGPoint = .zero
+        init(parent: EditorGestureView) { self.parent = parent }
+
+        @objc func hold(_ g: UILongPressGestureRecognizer) {
+            let p = g.location(in: g.view)
+            switch g.state {
+            case .began:
+                holdStart = p
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                parent.onHoldBegan(p)
+            case .changed:
+                parent.onHoldChanged(CGSize(width: p.x - holdStart.x, height: p.y - holdStart.y))
+            case .ended:
+                parent.onHoldEnded()
+            case .cancelled, .failed:
+                parent.onHoldCancelled()
+            default: break
+            }
+        }
+
+        @objc func tap(_ g: UITapGestureRecognizer) { parent.onTap(g.location(in: g.view)) }
+        @objc func doubleTap(_ g: UITapGestureRecognizer) { parent.onDoubleTap(g.location(in: g.view)) }
+        @objc func twoFingerTap(_ g: UITapGestureRecognizer) { parent.onTwoFingerTap() }
+        @objc func pinch(_ g: UIPinchGestureRecognizer) { parent.onPinch(g.scale, g.state) }
+        @objc func pan(_ g: UIPanGestureRecognizer) {
+            let t = g.translation(in: g.view)
+            parent.onPan(CGSize(width: t.x, height: t.y), g.state)
+        }
+
+        // Pinch and pan together, so zooming with a drifting pinch also pans.
+        func gestureRecognizer(_ a: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith b: UIGestureRecognizer) -> Bool {
+            (a is UIPinchGestureRecognizer && b is UIPanGestureRecognizer) || (a is UIPanGestureRecognizer && b is UIPinchGestureRecognizer)
         }
     }
 }

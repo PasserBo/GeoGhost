@@ -5,14 +5,28 @@ import Foundation
 /// Combines masks from different sources (Vision instances, seed-point regions) at full image
 /// resolution and renders previews / transparent cutouts from them.
 enum MaskCompositor {
-    /// Union of masks, each already expressed as a CIImage whose extent may differ; all are scaled to `size`.
+    /// Scale a mask covering the normalized `frame` (origin top-left) into full-photo pixel space.
+    static func place(_ mask: CIImage, frame: CGRect, in size: CGSize) -> CIImage {
+        let targetW = frame.width * size.width, targetH = frame.height * size.height
+        let scaled = mask.transformed(by: .init(scaleX: targetW / mask.extent.width, y: targetH / mask.extent.height))
+        // Core Image's origin is bottom-left.
+        let tx = frame.minX * size.width - scaled.extent.minX
+        let ty = (1 - frame.maxY) * size.height - scaled.extent.minY
+        let moved = scaled.transformed(by: .init(translationX: tx, y: ty))
+        // Pad to the full canvas with black so unions and blends line up.
+        let canvas = CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: size))
+        return moved.composited(over: canvas).cropped(to: canvas.extent)
+    }
+
+    /// Union of masks already in full-photo pixel space (see `place`). Masks with other extents are scaled to fit.
     static func union(_ masks: [CIImage], size: CGSize) -> CIImage? {
         var acc: CIImage?
+        let full = CGRect(origin: .zero, size: size)
         for m in masks {
-            let scaled = m.transformed(by: .init(scaleX: size.width / m.extent.width, y: size.height / m.extent.height))
-            acc = acc.map { scaled.applyingFilter("CIMaximumCompositing", parameters: [kCIInputBackgroundImageKey: $0]) } ?? scaled
+            let fitted = m.extent == full ? m : m.transformed(by: .init(scaleX: size.width / m.extent.width, y: size.height / m.extent.height))
+            acc = acc.map { fitted.applyingFilter("CIMaximumCompositing", parameters: [kCIInputBackgroundImageKey: $0]) } ?? fitted
         }
-        return acc?.cropped(to: CGRect(origin: .zero, size: size))
+        return acc?.cropped(to: full)
     }
 
     /// Slightly soften an upscaled hard mask so cutout edges don't look stair-stepped.
@@ -35,16 +49,22 @@ enum MaskCompositor {
         ])
     }
 
-    /// Dimmed image with the masked region at full brightness.
-    static func preview(image: CGImage, mask: CIImage?, maxLongEdge: Int = 1280) -> CGImage? {
+    /// Dimmed image with committed selection at full brightness and a tentative (still-held) selection tinted.
+    static func preview(image: CGImage, mask: CIImage?, tentative: CIImage? = nil, tint: CIColor = CIColor(red: 1.0, green: 0.42, blue: 0.17), maxLongEdge: Int = 1280) -> CGImage? {
         let base = CIImage(cgImage: image)
-        let out: CIImage
-        if let mask {
+        var out: CIImage = base
+        if mask != nil || tentative != nil {
             let dimmed = base.applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: -1.6])
                 .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.45])
-            out = base.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: dimmed, kCIInputMaskImageKey: mask])
-        } else {
-            out = base
+            out = dimmed
+            if let mask {
+                out = base.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: mask])
+            }
+            if let tentative {
+                // Bright image washed with the accent colour so it reads as "not yet committed".
+                let tinted = CIImage(color: CIColor(red: tint.red, green: tint.green, blue: tint.blue, alpha: 0.35)).cropped(to: base.extent).composited(over: base)
+                out = tinted.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: tentative])
+            }
         }
         let scale = min(1, CGFloat(maxLongEdge) / max(base.extent.width, base.extent.height))
         let scaled = out.transformed(by: .init(scaleX: scale, y: scale))

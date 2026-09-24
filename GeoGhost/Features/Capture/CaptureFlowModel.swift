@@ -23,22 +23,49 @@ final class CaptureFlowModel {
     private(set) var fullImage: CGImage?
     private(set) var metadata = CaptureMetadata()
 
+    /// Whole-photo Vision analysis (may have zero instances).
     private(set) var analysis: SegmentationAnalysis?
-    /// Vision instances currently selected.
-    private(set) var selection = IndexSet()
-    /// Regions grown from the user's long-presses (used when Vision has no instance at that point).
-    private(set) var pointRegions: [PointSegmentation] = []
-    /// Ordered history so Undo can pop either kind of selection.
-    private enum SelectionStep { case instance(Int), region }
-    private var history: [SelectionStep] = []
+    /// Vision analysis of the current zoomed viewport, when zoomed in far enough to matter.
+    private(set) var scopedAnalysis: SegmentationAnalysis?
+    private var fullPrepared: PointSegmenter.Prepared?
+    private var scopedPrepared: PointSegmenter.Prepared?
+    private(set) var viewport = CGRect(x: 0, y: 0, width: 1, height: 1)
+    private var viewportTask: Task<Void, Never>?
+    private(set) var isAnalyzingViewport = false
+
+    /// Committed selection.
+    private(set) var pieces: [SelectedPiece] = []
+    private var undoStack: [[SelectedPiece]] = []
+    private var selectionWasAdjusted = false
+
+    /// In-progress hold gesture.
+    struct Hold {
+        enum Axis { case undecided, horizontal, vertical }
+        enum Intent { case add, replace, discard, delete, expand }
+        var origin: CGPoint
+        /// Piece already under the finger when the hold began (drill / delete target).
+        var target: SelectedPiece?
+        var tentative: SelectedPiece?
+        var axis: Axis = .undecided
+        var intent: Intent
+        var tolerance: Float = PointSegmenter.Parameters().colorTolerance
+        var layers: Int = PointSegmenter.Parameters().expansionLayers
+        var usesRegion = false
+        var failed = false
+    }
+    private(set) var hold: Hold?
+    private var holdGeneration = 0
+    private var holdTask: Task<Void, Never>?
+    /// A hold released before its tentative result arrived: commit the result when it lands.
+    private var pendingCommit: (generation: Int, hold: Hold)?
+
     private(set) var previewImage: CGImage?
     private(set) var isRenderingPreview = false
     private(set) var isPicking = false
     private(set) var lastPickFailed = false
-    /// The most recently added piece, rendered alone so the editor can animate it.
+    /// The most recently committed piece, rendered alone so the editor can animate it.
     struct PickHighlight: Identifiable { let id = UUID(); let image: CGImage; let rect: CGRect }
     private(set) var lastPickHighlight: PickHighlight?
-    private var selectionWasAdjusted = false
 
     /// Final cutout ready for saving.
     private(set) var cutout: CGImage?
@@ -79,174 +106,278 @@ final class CaptureFlowModel {
                 self.fullImage = image
                 if self.metadata.pixelWidth == 0 { self.metadata.pixelWidth = image.width; self.metadata.pixelHeight = image.height }
                 self.analysis = try? result.get()
-                self.selection = self.analysis?.hasInstances == true ? self.analysis!.defaultSelection() : []
-                self.pointRegions = []
-                self.history = []
+                self.pieces = []
+                if let a = self.analysis, a.hasInstances, let idx = a.defaultSelection().first {
+                    self.pieces = [SelectedPiece(vision: a, instance: idx)]
+                }
+                self.undoStack = []
                 self.selectionWasAdjusted = false
                 self.stage = .editing
                 self.refreshPreview()
             }
+            // Region-growing preprocessing for the whole photo, ready before the first hold.
+            let prepared = PointSegmenter.Prepared(image: image)
+            await MainActor.run { self.fullPrepared = prepared }
         }
     }
 
     // MARK: Editing
 
-    /// Whether anything is selected (Vision instances or grown regions).
-    var hasSelection: Bool { !selection.isEmpty || !pointRegions.isEmpty }
-    var canUndo: Bool { !history.isEmpty }
+    var hasSelection: Bool { !pieces.isEmpty }
+    var canUndo: Bool { !undoStack.isEmpty }
+    var instanceCount: Int { (scopedAnalysis ?? analysis)?.allInstances.count ?? 0 }
+    var selectedArea: Double { pieces.reduce(0) { $0 + $1.area } }
 
     /// Vision instances larger than this share of the frame are probably the wall/pole, not the piece.
     private let largeInstanceArea = 0.35
 
-    /// Pick whatever is under a normalized point.
-    ///
-    /// Order of preference: a point region the user already added (hold again → remove) · a Vision
-    /// instance that isn't selected yet (select it, unless it's huge — then try to grow a smaller region
-    /// first) · a Vision instance that *is* selected (drill down: replace it with the region under the
-    /// finger, so a sticker sitting on a detected pole can still be isolated) · grow a region.
-    func pick(atNormalized point: CGPoint) {
-        lastPickFailed = false
-        guard let fullImage, !isPicking else { return }
+    // MARK: Viewport → scoped analysis
 
-        if let regionIndex = pointRegions.lastIndex(where: { $0.contains(point) }) {
-            pointRegions.remove(at: regionIndex)
-            if let h = history.lastIndex(where: { if case .region = $0 { return true }; return false }) { history.remove(at: h) }
-            selectionWasAdjusted = true
-            refreshPreview()
+    /// Called by the editor whenever the zoom/pan settles. Re-runs Vision on the visible crop so small
+    /// pieces the whole-photo pass missed become instances, and scopes region growth to what's on screen.
+    func setViewport(_ visible: CGRect) {
+        let clamped = visible.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+        guard clamped != viewport, let fullImage else { return }
+        viewport = clamped
+        viewportTask?.cancel()
+        let area = clamped.width * clamped.height
+        if area >= 0.9 {
+            scopedAnalysis = nil
+            scopedPrepared = nil
+            isAnalyzingViewport = false
             return
         }
-
-        let instance = analysis?.instance(atNormalized: point)
-        if let analysis, let idx = instance {
-            let instanceArea = analysis.area(of: [idx])
-            let alreadySelected = selection.contains(idx)
-            if !alreadySelected && instanceArea < largeInstanceArea {
-                select(instance: idx, in: analysis)
-                return
-            }
-            // Selected already, or suspiciously large: try to isolate the smaller piece under the finger.
-            growRegion(at: point, in: fullImage) { [weak self] region in
-                guard let self else { return }
-                if let region, region.area < instanceArea * 0.6 {
-                    if alreadySelected { self.deselect(instance: idx) }
-                    self.add(region: region)
-                } else if alreadySelected {
-                    self.deselect(instance: idx)
-                    self.refreshPreview()
-                } else {
-                    self.select(instance: idx, in: analysis)
-                }
-            }
-            return
-        }
-
-        growRegion(at: point, in: fullImage) { [weak self] region in
-            guard let self else { return }
-            if let region { self.add(region: region) } else { self.lastPickFailed = true }
-        }
-    }
-
-    private func select(instance idx: Int, in analysis: SegmentationAnalysis) {
-        selection.insert(idx)
-        history.append(.instance(idx))
-        if let buffer = try? analysis.scaledMask(for: [idx]), let rect = analysis.boundingRect(of: [idx]) {
-            makeHighlight(mask: CIImage(cvPixelBuffer: buffer), rect: rect)
-        }
-        selectionWasAdjusted = true
-        refreshPreview()
-    }
-
-    private func deselect(instance idx: Int) {
-        selection.remove(idx)
-        history.removeAll { if case .instance(let i) = $0 { return i == idx }; return false }
-        selectionWasAdjusted = true
-    }
-
-    private func add(region: PointSegmentation) {
-        pointRegions.append(region)
-        history.append(.region)
-        selectionWasAdjusted = true
-        makeHighlight(mask: MaskCompositor.sharpened(MaskCompositor.feathered(CIImage(cgImage: region.mask), radius: 1.0)), rect: region.boundingRect)
-        refreshPreview()
-    }
-
-    private func growRegion(at point: CGPoint, in image: CGImage, completion: @escaping @MainActor (PointSegmentation?) -> Void) {
-        isPicking = true
-        Task.detached(priority: .userInitiated) {
-            let region = PointSegmenter.segment(image: image, atNormalized: point)
+        isAnalyzingViewport = true
+        viewportTask = Task.detached(priority: .userInitiated) {
+            let analysis = try? SegmentationService.analyze(fullImage, frame: clamped)
+            let prepared = PointSegmenter.Prepared(image: fullImage, frame: clamped)
+            guard !Task.isCancelled else { return }
             await MainActor.run {
-                self.isPicking = false
-                completion(region)
+                guard self.viewport == clamped else { return }
+                self.scopedAnalysis = analysis
+                self.scopedPrepared = prepared
+                self.isAnalyzingViewport = false
             }
         }
+    }
+
+    private var activePrepared: PointSegmenter.Prepared? { scopedPrepared ?? fullPrepared }
+
+    /// Vision instance under a point: the zoomed-in analysis wins over the whole-photo one.
+    private func visionCandidate(at p: CGPoint) -> SelectedPiece? {
+        for a in [scopedAnalysis, analysis].compactMap({ $0 }) {
+            if let idx = a.instance(atNormalized: p) { return SelectedPiece(vision: a, instance: idx) }
+        }
+        return nil
+    }
+
+    // MARK: Hold gesture (press = try, release = commit, swipe down = throw away)
+
+    func beginHold(at p: CGPoint) {
+        guard fullImage != nil else { return }
+        lastPickFailed = false
+        pendingCommit = nil
+        let target = pieces.last { $0.contains(p) }
+        var h = Hold(origin: p, target: target, intent: target == nil ? .add : .replace)
+        // Drilling into an existing piece always uses region growth (that's what "smaller" means here).
+        h.usesRegion = target != nil
+        hold = h
+        computeTentative()
+    }
+
+    /// `translation` in screen points since the hold began.
+    func updateHold(translation t: CGSize) {
+        guard var h = hold else { return }
+        if h.axis == .undecided {
+            guard hypot(t.width, t.height) > 12 else { return }
+            h.axis = abs(t.width) > abs(t.height) ? .horizontal : .vertical
+        }
+        switch h.axis {
+        case .horizontal:
+            // Right loosens, left tightens. Full travel ≈ 240 pt.
+            let base = PointSegmenter.Parameters().colorTolerance
+            let tol = base + Float(t.width / 240) * 0.3
+            let clamped = min(max(tol, PointSegmenter.Parameters.toleranceRange.lowerBound), PointSegmenter.Parameters.toleranceRange.upperBound)
+            let changed = abs(clamped - h.tolerance) > 0.004 || !h.usesRegion
+            h.tolerance = clamped
+            h.usesRegion = true
+            h.intent = h.target == nil ? .add : .replace
+            hold = h
+            if changed { computeTentative() }
+        case .vertical:
+            if t.height > 48 {
+                h.intent = h.target == nil ? .discard : .delete
+                hold = h
+            } else if t.height < -48 {
+                let layers = min(4, PointSegmenter.Parameters().expansionLayers + 1 + Int((-t.height - 48) / 90))
+                let changed = layers != h.layers || h.intent != .expand
+                h.layers = layers
+                h.intent = .expand
+                h.usesRegion = true
+                hold = h
+                if changed { computeTentative() }
+            } else {
+                let wasVertical = h.intent == .discard || h.intent == .delete || h.intent == .expand
+                h.intent = h.target == nil ? .add : .replace
+                hold = h
+                if wasVertical { computeTentative() }
+            }
+        case .undecided:
+            hold = h
+        }
+    }
+
+    func endHold() {
+        guard let h = hold else { return }
+        hold = nil
+        defer { refreshPreview() }
+        switch h.intent {
+        case .discard:
+            holdTask?.cancel()
+            isPicking = false
+            return
+        case .delete:
+            holdTask?.cancel()
+            isPicking = false
+            if let t = h.target { commit(pieces.filter { $0.id != t.id }) }
+        case .add, .expand, .replace:
+            if let tentative = h.tentative {
+                holdTask?.cancel()
+                isPicking = false
+                apply(h, tentative: tentative)
+            } else if h.failed {
+                isPicking = false
+            } else {
+                // Still computing: let the result commit itself when it arrives.
+                pendingCommit = (holdGeneration, h)
+            }
+        }
+    }
+
+    private func apply(_ h: Hold, tentative: SelectedPiece) {
+        var next = pieces
+        if let t = h.target { next.removeAll { $0.id == t.id } }
+        next.append(tentative)
+        commit(next)
+        makeHighlight(for: tentative)
+    }
+
+    func cancelHold() {
+        holdTask?.cancel()
+        pendingCommit = nil
+        isPicking = false
+        hold = nil
+        refreshPreview()
+    }
+
+    /// A quick tap on a committed piece removes it. Tapping elsewhere does nothing (no accidental selects).
+    func tap(at p: CGPoint) {
+        guard let t = pieces.last(where: { $0.contains(p) }) else { return }
+        commit(pieces.filter { $0.id != t.id })
+        refreshPreview()
+    }
+
+    private func commit(_ next: [SelectedPiece]) {
+        undoStack.append(pieces)
+        if undoStack.count > 30 { undoStack.removeFirst() }
+        pieces = next
+        selectionWasAdjusted = true
     }
 
     func undo() {
-        guard let last = history.popLast() else { return }
-        switch last {
-        case .instance(let i): selection.remove(i)
-        case .region: if !pointRegions.isEmpty { pointRegions.removeLast() }
-        }
+        guard let previous = undoStack.popLast() else { return }
+        pieces = previous
+        selectionWasAdjusted = true
         refreshPreview()
     }
 
     func clearSelection() {
-        selection = []
-        pointRegions = []
-        history = []
-        selectionWasAdjusted = true
+        guard !pieces.isEmpty else { return }
+        commit([])
         refreshPreview()
     }
 
     func selectAll() {
-        guard let analysis else { return }
-        selection = analysis.allInstances
-        selectionWasAdjusted = true
+        guard let a = scopedAnalysis ?? analysis, a.hasInstances else { return }
+        commit(a.allInstances.map { SelectedPiece(vision: a, instance: $0) })
         refreshPreview()
     }
 
-    var instanceCount: Int { analysis?.allInstances.count ?? 0 }
-    var selectedArea: Double { (analysis?.area(of: selection) ?? 0) + pointRegions.reduce(0) { $0 + $1.area } }
+    /// Work out what the current hold would select, off the main thread, and show it tinted.
+    private func computeTentative() {
+        guard var h = hold, let fullImage else { return }
+        holdGeneration += 1
+        let gen = holdGeneration
+        holdTask?.cancel()
 
-    /// Full-resolution union mask of everything selected.
-    private func combinedMask() -> CIImage? {
-        guard let fullImage else { return nil }
-        var parts: [CIImage] = []
-        if let analysis, !selection.isEmpty, let buffer = try? analysis.scaledMask(for: selection) {
-            parts.append(CIImage(cvPixelBuffer: buffer))
+        // Vision path is synchronous and cheap: instance lookup only.
+        if !h.usesRegion, let candidate = visionCandidate(at: h.origin), candidate.area < largeInstanceArea {
+            h.tentative = candidate
+            hold = h
+            refreshPreview()
+            return
         }
-        let size = CGSize(width: fullImage.width, height: fullImage.height)
-        if !pointRegions.isEmpty {
-            // Upscale the hard low-res masks, blur to interpolate, then steepen so edges stay crisp.
-            let regions = pointRegions.map { CIImage(cgImage: $0.mask) }
-            if let u = MaskCompositor.union(regions, size: size) {
-                parts.append(MaskCompositor.sharpened(MaskCompositor.feathered(u, radius: 2.5)))
+        // Otherwise grow a region (also the fallback when the Vision instance is huge).
+        let fallback = h.usesRegion ? nil : visionCandidate(at: h.origin)
+        let targetArea = h.target?.area
+        var params = PointSegmenter.Parameters()
+        params.colorTolerance = h.tolerance
+        params.expansionLayers = h.layers
+        let prepared = activePrepared
+        let origin = h.origin
+        isPicking = true
+        holdTask = Task.detached(priority: .userInitiated) {
+            let region: PointSegmentation? = prepared.flatMap { PointSegmenter.segment($0, atNormalized: origin, parameters: params) }
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard self.holdGeneration == gen else { return }
+                self.isPicking = false
+                var tentative: SelectedPiece?
+                if let region, targetArea.map({ region.area < $0 * 0.6 }) ?? true {
+                    tentative = SelectedPiece(region: region)
+                } else if let fallback {
+                    tentative = fallback
+                }
+                if var h = self.hold {
+                    h.tentative = tentative
+                    if tentative == nil { h.failed = true; self.lastPickFailed = true }
+                    self.hold = h
+                    self.refreshPreview()
+                } else if let pending = self.pendingCommit, pending.generation == gen {
+                    // Finger already lifted: commit (or report) now.
+                    self.pendingCommit = nil
+                    if let tentative { self.apply(pending.hold, tentative: tentative) } else { self.lastPickFailed = true }
+                    self.refreshPreview()
+                }
+                _ = fullImage
             }
         }
-        guard !parts.isEmpty else { return nil }
-        return MaskCompositor.union(parts, size: size).map { MaskCompositor.feathered($0, radius: 0.7) }
     }
 
-    private func selectionBounds() -> CGRect? {
-        var rects: [CGRect] = []
-        if let analysis, !selection.isEmpty, let r = analysis.boundingRect(of: selection) { rects.append(r) }
-        rects += pointRegions.map(\.boundingRect)
-        guard var u = rects.first else { return nil }
-        for r in rects.dropFirst() { u = u.union(r) }
-        // Small margin so feathered edges aren't clipped.
-        return u.insetBy(dx: -0.004, dy: -0.004).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
-    }
-
-    /// Render just the newly picked piece at preview resolution for the pop animation.
-    private func makeHighlight(mask: CIImage, rect: CGRect) {
+    /// Render just the newly committed piece at preview resolution for the pop animation.
+    private func makeHighlight(for piece: SelectedPiece) {
         guard let fullImage else { return }
         Task.detached(priority: .userInitiated) {
             let small = ImageProcessing.downsample(fullImage, maxLongEdge: 1280)
             let size = CGSize(width: small.width, height: small.height)
-            guard let scaled = MaskCompositor.union([mask], size: size),
-                  let cg = MaskCompositor.cutout(image: small, mask: scaled, normalizedRect: rect) else { return }
-            await MainActor.run { self.lastPickHighlight = PickHighlight(image: cg, rect: rect) }
+            guard let mask = piece.mask(fullSize: size),
+                  let cg = MaskCompositor.cutout(image: small, mask: mask, normalizedRect: piece.rect) else { return }
+            await MainActor.run { self.lastPickHighlight = PickHighlight(image: cg, rect: piece.rect) }
         }
+    }
+
+    /// Full-resolution union mask of the committed pieces.
+    private func combinedMask(of pieces: [SelectedPiece]) -> CIImage? {
+        guard let fullImage, !pieces.isEmpty else { return nil }
+        let size = CGSize(width: fullImage.width, height: fullImage.height)
+        let masks = pieces.compactMap { $0.mask(fullSize: size) }
+        return MaskCompositor.union(masks, size: size).map { MaskCompositor.feathered($0, radius: 0.7) }
+    }
+
+    private func selectionBounds() -> CGRect? {
+        guard var u = pieces.first?.rect else { return nil }
+        for p in pieces.dropFirst() { u = u.union(p.rect) }
+        return u.insetBy(dx: -0.004, dy: -0.004).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
     }
 
     private var previewTask: Task<Void, Never>?
@@ -255,11 +386,15 @@ final class CaptureFlowModel {
         guard let fullImage else { return }
         previewGeneration += 1
         let gen = previewGeneration
-        let mask = combinedMask()
+        // Masks are built on the main thread (they only reference Vision/CI objects), rendered off it.
+        let committed = combinedMask(of: pieces)
+        let tentativeMask = hold?.tentative.flatMap { combinedMask(of: [$0]) }
+        let hidingTarget = hold?.target.map { t in pieces.filter { $0.id != t.id } }
+        let committedShown = (hold?.intent == .replace || hold?.intent == .delete) ? hidingTarget.flatMap { combinedMask(of: $0) } : committed
         previewTask?.cancel()
         isRenderingPreview = true
         previewTask = Task.detached(priority: .userInitiated) {
-            let img = MaskCompositor.preview(image: fullImage, mask: mask)
+            let img = MaskCompositor.preview(image: fullImage, mask: committedShown, tentative: tentativeMask)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 if self.previewGeneration == gen { self.previewImage = img; self.isRenderingPreview = false }
@@ -279,7 +414,7 @@ final class CaptureFlowModel {
 
     /// Render the selection into a transparent cutout and open the save sheet.
     func finishAutomatic() async {
-        guard let fullImage, let mask = combinedMask(), let rect = selectionBounds() else { return }
+        guard let fullImage, let mask = combinedMask(of: pieces), let rect = selectionBounds() else { return }
         let adjusted = selectionWasAdjusted
         let cg = await Task.detached(priority: .userInitiated) {
             MaskCompositor.cutout(image: fullImage, mask: mask, normalizedRect: rect)
@@ -305,9 +440,13 @@ final class CaptureFlowModel {
         originalData = nil
         fullImage = nil
         analysis = nil
-        selection = []
-        pointRegions = []
-        history = []
+        scopedAnalysis = nil
+        fullPrepared = nil
+        scopedPrepared = nil
+        viewport = CGRect(x: 0, y: 0, width: 1, height: 1)
+        pieces = []
+        undoStack = []
+        hold = nil
         lastPickHighlight = nil
         previewImage = nil
         cutout = nil
