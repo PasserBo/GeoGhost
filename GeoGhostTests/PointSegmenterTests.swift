@@ -32,14 +32,44 @@ final class PointSegmenterTests: XCTestCase {
         XCTAssertEqual(r.boundingRect.height, 300.0 / 1000, accuracy: 0.03)
     }
 
-    func testSeedOnGraphicGrabsJustTheGraphic() {
+    func testSeedOnGraphicExpandsToWholeSticker() {
         let r = PointSegmenter.segment(image: scene(), atNormalized: CGPoint(x: 0.5, y: 0.5))
         XCTAssertNotNil(r)
         guard let r else { return }
-        XCTAssertEqual(r.area, Double.pi * 80 * 80 / 800_000, accuracy: 0.01)
+        XCTAssertEqual(r.area, 0.1125, accuracy: 0.02)
+    }
+
+    func testExpansionStopsAtBackground() {
+        // Seed on the graphic of a sticker whose border is the *same* colour as the wall: expansion must not swallow the wall.
+        let w = 800, h = 1000
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        ctx.setFillColor(CGColor(gray: 0.5, alpha: 1)); ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.setFillColor(CGColor(red: 0.9, green: 0.1, blue: 0.3, alpha: 1)); ctx.fillEllipse(in: CGRect(x: 320, y: 420, width: 160, height: 160))
+        let r = PointSegmenter.segment(image: ctx.makeImage()!, atNormalized: CGPoint(x: 0.5, y: 0.5))
+        XCTAssertNotNil(r)
+        XCTAssertEqual(r?.area ?? 0, Double.pi * 80 * 80 / 800_000, accuracy: 0.01)
+    }
+
+    func testSegmentationIsFastEnough() {
+        let img = scene()
+        let t0 = CFAbsoluteTimeGetCurrent()
+        _ = PointSegmenter.segment(image: img, atNormalized: CGPoint(x: 0.5, y: 0.5))
+        let dt = CFAbsoluteTimeGetCurrent() - t0
+        print("PointSegmenter took \(Int(dt * 1000)) ms (debug build)")
+        // Debug builds are ~50× slower than release here (release: ~40 ms after warm-up on M-series).
+        XCTAssertLessThan(dt, 8.0)
     }
 
     func testSeedOnWallIsRejectedAsTooLarge() {
         XCTAssertNil(PointSegmenter.segment(image: scene(), atNormalized: CGPoint(x: 0.1, y: 0.1)))
+    }
+
+    /// A pole splitting the frame leaves each wall half well under the area cap; the edge rule must still reject it.
+    func testHalfWallTouchingThreeEdgesIsRejected() {
+        let w = 600, h = 800
+        let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+        ctx.setFillColor(CGColor(gray: 0.5, alpha: 1)); ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.setFillColor(CGColor(red: 0.2, green: 0.22, blue: 0.25, alpha: 1)); ctx.fill(CGRect(x: 220, y: 0, width: 160, height: h))
+        XCTAssertNil(PointSegmenter.segment(image: ctx.makeImage()!, atNormalized: CGPoint(x: 0.15, y: 0.5)))
     }
 }

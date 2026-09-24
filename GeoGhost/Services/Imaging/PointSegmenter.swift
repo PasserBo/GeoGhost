@@ -26,7 +26,11 @@ enum PointSegmenter {
         /// Reject results that grabbed most of the frame (the wall, not the sticker).
         var maxArea: Double = 0.65
         var minArea: Double = 0.0005
+        /// Regions above this that also touch ≥ 3 frame edges are rejected as background.
+        var backgroundArea: Double = 0.2
         var closingRadius = 2
+        /// How many enclosing layers to absorb (graphic → sticker face → sticker border).
+        var expansionLayers = 2
     }
 
     static func segment(image: CGImage, atNormalized seed: CGPoint, parameters p: Parameters = .init()) -> PointSegmentation? {
@@ -45,12 +49,16 @@ enum PointSegmenter {
             lum[i] = (0.299 * Float(rgba[i * 4]) + 0.587 * Float(rgba[i * 4 + 1]) + 0.114 * Float(rgba[i * 4 + 2])) / 255
         }
         var edge = [Float](repeating: 0, count: w * h)
-        for y in 1..<(h - 1) {
-            for x in 1..<(w - 1) {
-                let i = y * w + x
-                let gx = -lum[i - w - 1] + lum[i - w + 1] - 2 * lum[i - 1] + 2 * lum[i + 1] - lum[i + w - 1] + lum[i + w + 1]
-                let gy = -lum[i - w - 1] - 2 * lum[i - w] - lum[i - w + 1] + lum[i + w - 1] + 2 * lum[i + w] + lum[i + w + 1]
-                edge[i] = (gx * gx + gy * gy).squareRoot() / 4
+        lum.withUnsafeBufferPointer { l in
+            edge.withUnsafeMutableBufferPointer { e in
+                for y in 1..<(h - 1) {
+                    for x in 1..<(w - 1) {
+                        let i = y * w + x
+                        let gx = -l[i - w - 1] + l[i - w + 1] - 2 * l[i - 1] + 2 * l[i + 1] - l[i + w - 1] + l[i + w + 1]
+                        let gy = -l[i - w - 1] - 2 * l[i - w] - l[i - w + 1] + l[i + w - 1] + 2 * l[i + w] + l[i + w + 1]
+                        e[i] = (gx * gx + gy * gy).squareRoot() / 4
+                    }
+                }
             }
         }
 
@@ -66,43 +74,36 @@ enum PointSegmenter {
         } }
         sr /= n * 255; sg /= n * 255; sb /= n * 255
 
-        // Flood fill.
-        var mask = [UInt8](repeating: 0, count: w * h)
-        var stack = [sy * w + sx]
-        mask[sy * w + sx] = 1
-        var count = 0
-        let tol2 = p.colorTolerance * p.colorTolerance
-        while let i = stack.popLast() {
-            count += 1
-            let x = i % w, y = i / w
-            for (nx, ny) in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] {
-                guard nx >= 0, ny >= 0, nx < w, ny < h else { continue }
-                let j = ny * w + nx
-                guard mask[j] == 0 else { continue }
-                if edge[j] > p.edgeThreshold { continue }
-                let r = Float(rgba[j * 4]) / 255 - sr, g = Float(rgba[j * 4 + 1]) / 255 - sg, b = Float(rgba[j * 4 + 2]) / 255 - sb
-                if r * r + g * g + b * b > tol2 { continue }
-                mask[j] = 1
-                stack.append(j)
-            }
-        }
         let total = Double(w * h)
-        guard Double(count) / total <= p.maxArea else { return nil }
+        // Flood fill from the seed, then fill holes so a sticker's printed graphic comes along.
+        guard var mask = grow(from: [sy * w + sx], color: (sr, sg, sb), rgba: rgba, edge: edge, w: w, h: h, p: p),
+              Double(mask.reduce(0) { $0 + Int($1) }) / total <= p.maxArea else { return nil }
+        mask = fillHoles(mask, w, h)
 
-        // Fill holes: anything not reachable from the image border through non-mask pixels is interior.
-        var outside = [UInt8](repeating: 0, count: w * h)
-        var q: [Int] = []
-        for x in 0..<w { for y in [0, h - 1] { let i = y * w + x; if mask[i] == 0 && outside[i] == 0 { outside[i] = 1; q.append(i) } } }
-        for y in 0..<h { for x in [0, w - 1] { let i = y * w + x; if mask[i] == 0 && outside[i] == 0 { outside[i] = 1; q.append(i) } } }
-        while let i = q.popLast() {
-            let x = i % w, y = i / w
-            for (nx, ny) in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] {
-                guard nx >= 0, ny >= 0, nx < w, ny < h else { continue }
-                let j = ny * w + nx
-                if mask[j] == 0 && outside[j] == 0 { outside[j] = 1; q.append(j) }
+        // Expansion: if the region is wrapped by another uniform, bounded shape (e.g. the sticker's white
+        // border around its artwork), absorb it. Stop as soon as the wrapper looks like background.
+        for _ in 0..<p.expansionLayers {
+            // Skip the 2 px anti-aliased boundary, then sample a 4 px band; ignore edge pixels inside it.
+            let ring = ringPixels(around: mask, w, h, inner: 2, outer: 6).filter { edge[$0] <= p.edgeThreshold }
+            guard ring.count > 8 else { break }
+            var rr: Float = 0, rg: Float = 0, rb: Float = 0
+            for i in ring { rr += Float(rgba[i * 4]); rg += Float(rgba[i * 4 + 1]); rb += Float(rgba[i * 4 + 2]) }
+            let n = Float(ring.count) * 255
+            let ringColor = (rr / n, rg / n, rb / n)
+            // Only seed from ring pixels that actually match the ring's dominant colour.
+            let seeds = ring.filter { i in
+                let r = Float(rgba[i * 4]) / 255 - ringColor.0, g = Float(rgba[i * 4 + 1]) / 255 - ringColor.1, b = Float(rgba[i * 4 + 2]) / 255 - ringColor.2
+                return r * r + g * g + b * b <= p.colorTolerance * p.colorTolerance
             }
+            // The wrapper must be dominated by one colour, otherwise it's just background texture.
+            guard Double(seeds.count) >= Double(ring.count) * 0.6 else { break }
+            guard let wrapper = grow(from: seeds, color: ringColor, rgba: rgba, edge: edge, w: w, h: h, p: p) else { break }
+            let combined = fillHoles(zip(mask, wrapper).map { max($0, $1) }, w, h)
+            let stats = bounds(of: combined, w, h)
+            let area = Double(stats.count) / total
+            guard area <= p.maxArea, stats.edgesTouched(w, h, slack: 1) == 0 else { break }
+            mask = combined
         }
-        for i in 0..<(w * h) where mask[i] == 0 && outside[i] == 0 { mask[i] = 1 }
 
         // Morphological closing then opening to knock off speckles and smooth the outline.
         mask = dilate(erode(dilate(mask, w, h, p.closingRadius), w, h, p.closingRadius * 2), w, h, p.closingRadius)
@@ -110,13 +111,13 @@ enum PointSegmenter {
         // Keep only the component containing the seed (closing may have bridged to noise).
         mask = component(of: mask, w, h, containing: sy * w + sx)
 
-        var minX = w, minY = h, maxX = -1, maxY = -1, selected = 0
-        for y in 0..<h { for x in 0..<w where mask[y * w + x] != 0 {
-            selected += 1
-            if x < minX { minX = x }; if x > maxX { maxX = x }; if y < minY { minY = y }; if y > maxY { maxY = y }
-        } }
-        let area = Double(selected) / total
-        guard maxX >= 0, area >= p.minArea, area <= p.maxArea else { return nil }
+        let stats = bounds(of: mask, w, h)
+        let area = Double(stats.count) / total
+        guard stats.maxX >= 0, area >= p.minArea, area <= p.maxArea else { return nil }
+        // A sizeable region touching three or more frame edges is the wall/sky/pole behind the piece, not the piece.
+        // Morphology pulls the outline in by up to 2·radius px, so allow that much slack at the border.
+        if stats.edgesTouched(w, h, slack: p.closingRadius * 2 + 1) >= 3 && area > p.backgroundArea { return nil }
+        let (minX, minY, maxX, maxY) = (stats.minX, stats.minY, stats.maxX, stats.maxY)
 
         var gray = [UInt8](repeating: 0, count: w * h)
         for i in 0..<(w * h) { gray[i] = mask[i] != 0 ? 255 : 0 }
@@ -126,29 +127,123 @@ enum PointSegmenter {
         return PointSegmentation(mask: maskImage, boundingRect: rect, area: area)
     }
 
-    // MARK: Morphology helpers (square kernels; fine at 640 px)
+    // MARK: Region helpers
 
+    /// 4-connected flood fill from `seeds`, bounded by colour distance to `color` and by strong edges.
+    private static func grow(from seeds: [Int], color: (Float, Float, Float), rgba: [UInt8], edge: [Float], w: Int, h: Int, p: Parameters) -> [UInt8]? {
+        var mask = [UInt8](repeating: 0, count: w * h)
+        var stack: [Int] = []
+        for s in seeds where mask[s] == 0 { mask[s] = 1; stack.append(s) }
+        let tol2 = p.colorTolerance * p.colorTolerance
+        let limit = Int(Double(w * h) * p.maxArea) + 1
+        var count = stack.count
+        var overflow = false
+        rgba.withUnsafeBufferPointer { px in
+            edge.withUnsafeBufferPointer { ed in
+                mask.withUnsafeMutableBufferPointer { mk in
+                    @inline(__always) func visit(_ j: Int) {
+                        guard mk[j] == 0, ed[j] <= p.edgeThreshold else { return }
+                        let r = Float(px[j * 4]) / 255 - color.0, g = Float(px[j * 4 + 1]) / 255 - color.1, b = Float(px[j * 4 + 2]) / 255 - color.2
+                        if r * r + g * g + b * b > tol2 { return }
+                        mk[j] = 1
+                        count += 1
+                        stack.append(j)
+                    }
+                    while let i = stack.popLast() {
+                        if count > limit { overflow = true; return }
+                        let x = i % w, y = i / w
+                        if x > 0 { visit(i - 1) }
+                        if x < w - 1 { visit(i + 1) }
+                        if y > 0 { visit(i - w) }
+                        if y < h - 1 { visit(i + w) }
+                    }
+                }
+            }
+        }
+        return overflow ? nil : mask
+    }
+
+    /// Anything not reachable from the image border through non-mask pixels is interior → becomes mask.
+    private static func fillHoles(_ m: [UInt8], _ w: Int, _ h: Int) -> [UInt8] {
+        var mask = m
+        var outside = [UInt8](repeating: 0, count: w * h)
+        var q: [Int] = []
+        for x in 0..<w { for y in [0, h - 1] { let i = y * w + x; if mask[i] == 0 && outside[i] == 0 { outside[i] = 1; q.append(i) } } }
+        for y in 0..<h { for x in [0, w - 1] { let i = y * w + x; if mask[i] == 0 && outside[i] == 0 { outside[i] = 1; q.append(i) } } }
+        mask.withUnsafeBufferPointer { mk in
+            outside.withUnsafeMutableBufferPointer { out in
+                @inline(__always) func visit(_ j: Int) { if mk[j] == 0 && out[j] == 0 { out[j] = 1; q.append(j) } }
+                while let i = q.popLast() {
+                    let x = i % w, y = i / w
+                    if x > 0 { visit(i - 1) }
+                    if x < w - 1 { visit(i + 1) }
+                    if y > 0 { visit(i - w) }
+                    if y < h - 1 { visit(i + w) }
+                }
+            }
+        }
+        for i in 0..<(w * h) where mask[i] == 0 && outside[i] == 0 { mask[i] = 1 }
+        return mask
+    }
+
+    /// Band of pixels between `inner` and `outer` px outside the mask.
+    private static func ringPixels(around m: [UInt8], _ w: Int, _ h: Int, inner: Int, outer: Int) -> [Int] {
+        let near = dilate(m, w, h, inner)
+        let far = dilate(near, w, h, outer - inner)
+        var ring: [Int] = []
+        for i in 0..<(w * h) where far[i] != 0 && near[i] == 0 { ring.append(i) }
+        return ring
+    }
+
+    private struct Bounds {
+        var minX: Int, minY: Int, maxX: Int, maxY: Int, count: Int
+        func edgesTouched(_ w: Int, _ h: Int, slack: Int) -> Int {
+            var n = 0
+            if minX <= slack { n += 1 }; if minY <= slack { n += 1 }
+            if maxX >= w - 1 - slack { n += 1 }; if maxY >= h - 1 - slack { n += 1 }
+            return n
+        }
+    }
+
+    private static func bounds(of m: [UInt8], _ w: Int, _ h: Int) -> Bounds {
+        var b = Bounds(minX: w, minY: h, maxX: -1, maxY: -1, count: 0)
+        for y in 0..<h { for x in 0..<w where m[y * w + x] != 0 {
+            b.count += 1
+            if x < b.minX { b.minX = x }; if x > b.maxX { b.maxX = x }; if y < b.minY { b.minY = y }; if y > b.maxY { b.maxY = y }
+        } }
+        return b
+    }
+
+    // MARK: Morphology helpers (square kernels; fine at 960 px)
+
+    /// Square-kernel dilation as two separable 1-D passes: O(w·h·r) instead of O(w·h·r²).
     private static func dilate(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] {
         guard r > 0 else { return m }
-        var out = m
-        for y in 0..<h { for x in 0..<w where m[y * w + x] != 0 {
-            for dy in -r...r { let ny = y + dy; guard ny >= 0, ny < h else { continue }
-                for dx in -r...r { let nx = x + dx; guard nx >= 0, nx < w else { continue }; out[ny * w + nx] = 1 } }
-        } }
+        var tmp = [UInt8](repeating: 0, count: w * h)
+        for y in 0..<h {
+            let row = y * w
+            for x in 0..<w where m[row + x] != 0 {
+                for nx in max(0, x - r)...min(w - 1, x + r) { tmp[row + nx] = 1 }
+            }
+        }
+        var out = [UInt8](repeating: 0, count: w * h)
+        for x in 0..<w {
+            for y in 0..<h where tmp[y * w + x] != 0 {
+                for ny in max(0, y - r)...min(h - 1, y + r) { out[ny * w + x] = 1 }
+            }
+        }
         return out
     }
 
+    /// Erosion = complement of dilating the complement (pixels outside the frame count as background).
     private static func erode(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] {
         guard r > 0 else { return m }
-        var out = m
-        for y in 0..<h { for x in 0..<w where m[y * w + x] != 0 {
-            var keep = true
-            outer: for dy in -r...r { let ny = y + dy
-                for dx in -r...r { let nx = x + dx
-                    if nx < 0 || ny < 0 || nx >= w || ny >= h || m[ny * w + nx] == 0 { keep = false; break outer } } }
-            if !keep { out[y * w + x] = 0 }
-        } }
-        return out
+        var inv = m.map { $0 == 0 ? UInt8(1) : UInt8(0) }
+        // Treat the frame border as background so shapes touching it erode there too.
+        for x in 0..<w { inv[x] = 1; inv[(h - 1) * w + x] = 1 }
+        for y in 0..<h { inv[y * w] = 1; inv[y * w + w - 1] = 1 }
+        let grown = dilate(inv, w, h, r)
+        return grown.map { $0 == 0 ? UInt8(1) : UInt8(0) }
     }
 
     private static func component(of m: [UInt8], _ w: Int, _ h: Int, containing seed: Int) -> [UInt8] {
@@ -165,12 +260,16 @@ enum PointSegmenter {
             if best == Int.max { return out }
         }
         var stack = [start]; out[start] = 1
-        while let i = stack.popLast() {
-            let x = i % w, y = i / w
-            for (nx, ny) in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] {
-                guard nx >= 0, ny >= 0, nx < w, ny < h else { continue }
-                let j = ny * w + nx
-                if m[j] != 0 && out[j] == 0 { out[j] = 1; stack.append(j) }
+        m.withUnsafeBufferPointer { src in
+            out.withUnsafeMutableBufferPointer { dst in
+                @inline(__always) func visit(_ j: Int) { if src[j] != 0 && dst[j] == 0 { dst[j] = 1; stack.append(j) } }
+                while let i = stack.popLast() {
+                    let x = i % w, y = i / w
+                    if x > 0 { visit(i - 1) }
+                    if x < w - 1 { visit(i + 1) }
+                    if y > 0 { visit(i - w) }
+                    if y < h - 1 { visit(i + w) }
+                }
             }
         }
         return out
