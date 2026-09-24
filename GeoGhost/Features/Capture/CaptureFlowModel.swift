@@ -24,9 +24,17 @@ final class CaptureFlowModel {
     private(set) var metadata = CaptureMetadata()
 
     private(set) var analysis: SegmentationAnalysis?
+    /// Vision instances currently selected.
     private(set) var selection = IndexSet()
+    /// Regions grown from the user's long-presses (used when Vision has no instance at that point).
+    private(set) var pointRegions: [PointSegmentation] = []
+    /// Ordered history so Undo can pop either kind of selection.
+    private enum SelectionStep { case instance(Int), region }
+    private var history: [SelectionStep] = []
     private(set) var previewImage: CGImage?
     private(set) var isRenderingPreview = false
+    private(set) var isPicking = false
+    private(set) var lastPickFailed = false
     private var selectionWasAdjusted = false
 
     /// Final cutout ready for saving.
@@ -67,37 +75,69 @@ final class CaptureFlowModel {
             await MainActor.run {
                 self.fullImage = image
                 if self.metadata.pixelWidth == 0 { self.metadata.pixelWidth = image.width; self.metadata.pixelHeight = image.height }
-                switch result {
-                case .success(let analysis) where analysis.hasInstances:
-                    self.analysis = analysis
-                    self.selection = analysis.defaultSelection()
-                    self.selectionWasAdjusted = false
-                    self.stage = .editing
-                    self.refreshPreview()
-                default:
-                    self.analysis = nil
-                    self.stage = .manualCrop
-                }
+                self.analysis = try? result.get()
+                self.selection = self.analysis?.hasInstances == true ? self.analysis!.defaultSelection() : []
+                self.pointRegions = []
+                self.history = []
+                self.selectionWasAdjusted = false
+                self.stage = .editing
+                self.refreshPreview()
             }
         }
     }
 
     // MARK: Editing
 
-    func toggleInstance(atNormalized point: CGPoint) {
-        guard let analysis, let idx = analysis.instance(atNormalized: point) else { return }
-        if selection.contains(idx) {
-            if selection.count > 1 { selection.remove(idx) }
-        } else {
-            selection.insert(idx)
+    /// Whether anything is selected (Vision instances or grown regions).
+    var hasSelection: Bool { !selection.isEmpty || !pointRegions.isEmpty }
+    var canUndo: Bool { !history.isEmpty }
+
+    /// Pick whatever is under a normalized point: a Vision instance if there is one, else grow a region there.
+    func pick(atNormalized point: CGPoint) {
+        lastPickFailed = false
+        if let analysis, let idx = analysis.instance(atNormalized: point) {
+            if selection.contains(idx) {
+                selection.remove(idx)
+                history.removeAll { if case .instance(let i) = $0 { return i == idx }; return false }
+            } else {
+                selection.insert(idx)
+                history.append(.instance(idx))
+            }
+            selectionWasAdjusted = true
+            refreshPreview()
+            return
         }
-        selectionWasAdjusted = true
+        guard let fullImage, !isPicking else { return }
+        isPicking = true
+        Task.detached(priority: .userInitiated) {
+            let region = PointSegmenter.segment(image: fullImage, atNormalized: point)
+            await MainActor.run {
+                self.isPicking = false
+                if let region {
+                    self.pointRegions.append(region)
+                    self.history.append(.region)
+                    self.selectionWasAdjusted = true
+                    self.refreshPreview()
+                } else {
+                    self.lastPickFailed = true
+                }
+            }
+        }
+    }
+
+    func undo() {
+        guard let last = history.popLast() else { return }
+        switch last {
+        case .instance(let i): selection.remove(i)
+        case .region: if !pointRegions.isEmpty { pointRegions.removeLast() }
+        }
         refreshPreview()
     }
 
-    func selectOnly(atNormalized point: CGPoint) {
-        guard let analysis, let idx = analysis.instance(atNormalized: point) else { return }
-        selection = [idx]
+    func clearSelection() {
+        selection = []
+        pointRegions = []
+        history = []
         selectionWasAdjusted = true
         refreshPreview()
     }
@@ -110,19 +150,51 @@ final class CaptureFlowModel {
     }
 
     var instanceCount: Int { analysis?.allInstances.count ?? 0 }
-    var selectedArea: Double { analysis?.area(of: selection) ?? 0 }
+    var selectedArea: Double { (analysis?.area(of: selection) ?? 0) + pointRegions.reduce(0) { $0 + $1.area } }
+
+    /// Full-resolution union mask of everything selected.
+    private func combinedMask() -> CIImage? {
+        guard let fullImage else { return nil }
+        var parts: [CIImage] = []
+        if let analysis, !selection.isEmpty, let buffer = try? analysis.scaledMask(for: selection) {
+            parts.append(CIImage(cvPixelBuffer: buffer))
+        }
+        let size = CGSize(width: fullImage.width, height: fullImage.height)
+        if !pointRegions.isEmpty {
+            // Upscale the hard low-res masks, blur to interpolate, then steepen so edges stay crisp.
+            let regions = pointRegions.map { CIImage(cgImage: $0.mask) }
+            if let u = MaskCompositor.union(regions, size: size) {
+                parts.append(MaskCompositor.sharpened(MaskCompositor.feathered(u, radius: 2.5)))
+            }
+        }
+        guard !parts.isEmpty else { return nil }
+        return MaskCompositor.union(parts, size: size).map { MaskCompositor.feathered($0, radius: 0.7) }
+    }
+
+    private func selectionBounds() -> CGRect? {
+        var rects: [CGRect] = []
+        if let analysis, !selection.isEmpty, let r = analysis.boundingRect(of: selection) { rects.append(r) }
+        rects += pointRegions.map(\.boundingRect)
+        guard var u = rects.first else { return nil }
+        for r in rects.dropFirst() { u = u.union(r) }
+        // Small margin so feathered edges aren't clipped.
+        return u.insetBy(dx: -0.004, dy: -0.004).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+    }
 
     private var previewTask: Task<Void, Never>?
+    private var previewGeneration = 0
     private func refreshPreview() {
-        guard let analysis else { return }
-        let sel = selection
+        guard let fullImage else { return }
+        previewGeneration += 1
+        let gen = previewGeneration
+        let mask = combinedMask()
         previewTask?.cancel()
         isRenderingPreview = true
         previewTask = Task.detached(priority: .userInitiated) {
-            let img = try? analysis.previewComposite(selected: sel)
+            let img = MaskCompositor.preview(image: fullImage, mask: mask)
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                if self.selection == sel { self.previewImage = img; self.isRenderingPreview = false }
+                if self.previewGeneration == gen { self.previewImage = img; self.isRenderingPreview = false }
             }
         }
     }
@@ -132,22 +204,19 @@ final class CaptureFlowModel {
     }
 
     func backToAutomatic() {
-        if analysis != nil { stage = .editing; refreshPreview() }
+        if fullImage != nil { stage = .editing; refreshPreview() }
     }
 
     // MARK: Finalize
 
-    /// Render the selected instances into a transparent cutout and open the save sheet.
+    /// Render the selection into a transparent cutout and open the save sheet.
     func finishAutomatic() async {
-        guard let analysis else { return }
-        let sel = selection
+        guard let fullImage, let mask = combinedMask(), let rect = selectionBounds() else { return }
         let adjusted = selectionWasAdjusted
-        let result = await Task.detached(priority: .userInitiated) { () -> (CGImage, CGRect)? in
-            guard let cg = try? analysis.cutout(for: sel) else { return nil }
-            let rect = analysis.boundingRect(of: sel) ?? CGRect(x: 0, y: 0, width: 1, height: 1)
-            return (cg, rect)
+        let cg = await Task.detached(priority: .userInitiated) {
+            MaskCompositor.cutout(image: fullImage, mask: mask, normalizedRect: rect)
         }.value
-        guard let (cg, rect) = result else { stage = .failed(SegmentationError.renderFailed.localizedDescription); return }
+        guard let cg else { stage = .failed(SegmentationError.renderFailed.localizedDescription); return }
         cutout = cg
         cutoutRect = rect
         segmentationMode = adjusted ? .autoAdjusted : .auto
@@ -169,6 +238,8 @@ final class CaptureFlowModel {
         fullImage = nil
         analysis = nil
         selection = []
+        pointRegions = []
+        history = []
         previewImage = nil
         cutout = nil
         metadata = CaptureMetadata()
