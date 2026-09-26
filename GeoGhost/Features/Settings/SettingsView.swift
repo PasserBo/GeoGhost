@@ -37,8 +37,8 @@ struct SettingsView: View {
                 }
                 Section("About") {
                     LabeledContent("Version", value: Bundle.main.versionString)
-                    Link("Privacy policy", destination: URL(string: "https://passerbo.github.io/GeoGhost/privacy")!)
-                    Link("Support", destination: URL(string: "https://github.com/PasserBo/GeoGhost/issues")!)
+                    Link("Privacy policy", destination: URL(string: "https://passerbo.github.io/GeoGhost/privacy/")!)
+                    Link("Support", destination: URL(string: "https://passerbo.github.io/GeoGhost/support/")!)
                 }
             }
             .scrollContentBackground(.hidden)

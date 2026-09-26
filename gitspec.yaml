@@ -1,0 +1,12 @@
+# GitSpec site configuration: docs/ is served as the GeoGhost documentation site.
+# The site is read-only (no `repository` block) — edits go through pull requests here.
+version: 1
+
+site:
+  title: GeoGhost
+
+spaces:
+  - key: geoghost-docs
+    title: GeoGhost
+    path: /
+    directory: ./docs

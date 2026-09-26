@@ -1,5 +1,7 @@
 # GeoGhost 文档索引
 
+用户页面：[隐私政策](privacy.md) · [支持](support.md)
+
 | 文档 | 内容 |
 |---|---|
 | [00-product-spec.md](00-product-spec.md) | 产品定位、用户、功能范围、商业模式 |
