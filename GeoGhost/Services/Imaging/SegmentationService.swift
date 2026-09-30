@@ -81,6 +81,22 @@ final class SegmentationAnalysis: @unchecked Sendable {
                       width: CGFloat(maxX - minX + 1) / CGFloat(maskWidth), height: CGFloat(maxY - minY + 1) / CGFloat(maskHeight))
     }
 
+    /// For each instance, the fraction of its pixels that fall inside a polygon (normalized full-photo coords).
+    func coverage(insidePolygon polygon: [CGPoint]) -> [Int: Double] {
+        // Polygon → mask pixel space.
+        let pts = polygon.map { CGPoint(x: ($0.x - frame.minX) / frame.width * CGFloat(maskWidth), y: ($0.y - frame.minY) / frame.height * CGFloat(maskHeight)) }
+        guard let inside = LassoSegmenter.rasterize(pts, maskWidth, maskHeight) else { return [:] }
+        var total: [Int: Int] = [:], hit: [Int: Int] = [:]
+        for i in 0..<maskLabels.count {
+            let l = Int(maskLabels[i]); guard l != 0 else { continue }
+            total[l, default: 0] += 1
+            if inside[i] != 0 { hit[l, default: 0] += 1 }
+        }
+        var out: [Int: Double] = [:]
+        for (l, t) in total { out[l] = Double(hit[l] ?? 0) / Double(t) }
+        return out
+    }
+
     /// Default pick: the instance under the frame center, else the largest one.
     func defaultSelection() -> IndexSet {
         guard hasInstances else { return [] }

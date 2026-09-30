@@ -16,6 +16,7 @@ import UIKit
 /// Zooming also scopes detection: Vision re-runs on the visible crop and region growth can't leave it.
 struct SegmentationEditorView: View {
     @Bindable var model: CaptureFlowModel
+    @Environment(\.dismiss) private var dismiss
     @State private var isFinishing = false
     @State private var showHint = true
 
@@ -25,6 +26,8 @@ struct SegmentationEditorView: View {
     @State private var gestureStartZoom: CGFloat = 1
     @State private var gestureStartPan: CGSize = .zero
     @State private var viewportSettleTask: Task<Void, Never>?
+    /// Lasso being drawn, in container points (for the overlay only; the model gets normalized points).
+    @State private var lassoTrail: [CGPoint] = []
 
     private let maxZoom: CGFloat = 4
 
@@ -64,8 +67,16 @@ struct SegmentationEditorView: View {
                         onDoubleTap: { pt in toggleZoom(at: pt, fitted: fitted, container: container) },
                         onPinch: { scale, state in pinch(scale, state: state, fitted: fitted, container: container) },
                         onPan: { t, state in drag(t, state: state, fitted: fitted, container: container) },
-                        onTwoFingerTap: { model.undo() }
+                        onTwoFingerTap: { model.undo() },
+                        onLasso: { pts, state in lasso(pts, state: state, fitted: fitted, container: container) }
                     )
+
+                    if lassoTrail.count > 1 {
+                        Path { p in p.addLines(lassoTrail) }
+                            .stroke(.white, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round, dash: [6, 5]))
+                            .shadow(color: .black.opacity(0.6), radius: 2)
+                            .allowsHitTesting(false)
+                    }
 
                     if model.isPicking || model.isAnalyzingViewport {
                         ProgressView().tint(.white).controlSize(.regular)
@@ -182,13 +193,34 @@ struct SegmentationEditorView: View {
         }
     }
 
+    private func lasso(_ pts: [CGPoint], state: UIGestureRecognizer.State, fitted: CGRect, container: CGSize) {
+        switch state {
+        case .began, .changed:
+            lassoTrail = pts
+            showHint = false
+        case .ended:
+            let normalized = pts.compactMap { normalizedUnclamped($0, fitted: fitted, container: container) }
+            lassoTrail = []
+            model.lassoEnded(normalized)
+        default:
+            lassoTrail = []
+        }
+    }
+
+    /// Like `normalized` but clamps instead of rejecting points slightly outside the photo.
+    private func normalizedUnclamped(_ c: CGPoint, fitted: CGRect, container: CGSize) -> CGPoint? {
+        guard fitted.width > 0 else { return nil }
+        let u = unzoomed(c, container: container)
+        return CGPoint(x: min(1, max(0, (u.x - fitted.minX) / fitted.width)), y: min(1, max(0, (u.y - fitted.minY) / fitted.height)))
+    }
+
     // MARK: Chrome
 
     private var hintBubble: some View {
         VStack(spacing: 6) {
             Image(systemName: "hand.tap.fill").font(.title2)
-            Text("Hold your finger on the piece to lift it").font(.subheadline.weight(.semibold))
-            Text("Pinch to zoom in on small pieces").font(.caption).foregroundStyle(.white.opacity(0.7))
+            Text("Hold on the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
+            Text("Pinch to zoom · two fingers to move").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
         .foregroundStyle(.white)
         .padding(16)
@@ -223,9 +255,11 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.hasSelection ? "Hold to add · tap a piece to remove" : "Hold on the piece you want").font(.subheadline.weight(.semibold))
+                Text(model.hasSelection ? "Hold or loop to add · tap a piece to remove" : "Hold on the piece, or loop around it").font(.subheadline.weight(.semibold))
                 if model.lastPickFailed {
-                    Text("Couldn't isolate that spot — zoom in or drag right while holding").font(.caption).foregroundStyle(.yellow)
+                    Text("Couldn't isolate that — try drawing a loop around it").font(.caption).foregroundStyle(.yellow)
+                } else if model.savedCount > 0 {
+                    Text("\(model.savedCount) saved from this photo").font(.caption).foregroundStyle(.white.opacity(0.7))
                 } else if zoom > 1.01 {
                     Text("Detecting within view · \(model.instanceCount) subjects").font(.caption).foregroundStyle(.white.opacity(0.7))
                 } else if model.instanceCount > 1 {
@@ -270,18 +304,23 @@ struct SegmentationEditorView: View {
                         .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .accessibilityLabel("Crop by hand")
-                Button {
-                    isFinishing = true
-                    Task { await model.finishAutomatic(); isFinishing = false }
-                } label: {
-                    HStack {
-                        if isFinishing { ProgressView().tint(.white) } else { Image(systemName: "checkmark") }
-                        Text("Use this cutout")
+                if !model.hasSelection && model.savedCount > 0 {
+                    Button { dismiss() } label: { Label("Done", systemImage: "checkmark") }
+                        .buttonStyle(PrimaryButtonStyle())
+                } else {
+                    Button {
+                        isFinishing = true
+                        Task { await model.finishAutomatic(); isFinishing = false }
+                    } label: {
+                        HStack {
+                            if isFinishing { ProgressView().tint(.white) } else { Image(systemName: "checkmark") }
+                            Text("Use this cutout")
+                        }
                     }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview || model.hold != nil)
+                    .opacity(model.hasSelection ? 1 : 0.5)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview || model.hold != nil)
-                .opacity(model.hasSelection ? 1 : 0.5)
             }
         }
         .foregroundStyle(.white)
@@ -319,6 +358,7 @@ struct GestureHelpView: View {
         List {
             Section("Selecting") {
                 row("hand.tap.fill", "Hold on a piece", "Shows what will be selected. Release to add it.")
+                row("lasso", "Draw a loop around a piece", "Everything inside that doesn't match the background is selected — best for busy stickers with text.")
                 row("arrow.left.and.right", "Hold, then drag sideways", "Right selects more of the surrounding colour, left selects less.")
                 row("arrow.up", "Hold, then swipe up", "Also take the shape wrapping it — a sticker's border around its artwork.")
                 row("arrow.down", "Hold, then swipe down", "Cancel without selecting.")
@@ -331,6 +371,7 @@ struct GestureHelpView: View {
             }
             Section("Looking closer") {
                 row("plus.magnifyingglass", "Pinch or double-tap", "Zoom. Detection re-runs on what's visible, so small stickers become selectable.")
+                row("hand.draw", "Two-finger drag", "Move around while zoomed in.")
             }
         }
         .navigationTitle("Gestures")
@@ -360,6 +401,7 @@ private struct EditorGestureView: UIViewRepresentable {
     var onPinch: (CGFloat, UIGestureRecognizer.State) -> Void
     var onPan: (CGSize, UIGestureRecognizer.State) -> Void
     var onTwoFingerTap: () -> Void
+    var onLasso: ([CGPoint], UIGestureRecognizer.State) -> Void
 
     func makeUIView(context: Context) -> UIView {
         let v = UIView()
@@ -369,7 +411,9 @@ private struct EditorGestureView: UIViewRepresentable {
 
         let hold = UILongPressGestureRecognizer(target: c, action: #selector(Coordinator.hold(_:)))
         hold.minimumPressDuration = 0.3
-        hold.allowableMovement = .greatestFiniteMagnitude   // we track the drag ourselves
+        // Movement beyond this *before* the 0.3 s elapses makes the hold fail, which is what lets a
+        // drawing stroke become a lasso. Once the hold has begun, movement is unrestricted.
+        hold.allowableMovement = 12
         let tap = UITapGestureRecognizer(target: c, action: #selector(Coordinator.tap(_:)))
         let doubleTap = UITapGestureRecognizer(target: c, action: #selector(Coordinator.doubleTap(_:)))
         doubleTap.numberOfTapsRequired = 2
@@ -377,15 +421,18 @@ private struct EditorGestureView: UIViewRepresentable {
         twoFingerTap.numberOfTouchesRequired = 2
         let pinch = UIPinchGestureRecognizer(target: c, action: #selector(Coordinator.pinch(_:)))
         let pan = UIPanGestureRecognizer(target: c, action: #selector(Coordinator.pan(_:)))
-        pan.minimumNumberOfTouches = 1
+        pan.minimumNumberOfTouches = 2
         pan.maximumNumberOfTouches = 2
+        let lasso = UIPanGestureRecognizer(target: c, action: #selector(Coordinator.lasso(_:)))
+        lasso.minimumNumberOfTouches = 1
+        lasso.maximumNumberOfTouches = 1
 
         tap.require(toFail: doubleTap)
-        pan.require(toFail: hold)   // a hold that starts wins over panning
+        lasso.require(toFail: hold)   // a hold that starts wins over drawing
         pinch.delegate = c
         pan.delegate = c
 
-        [hold, tap, doubleTap, twoFingerTap, pinch, pan].forEach(v.addGestureRecognizer)
+        [hold, tap, doubleTap, twoFingerTap, pinch, pan, lasso].forEach(v.addGestureRecognizer)
         return v
     }
 
@@ -421,6 +468,18 @@ private struct EditorGestureView: UIViewRepresentable {
         @objc func pan(_ g: UIPanGestureRecognizer) {
             let t = g.translation(in: g.view)
             parent.onPan(CGSize(width: t.x, height: t.y), g.state)
+        }
+
+        private var trail: [CGPoint] = []
+        @objc func lasso(_ g: UIPanGestureRecognizer) {
+            let p = g.location(in: g.view)
+            switch g.state {
+            case .began: trail = [p]
+            case .changed: if let last = trail.last, hypot(p.x - last.x, p.y - last.y) > 2 { trail.append(p) }
+            default: break
+            }
+            parent.onLasso(trail, g.state)
+            if g.state == .ended || g.state == .cancelled || g.state == .failed { trail = [] }
         }
 
         // Pinch and pan together, so zooming with a drifting pinch also pans.

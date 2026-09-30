@@ -95,6 +95,17 @@ extension Artwork {
 
     var tagList: [Tag] { tags ?? [] }
 
+    /// The capture metadata this artwork was saved with (for re-editing its photo).
+    var captureMetadata: CaptureMetadata {
+        var m = CaptureMetadata()
+        m.capturedAt = capturedAt; m.capturedAtIsEstimated = capturedAtIsEstimated
+        m.latitude = latitude; m.longitude = longitude; m.horizontalAccuracy = horizontalAccuracy
+        m.altitude = altitude; m.heading = heading; m.locationSource = locationSource
+        m.deviceModel = deviceModel; m.lensModel = lensModel
+        m.pixelWidth = imagePixelWidth; m.pixelHeight = imagePixelHeight
+        return m
+    }
+
     func apply(_ metadata: CaptureMetadata) {
         capturedAt = metadata.capturedAt
         capturedAtIsEstimated = metadata.capturedAtIsEstimated

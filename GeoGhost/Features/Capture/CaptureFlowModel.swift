@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import os
 import SwiftUI
 
 /// Drives one capture: photo → segmentation → selection → save.
@@ -35,6 +36,12 @@ final class CaptureFlowModel {
 
     /// Committed selection.
     private(set) var pieces: [SelectedPiece] = []
+    /// Regions already saved as artworks from this photo (this session or earlier); shown ghosted, not selectable.
+    private(set) var savedRegions: [CGRect] = []
+    /// Artworks saved from this photo during this editing session.
+    private(set) var savedCount = 0
+    /// Lasso in progress / just completed (normalized full-photo points), for the overlay.
+    private(set) var lassoPoints: [CGPoint] = []
     private var undoStack: [[SelectedPiece]] = []
     private var selectionWasAdjusted = false
 
@@ -94,6 +101,14 @@ final class CaptureFlowModel {
         begin(data: data, metadata: m, ext: Self.fileExtension(for: data))
     }
 
+    /// Re-open a saved artwork's original photo to pick more pieces from it.
+    func receiveStoredPhoto(_ data: Data, metadata: CaptureMetadata, alreadySaved: [CGRect]) {
+        var m = metadata.merging(fallback: ImageMetadataReader.read(data))
+        if m.capturedAt == nil { m.capturedAt = Date(); m.capturedAtIsEstimated = true }
+        savedRegions = alreadySaved
+        begin(data: data, metadata: m, ext: Self.fileExtension(for: data))
+    }
+
     private func begin(data: Data, metadata: CaptureMetadata, ext: String) {
         originalData = data
         originalExtension = ext
@@ -112,7 +127,8 @@ final class CaptureFlowModel {
                 self.analysis = try? result.get()
                 self.pieces = []
                 if let a = self.analysis, a.hasInstances, let idx = a.defaultSelection().first {
-                    self.pieces = [SelectedPiece(vision: a, instance: idx)]
+                    let piece = SelectedPiece(vision: a, instance: idx)
+                    if !self.isSaved(piece.rect) { self.pieces = [piece] }
                 }
                 self.undoStack = []
                 self.selectionWasAdjusted = false
@@ -175,12 +191,94 @@ final class CaptureFlowModel {
         return nil
     }
 
+    // MARK: Saved regions (multiple pieces per photo)
+
+    /// A candidate whose bounds mostly sit inside an already-saved region is that saved piece.
+    private func isSaved(_ rect: CGRect) -> Bool {
+        savedRegions.contains { saved in
+            let inter = saved.intersection(rect)
+            guard !inter.isEmpty, rect.width * rect.height > 0 else { return false }
+            return (inter.width * inter.height) / (rect.width * rect.height) > 0.7
+        }
+    }
+
+    /// After a save that keeps the editor open: ghost what was saved and start a fresh selection.
+    func markSaved() {
+        savedRegions += pieces.map(\.rect)
+        savedCount += 1
+        pieces = []
+        undoStack = []
+        cutout = nil
+        showSaveSheet = false
+        refreshPreview()
+    }
+
+    // MARK: Lasso (draw a loop around the piece)
+
+    func lassoChanged(_ points: [CGPoint]) { lassoPoints = points }
+
+    /// Close the loop and select what's inside: Vision instances that sit inside it, else a
+    /// background-model segmentation of the interior.
+    func lassoEnded(_ points: [CGPoint]) {
+        lassoPoints = []
+        let log = Logger(subsystem: "com.passerbo.geoghost", category: "Lasso")
+        log.info("lasso ended with \(points.count) points")
+        guard let fullImage, points.count >= 8 else { return }
+        lastPickFailed = false
+        // Simplify to ≤ 64 vertices.
+        let step = max(1, points.count / 64)
+        let polygon = stride(from: 0, to: points.count, by: step).map { points[$0] }
+        var bbox = polygon.reduce(CGRect.null) { $0.union(CGRect(origin: $1, size: .zero)) }
+        guard bbox.width > 0.01, bbox.height > 0.01 else { return }
+        bbox = bbox.insetBy(dx: -bbox.width * 0.15, dy: -bbox.height * 0.15).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+        let prepared = activePrepared
+        let scopedInside = prepared.map { $0.frame.contains(bbox) } ?? false
+        log.info("bbox \(bbox.debugDescription, privacy: .public) prepared=\(prepared != nil) scopedInside=\(scopedInside) image \(fullImage.width)x\(fullImage.height)")
+        isPicking = true
+        Task.detached(priority: .userInitiated) {
+            var result: [SelectedPiece] = []
+            // 1. Vision on a crop around the loop: instances that are ≥ 80% inside the loop.
+            if let a = try? SegmentationService.analyze(fullImage, frame: bbox), a.hasInstances {
+                let cov = a.coverage(insidePolygon: polygon)
+                let picked = IndexSet(cov.filter { $0.value >= 0.8 }.map(\.key))
+                let loopArea = Double(bbox.width * bbox.height) * 0.7
+                if !picked.isEmpty, a.area(of: picked) >= loopArea * 0.15 {
+                    result = picked.map { SelectedPiece(vision: a, instance: $0) }
+                }
+            }
+            // 2. Background-model segmentation inside the loop.
+            if result.isEmpty {
+                let prep = scopedInside ? prepared : PointSegmenter.Prepared(image: fullImage, frame: bbox)
+                log.info("prep \(prep?.width ?? -1)x\(prep?.height ?? -1) frame \(prep?.frame.debugDescription ?? "nil", privacy: .public)")
+                if let prep, let region = LassoSegmenter.segment(prep, polygon: polygon) {
+                    log.info("lasso region area \(region.area)")
+                    result = [SelectedPiece(region: region)]
+                } else {
+                    log.info("lasso segmentation returned nil")
+                }
+            }
+            await MainActor.run {
+                self.isPicking = false
+                guard !result.isEmpty else { self.lastPickFailed = true; return }
+                var next = self.pieces
+                next.append(contentsOf: result)
+                self.commit(next)
+                if let last = result.last { self.makeHighlight(for: last) }
+                self.refreshPreview()
+            }
+        }
+    }
+
     // MARK: Hold gesture (press = try, release = commit, swipe down = throw away)
 
     func beginHold(at p: CGPoint) {
         guard fullImage != nil else { return }
         lastPickFailed = false
         pendingCommit = nil
+        if savedRegions.contains(where: { $0.contains(p) }) && !pieces.contains(where: { $0.contains(p) }) {
+            lastPickFailed = true   // already saved from this photo
+            return
+        }
         let target = pieces.last { $0.contains(p) }
         var h = Hold(origin: p, target: target, intent: target == nil ? .add : .replace)
         // Drilling into an existing piece always uses region growth (that's what "smaller" means here).
@@ -416,10 +514,11 @@ final class CaptureFlowModel {
         let committedShown = (hold?.intent == .replace || hold?.intent == .delete) ? hidingTarget.flatMap { combinedMask(of: $0) } : committed
         // When something is only tentatively selected, dim the rest so the lifted piece stands out.
         let dimAll = hold?.tentative != nil && committedShown == nil
+        let savedMask = savedRegions.isEmpty ? nil : MaskCompositor.rectsMask(savedRegions, size: CGSize(width: fullImage.width, height: fullImage.height))
         previewTask?.cancel()
         isRenderingPreview = true
         previewTask = Task.detached(priority: .userInitiated) {
-            let img = MaskCompositor.preview(image: fullImage, mask: committedShown, dimWhenEmpty: dimAll)
+            let img = MaskCompositor.preview(image: fullImage, mask: committedShown, saved: savedMask, dimWhenEmpty: dimAll)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 if self.previewGeneration == gen { self.previewImage = img; self.isRenderingPreview = false }
@@ -471,6 +570,9 @@ final class CaptureFlowModel {
         viewport = CGRect(x: 0, y: 0, width: 1, height: 1)
         pieces = []
         undoStack = []
+        savedRegions = []
+        savedCount = 0
+        lassoPoints = []
         hold = nil
         lastPickHighlight = nil
         previewImage = nil

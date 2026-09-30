@@ -10,6 +10,8 @@ struct ArtworkDetailView: View {
     @State private var isEditing = false
     @State private var confirmDelete = false
     @State private var exportItem: ExportItem?
+    @State private var reopen: CaptureView.StoredPhoto?
+    @Query private var siblings: [Artwork]
 
     var body: some View {
         ScrollView {
@@ -35,6 +37,7 @@ struct ArtworkDetailView: View {
                 Menu {
                     Button { isEditing = true } label: { Label("Edit details", systemImage: "pencil") }
                     Button { export() } label: { Label("Share sticker", systemImage: "square.and.arrow.up") }
+                    Button { reopenPhoto() } label: { Label("Pick more from this photo", systemImage: "plus.viewfinder") }
                     Divider()
                     Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
                 } label: { Image(systemName: "ellipsis.circle") }
@@ -42,6 +45,9 @@ struct ArtworkDetailView: View {
         }
         .sheet(isPresented: $isEditing) { EditArtworkSheet(artwork: artwork) }
         .sheet(item: $exportItem) { item in ShareSheet(items: [item.url]) }
+        .fullScreenCover(item: Binding(get: { reopen.map { ReopenItem(photo: $0) } }, set: { if $0 == nil { reopen = nil } })) { item in
+            CaptureView(stored: item.photo)
+        }
         .confirmationDialog("Delete this piece?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { delete() }
         } message: { Text("The cutout and the original photo will be removed from GeoGhost.") }
@@ -219,6 +225,18 @@ struct ArtworkDetailView: View {
         }
     }
 
+    /// Reopen the original photo in the picker; pieces already saved from it (by pixel size + capture time) are ghosted.
+    private func reopenPhoto() {
+        let id = artwork.id, imageID = artwork.originalImageID
+        let metadata = artwork.captureMetadata
+        let sameShot = siblings.filter { $0.capturedAt == artwork.capturedAt && $0.imagePixelWidth == artwork.imagePixelWidth && $0.imagePixelHeight == artwork.imagePixelHeight }
+        let saved = sameShot.map(\.cutoutRect)
+        Task.detached {
+            guard let data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return }
+            await MainActor.run { reopen = CaptureView.StoredPhoto(data: data, metadata: metadata, savedRegions: saved) }
+        }
+    }
+
     private func delete() {
         let id = artwork.id
         let series = artwork.series
@@ -231,6 +249,7 @@ struct ArtworkDetailView: View {
 }
 
 struct ExportItem: Identifiable { let id = UUID(); let url: URL }
+private struct ReopenItem: Identifiable { let id = UUID(); let photo: CaptureView.StoredPhoto }
 
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]

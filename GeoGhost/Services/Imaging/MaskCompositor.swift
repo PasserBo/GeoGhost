@@ -50,7 +50,7 @@ enum MaskCompositor {
     }
 
     /// Dimmed image with committed selection at full brightness and a tentative (still-held) selection tinted.
-    static func preview(image: CGImage, mask: CIImage?, dimWhenEmpty: Bool = false, maxLongEdge: Int = 1280) -> CGImage? {
+    static func preview(image: CGImage, mask: CIImage?, saved: CIImage? = nil, dimWhenEmpty: Bool = false, maxLongEdge: Int = 1280) -> CGImage? {
         let base = CIImage(cgImage: image)
         var out: CIImage = base
         if mask != nil || dimWhenEmpty {
@@ -61,9 +61,23 @@ enum MaskCompositor {
                 out = base.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: mask])
             }
         }
+        if let saved {
+            // Already-saved pieces: desaturated and washed out so they read as "done".
+            let ghost = base.applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.0, kCIInputBrightnessKey: 0.15, kCIInputContrastKey: 0.6])
+            out = ghost.applyingFilter("CIBlendWithMask", parameters: [kCIInputBackgroundImageKey: out, kCIInputMaskImageKey: saved])
+        }
         let scale = min(1, CGFloat(maxLongEdge) / max(base.extent.width, base.extent.height))
         let scaled = out.transformed(by: .init(scaleX: scale, y: scale))
         return ImageProcessing.ciContext.createCGImage(scaled, from: scaled.extent.integral)
+    }
+
+    /// Union of normalized rects (origin top-left) as a full-size mask.
+    static func rectsMask(_ rects: [CGRect], size: CGSize) -> CIImage {
+        let canvas = CIImage(color: .black).cropped(to: CGRect(origin: .zero, size: size))
+        return rects.reduce(canvas) { acc, r in
+            let px = CGRect(x: r.minX * size.width, y: (1 - r.maxY) * size.height, width: r.width * size.width, height: r.height * size.height)
+            return CIImage(color: .white).cropped(to: px).composited(over: acc)
+        }
     }
 
     /// White ring hugging the mask's edge (for the shimmering "lift" outline), cropped to `normalizedRect`.

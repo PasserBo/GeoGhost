@@ -260,34 +260,8 @@ enum PointSegmenter {
         return b
     }
 
-    // MARK: Morphology (separable square kernels)
-
-    private static func dilate(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] {
-        guard r > 0 else { return m }
-        var tmp = [UInt8](repeating: 0, count: w * h)
-        for y in 0..<h {
-            let row = y * w
-            for x in 0..<w where m[row + x] != 0 {
-                for nx in max(0, x - r)...min(w - 1, x + r) { tmp[row + nx] = 1 }
-            }
-        }
-        var out = [UInt8](repeating: 0, count: w * h)
-        for x in 0..<w {
-            for y in 0..<h where tmp[y * w + x] != 0 {
-                for ny in max(0, y - r)...min(h - 1, y + r) { out[ny * w + x] = 1 }
-            }
-        }
-        return out
-    }
-
-    private static func erode(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] {
-        guard r > 0 else { return m }
-        var inv = m.map { $0 == 0 ? UInt8(1) : UInt8(0) }
-        for x in 0..<w { inv[x] = 1; inv[(h - 1) * w + x] = 1 }
-        for y in 0..<h { inv[y * w] = 1; inv[y * w + w - 1] = 1 }
-        let grown = dilate(inv, w, h, r)
-        return grown.map { $0 == 0 ? UInt8(1) : UInt8(0) }
-    }
+    private static func dilate(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] { Morphology.dilate(m, w, h, r) }
+    private static func erode(_ m: [UInt8], _ w: Int, _ h: Int, _ r: Int) -> [UInt8] { Morphology.erode(m, w, h, r) }
 
     private static func component(of m: [UInt8], _ w: Int, _ h: Int, containing seed: Int) -> [UInt8] {
         var out = [UInt8](repeating: 0, count: w * h)

@@ -4,6 +4,14 @@ import SwiftUI
 
 /// Full-screen capture flow: camera → segmentation editor → save.
 struct CaptureView: View {
+    /// A saved artwork's original photo to reopen instead of the camera.
+    struct StoredPhoto {
+        let data: Data
+        let metadata: CaptureMetadata
+        let savedRegions: [CGRect]
+    }
+    var stored: StoredPhoto?
+
     @Environment(\.dismiss) private var dismiss
     @Environment(AppServices.self) private var services
     @State private var model = CaptureFlowModel()
@@ -40,18 +48,29 @@ struct CaptureView: View {
         .statusBarHidden(model.stage == .camera)
         .sheet(isPresented: Bindable(model).showSaveSheet) {
             if let cutout = model.cutout {
-                SaveArtworkSheet(model: model, cutout: cutout) {
-                    dismiss()
+                SaveArtworkSheet(model: model, cutout: cutout) { keepEditing in
+                    if keepEditing { model.markSaved() } else { dismiss() }
                 }
                 .interactiveDismissDisabled()
             }
         }
-        .onAppear { services.location.start() }
+        .onAppear {
+            if let stored {
+                model.receiveStoredPhoto(stored.data, metadata: stored.metadata, alreadySaved: stored.savedRegions)
+            } else {
+                services.location.start()
+            }
+        }
         .onDisappear { services.location.stop(); services.camera.stop() }
         .onChange(of: model.stage) { _, new in
-            if new == .camera { Task { await services.camera.start() } } else { services.camera.stop() }
+            if new == .camera {
+                // Reopened photos have no camera to go back to.
+                if stored != nil { dismiss() } else { Task { await services.camera.start() } }
+            } else {
+                services.camera.stop()
+            }
         }
-        .task { await services.camera.start() }
+        .task { if stored == nil { await services.camera.start() } }
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             Task {

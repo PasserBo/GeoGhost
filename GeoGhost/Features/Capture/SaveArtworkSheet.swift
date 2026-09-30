@@ -6,7 +6,8 @@ import SwiftUI
 struct SaveArtworkSheet: View {
     @Bindable var model: CaptureFlowModel
     let cutout: CGImage
-    let onSaved: () -> Void
+    /// `keepEditing` = the user wants to pick another piece from the same photo.
+    let onSaved: (_ keepEditing: Bool) -> Void
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -76,13 +77,23 @@ struct SaveArtworkSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Back") { dismiss() } }
             }
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    Task { await save() }
-                } label: {
-                    HStack { if isSaving { ProgressView().tint(.white) }; Text("Save") }
+                VStack(spacing: 8) {
+                    Button {
+                        Task { await save(keepEditing: false) }
+                    } label: {
+                        HStack { if isSaving { ProgressView().tint(.white) }; Text("Save") }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(isSaving)
+                    Button {
+                        Task { await save(keepEditing: true) }
+                    } label: {
+                        Label("Save and pick another from this photo", systemImage: "plus.square.on.square")
+                            .font(.subheadline.weight(.semibold))
+                    }
+                    .disabled(isSaving)
+                    .padding(.vertical, 4)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(isSaving)
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(Theme.paper)
             }
@@ -136,7 +147,7 @@ struct SaveArtworkSheet: View {
         if let suggestion, !kindWasSetByUser { kind = suggestion.kind }
     }
 
-    private func save() async {
+    private func save(keepEditing: Bool) async {
         isSaving = true
         defer { isSaving = false }
         guard let originalData = model.originalData else { return }
@@ -147,7 +158,7 @@ struct SaveArtworkSheet: View {
             tags: tagText.split(whereSeparator: { $0 == " " || $0 == "," }).map(String.init), place: place)
         do {
             try await ArtworkSaver.save(input, in: context)
-            onSaved()
+            onSaved(keepEditing)
         } catch {
             errorMessage = error.localizedDescription
         }
