@@ -7,7 +7,11 @@ final class ImageCache: @unchecked Sendable {
     init() { cache.countLimit = 600 }
     func image(for key: String) -> CGImage? { cache.object(forKey: key as NSString) }
     func set(_ image: CGImage, for key: String) { cache.setObject(image, forKey: key as NSString) }
-    func remove(prefix: String) { cache.removeAllObjects() }
+    /// NSCache can't enumerate keys, so evict known variants for this artwork explicitly.
+    func remove(prefix: String) {
+        guard !prefix.isEmpty else { cache.removeAllObjects(); return }
+        for id in ["cutout.png", "thumb.png"] { cache.removeObject(forKey: "\(prefix)/\(id)" as NSString) }
+    }
 }
 
 /// Loads one of an artwork's stored images asynchronously.

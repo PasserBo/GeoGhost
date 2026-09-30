@@ -52,6 +52,16 @@ actor ImageStore {
         return SavedImages(originalID: originalID, cutoutID: "cutout.png", thumbnailID: "thumb.png")
     }
 
+    /// Overwrite cutout.png and thumb.png in place; the original is untouched.
+    func replaceCutout(artworkID: UUID, cutout: CGImage) throws {
+        let dir = directory(for: artworkID)
+        guard let cutoutPNG = ImageProcessing.pngData(cutout) else { throw ImageStoreError.encodingFailed }
+        try cutoutPNG.write(to: dir.appending(path: "cutout.png"), options: .atomic)
+        let thumb = ImageProcessing.downsample(cutout, maxLongEdge: Self.thumbnailLongEdge)
+        guard let thumbPNG = ImageProcessing.pngData(thumb) else { throw ImageStoreError.encodingFailed }
+        try thumbPNG.write(to: dir.appending(path: "thumb.png"), options: .atomic)
+    }
+
     func delete(artworkID: UUID) {
         let dir = directory(for: artworkID)
         try? FileManager.default.removeItem(at: dir)

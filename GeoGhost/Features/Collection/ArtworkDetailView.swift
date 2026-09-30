@@ -37,7 +37,8 @@ struct ArtworkDetailView: View {
                 Menu {
                     Button { isEditing = true } label: { Label("Edit details", systemImage: "pencil") }
                     Button { export() } label: { Label("Share sticker", systemImage: "square.and.arrow.up") }
-                    Button { reopenPhoto() } label: { Label("Pick more from this photo", systemImage: "plus.viewfinder") }
+                    Button { reopenPhoto(recut: true) } label: { Label("Edit this piece", systemImage: "scissors") }
+                    Button { reopenPhoto() } label: { Label("Add another from this photo", systemImage: "plus.viewfinder") }
                     Divider()
                     Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
                 } label: { Image(systemName: "ellipsis.circle") }
@@ -226,14 +227,17 @@ struct ArtworkDetailView: View {
     }
 
     /// Reopen the original photo in the picker; pieces already saved from it (by pixel size + capture time) are ghosted.
-    private func reopenPhoto() {
+    /// `recut` = re-select this same piece (its own region is not ghosted; the result replaces it).
+    private func reopenPhoto(recut: Bool = false) {
         let id = artwork.id, imageID = artwork.originalImageID
         let metadata = artwork.captureMetadata
         let sameShot = siblings.filter { $0.capturedAt == artwork.capturedAt && $0.imagePixelWidth == artwork.imagePixelWidth && $0.imagePixelHeight == artwork.imagePixelHeight }
-        let saved = sameShot.map(\.cutoutRect)
-        Task.detached {
-            guard let data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return }
-            await MainActor.run { reopen = CaptureView.StoredPhoto(data: data, metadata: metadata, savedRegions: saved) }
+        let saved = sameShot.filter { !recut || $0.id != id }.map(\.cutoutRect)
+        // Load off the main thread, then build the (main-actor-bound) StoredPhoto back on it.
+        Task {
+            let data = await Task.detached { ImageStore.shared.loadData(artworkID: id, imageID: imageID) }.value
+            guard let data else { return }
+            reopen = CaptureView.StoredPhoto(data: data, metadata: metadata, savedRegions: saved, replacing: recut ? artwork : nil)
         }
     }
 

@@ -9,6 +9,8 @@ struct CaptureView: View {
         let data: Data
         let metadata: CaptureMetadata
         let savedRegions: [CGRect]
+        /// When set, the new cutout replaces this artwork's cutout instead of creating a new piece.
+        var replacing: Artwork? = nil
     }
     var stored: StoredPhoto?
 
@@ -48,10 +50,15 @@ struct CaptureView: View {
         .statusBarHidden(model.stage == .camera)
         .sheet(isPresented: Bindable(model).showSaveSheet) {
             if let cutout = model.cutout {
-                SaveArtworkSheet(model: model, cutout: cutout) { keepEditing in
-                    if keepEditing { model.markSaved() } else { dismiss() }
+                if let target = stored?.replacing {
+                    RecutConfirmSheet(model: model, cutout: cutout, artwork: target) { dismiss() }
+                        .interactiveDismissDisabled()
+                } else {
+                    SaveArtworkSheet(model: model, cutout: cutout) { keepEditing in
+                        if keepEditing { model.markSaved() } else { dismiss() }
+                    }
+                    .interactiveDismissDisabled()
                 }
-                .interactiveDismissDisabled()
             }
         }
         .onAppear {

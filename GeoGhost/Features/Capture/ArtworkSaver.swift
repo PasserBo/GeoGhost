@@ -50,6 +50,27 @@ enum ArtworkSaver {
         Task { await enrich(artworkID: id, cutout: cutout, needsPlace: input.place == nil, context: context) }
     }
 
+    /// Swap an artwork's cutout for a new one from the same photo; metadata and relations are untouched.
+    /// The feature print is recomputed so series matching reflects the new cutout.
+    static func replaceCutout(of artwork: Artwork, with cutout: CGImage, rect: CGRect, mode: SegmentationMode, in context: ModelContext) async throws {
+        let id = artwork.id
+        try await ImageStore.shared.replaceCutout(artworkID: id, cutout: cutout)
+        ImageCache.shared.remove(prefix: id.uuidString)
+        artwork.cutoutRect = rect
+        artwork.segmentationMode = mode
+        try context.save()
+
+        let printAndColor = await Task.detached(priority: .utility) { () -> (Data?, String?) in
+            (try? FeaturePrintService.featurePrint(for: cutout), ImageProcessing.dominantColorHex(ImageProcessing.downsample(cutout, maxLongEdge: 64)))
+        }.value
+        artwork.featurePrint = printAndColor.0
+        artwork.dominantColorHex = printAndColor.1
+        try? context.save()
+        if let print = printAndColor.0, artwork.series == nil {
+            await SeriesAssigner.assign(artwork, print: print, in: context)
+        }
+    }
+
     static func tags(named names: [String], in context: ModelContext) throws -> [Tag] {
         var result: [Tag] = []
         for raw in names {
