@@ -40,6 +40,9 @@ final class CaptureFlowModel {
     private(set) var savedRegions: [CGRect] = []
     /// Artworks saved from this photo during this editing session.
     private(set) var savedCount = 0
+    /// Editing an existing piece: its saved cutout is preselected and any new selection replaces it.
+    private(set) var isEditingExisting = false
+    private var existingCutout: (image: CGImage, rect: CGRect)?
     /// Lasso in progress / just completed (normalized full-photo points), for the overlay.
     private(set) var lassoPoints: [CGPoint] = []
     private var undoStack: [[SelectedPiece]] = []
@@ -102,10 +105,13 @@ final class CaptureFlowModel {
     }
 
     /// Re-open a saved artwork's original photo to pick more pieces from it.
-    func receiveStoredPhoto(_ data: Data, metadata: CaptureMetadata, alreadySaved: [CGRect]) {
+    /// - Parameter existing: when editing a piece, its current cutout (with alpha) and normalized rect.
+    func receiveStoredPhoto(_ data: Data, metadata: CaptureMetadata, alreadySaved: [CGRect], existing: (image: CGImage, rect: CGRect)? = nil) {
         var m = metadata.merging(fallback: ImageMetadataReader.read(data))
         if m.capturedAt == nil { m.capturedAt = Date(); m.capturedAtIsEstimated = true }
         savedRegions = alreadySaved
+        isEditingExisting = existing != nil
+        existingCutout = existing
         begin(data: data, metadata: m, ext: Self.fileExtension(for: data))
     }
 
@@ -125,10 +131,10 @@ final class CaptureFlowModel {
                 self.fullImage = image
                 if self.metadata.pixelWidth == 0 { self.metadata.pixelWidth = image.width; self.metadata.pixelHeight = image.height }
                 self.analysis = try? result.get()
+                // No silent preselection: every selected piece is one the user made (or, when editing, the saved one).
                 self.pieces = []
-                if let a = self.analysis, a.hasInstances, let idx = a.defaultSelection().first {
-                    let piece = SelectedPiece(vision: a, instance: idx)
-                    if !self.isSaved(piece.rect) { self.pieces = [piece] }
+                if let ex = self.existingCutout {
+                    self.pieces = [SelectedPiece(storedCutout: ex.image, rect: ex.rect, imageSize: CGSize(width: image.width, height: image.height))]
                 }
                 self.undoStack = []
                 self.selectionWasAdjusted = false
@@ -379,7 +385,10 @@ final class CaptureFlowModel {
         refreshPreview()
     }
 
-    private func commit(_ next: [SelectedPiece]) {
+    private func commit(_ proposed: [SelectedPiece]) {
+        var next = proposed
+        // Editing an existing piece: the first fresh selection takes the place of the saved cutout.
+        if isEditingExisting, next.contains(where: { !$0.isStored }) { next.removeAll(where: \.isStored) }
         undoStack.append(pieces)
         if undoStack.count > 30 { undoStack.removeFirst() }
         pieces = next
@@ -572,6 +581,8 @@ final class CaptureFlowModel {
         undoStack = []
         savedRegions = []
         savedCount = 0
+        isEditingExisting = false
+        existingCutout = nil
         lassoPoints = []
         hold = nil
         lastPickHighlight = nil

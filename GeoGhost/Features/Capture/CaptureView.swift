@@ -63,7 +63,11 @@ struct CaptureView: View {
         }
         .onAppear {
             if let stored {
-                model.receiveStoredPhoto(stored.data, metadata: stored.metadata, alreadySaved: stored.savedRegions)
+                var existing: (image: CGImage, rect: CGRect)?
+                if let a = stored.replacing, let cg = ImageStore.shared.loadImage(artworkID: a.id, imageID: a.cutoutImageID) {
+                    existing = (cg, a.cutoutRect)
+                }
+                model.receiveStoredPhoto(stored.data, metadata: stored.metadata, alreadySaved: stored.savedRegions, existing: existing)
             } else {
                 services.location.start()
             }

@@ -255,9 +255,13 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.hasSelection ? "Hold or loop to add · tap a piece to remove" : "Hold on the piece, or loop around it").font(.subheadline.weight(.semibold))
+                Text(model.isEditingExisting ? "Hold or loop to re-select this piece" : model.hasSelection ? "Hold or loop to add · tap a piece to remove" : "Hold on the piece, or loop around it").font(.subheadline.weight(.semibold))
                 if model.lastPickFailed {
                     Text("Couldn't isolate that — try drawing a loop around it").font(.caption).foregroundStyle(.yellow)
+                } else if model.isEditingExisting && model.pieces.first?.isStored == true {
+                    Text("Showing the current cutout · a new selection replaces it").font(.caption).foregroundStyle(.white.opacity(0.7))
+                } else if model.pieces.count > 1 {
+                    Text("\(model.pieces.count) pieces selected").font(.caption).foregroundStyle(.white.opacity(0.7))
                 } else if model.savedCount > 0 {
                     Text("\(model.savedCount) saved from this photo").font(.caption).foregroundStyle(.white.opacity(0.7))
                 } else if zoom > 1.01 {
