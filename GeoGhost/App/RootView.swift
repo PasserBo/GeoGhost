@@ -9,6 +9,7 @@ struct RootView: View {
     @State private var showCapture = false
     @State private var showLimitAlert = false
     @Environment(AppServices.self) private var services
+    @Environment(\.modelContext) private var context
     @Query private var artworks: [Artwork]
 
     var body: some View {
@@ -30,6 +31,15 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $showCapture) {
             CaptureView()
+        }
+        .task {
+            // Older pieces have no cached local features; compute them once and link what matches.
+            let minInliers = UserDefaults.standard.object(forKey: "seriesMinInliers") as? Int ?? 8
+            SeriesAssigner.matcher.matchInliers = minInliers
+            SeriesAssigner.matcher.suggestionInliers = max(3, minInliers - 3)
+            if artworks.contains(where: { $0.localFeatures == nil }) {
+                await SeriesAssigner.backfillAndRematch(in: context)
+            }
         }
         .alert("Free limit reached", isPresented: $showLimitAlert) {
             Button("See GeoGhost Pro") { tab = .settings }

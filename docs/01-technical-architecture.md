@@ -12,7 +12,7 @@
 | 持久化 | **SwiftData**（本地）→ 开启 CloudKit 私有库镜像（Pro 功能） | 系统方案，零运维，自动同步 |
 | 图像存储 | 文件系统（`Application Support/Images/<uuid>/`），数据库只存相对路径 | 大二进制不进 SQLite；iCloud 同步时走 `CKAsset` |
 | 分割 | **Vision `VNGenerateForegroundInstanceMaskRequest`**（iOS 17） | 端侧、多实例、高质量 alpha mask；支持点选实例 |
-| 相似度/系列 | **Vision `VNGenerateImageFeaturePrintRequest`** + 距离阈值聚类 | 端侧，2048 维向量，同设计不同角度/光照鲁棒 |
+| 相似度/系列 | **自研 ORB 风格局部特征匹配**（FAST 角点 + 旋转 BRIEF + RANSAC 仿射），Vision FeaturePrint 仅作无缓存时的回退 | 端侧；旋转、部分损毁、多余背景下仍能匹配。FeaturePrint 是全局嵌入，实测在 50 件真实贴纸上同设计中位距离 0.80 高于不同设计最小距离 0.68，无法分开 |
 | 分类 | Vision `VNClassifyImageRequest` 关键词映射（v1），后续可换自训 Core ML | 零成本起步 |
 | 相机 | AVFoundation `AVCapturePhotoOutput`，写入 EXIF/GPS | 完整控制元数据 |
 | 元数据 | ImageIO `CGImageSource` 读取 EXIF/GPS/TIFF；`CLGeocoder` 反地理编码 | |
@@ -73,9 +73,11 @@ GeoGhost/
 
 ### 3.2 系列匹配
 
-- 每件作品在保存时计算 `VNFeaturePrintObservation`（对**抠图**而非原图计算，去除背景干扰），序列化为 `Data` 存入 `Artwork.featurePrint`。
-- 匹配：与库中所有作品做 `computeDistance`，取最小距离；`< 0.55` 判为同系列（阈值可在设置中调「严格/宽松」，并用真实样本回归校准）。
-- 复杂度 O(n)，n ≤ 数千件时端侧毫秒级；超过 1 万件再考虑 LSH。
+- 每件作品保存时对**抠图**提取局部特征（`LocalFeatureMatcher`：512 px 工作图，4 层金字塔，FAST-9 角点 ≤ 500 个，强度质心定向，256 位旋转 BRIEF），序列化存入 `Artwork.localFeatures`；FeaturePrint 仍计算并存入 `featurePrint` 作为回退。
+- 匹配：Hamming 距离 + Lowe 比率测试 0.8 + 交叉校验得到候选对应，RANSAC（600 次，3 点仿射，奇异值比 < 2.5）取几何一致的内点数。**≥ 8 判同系列，5–7 为建议**（设置里 Loose/Balanced/Strict = 6/8/12）。
+- 校准（2026-10-05，用户导出的 50 件真实贴纸，7 组 27 对同设计）：不同设计最大内点 4；同设计 20/27 对 ≥ 8，失败的是手绘变体（888 ×3）、被裁掉一半且大角度旋转（老鼠 ×2）、角点极少（流星、K(ill)ON）。旧算法 FeaturePrint 在同一集合上只能找回 4/27。
+- 性能（M 系列 Release）：提取 ≈ 20 ms/件，匹配 ≈ 0.3 ms/对；1000 件库新增一件 ≈ 300 ms。
+- 旧作品：启动时发现缺少 `localFeatures` 即后台补算并重新匹配；设置里可「Rebuild all series」。
 - 用户可手动「移出系列」「合并系列」；手动操作记录 `isManuallyAssigned`，之后自动匹配不再覆盖。
 
 ### 3.3 同步（Pro）
@@ -110,6 +112,7 @@ GeoGhost/
 
 - **ADR-001 放弃 Flutter 改原生**：分割/FeaturePrint/SwiftData/MapKit 全是系统框架，Flutter 无等价物；ML Kit 模拟器不可用已严重拖慢迭代；App 定位单平台精品。代价：放弃 Android，v1 可接受。
 - **ADR-002 无自建后端**：v1 单人本地 + iCloud；多人阶段用 CloudKit Public DB。避免服务器成本与隐私合规负担；缺点是难以做跨平台/Web，接受。
-- **ADR-003 对抠图而非原图计算 FeaturePrint**：原图背景（墙面、杆子）会主导相似度；抠图后同设计贴纸距离显著缩小。
+- **ADR-003 对抠图而非原图计算特征**：原图背景（墙面、杆子）会主导相似度；抠图后只剩设计本身。
+- **ADR-006 系列匹配由全局嵌入改为局部特征几何校验**（2026-10-05）：FeaturePrint 面向「相似照片」聚类，对旋转、残缺、多余内容敏感，真实数据上无法区分；ORB 风格匹配只需局部细节对上且几何一致，天然满足三种场景。代价是手绘变体与角点稀少的极简图案仍匹配不上，接受。
 - **ADR-004 图片走文件系统**：SwiftData/CloudKit 对大 blob 支持弱；文件 + 相对路径最稳。
 - **ADR-005 iOS 17 为最低版本**：`VNGenerateForegroundInstanceMaskRequest` 与 SwiftData 均需 17；2026 年 iOS 17+ 覆盖率 > 95%。

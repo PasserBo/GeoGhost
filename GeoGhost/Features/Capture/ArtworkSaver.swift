@@ -60,14 +60,17 @@ enum ArtworkSaver {
         artwork.segmentationMode = mode
         try context.save()
 
-        let printAndColor = await Task.detached(priority: .utility) { () -> (Data?, String?) in
-            (try? FeaturePrintService.featurePrint(for: cutout), ImageProcessing.dominantColorHex(ImageProcessing.downsample(cutout, maxLongEdge: 64)))
+        let computed = await Task.detached(priority: .utility) { () -> (Data, Data?, String?) in
+            (LocalFeatureMatcher.extract(cutout).encoded(),
+             try? FeaturePrintService.featurePrint(for: cutout),
+             ImageProcessing.dominantColorHex(ImageProcessing.downsample(cutout, maxLongEdge: 64)))
         }.value
-        artwork.featurePrint = printAndColor.0
-        artwork.dominantColorHex = printAndColor.1
+        artwork.localFeatures = computed.0
+        artwork.featurePrint = computed.1
+        artwork.dominantColorHex = computed.2
         try? context.save()
-        if let print = printAndColor.0, artwork.series == nil {
-            await SeriesAssigner.assign(artwork, print: print, in: context)
+        if artwork.series == nil {
+            await SeriesAssigner.assign(artwork, in: context)
         }
     }
 
@@ -89,19 +92,20 @@ enum ArtworkSaver {
     }
 
     private static func enrich(artworkID: UUID, cutout: CGImage, needsPlace: Bool, context: ModelContext) async {
-        // 1. Feature print + colour.
-        let printAndColor = await Task.detached(priority: .utility) { () -> (Data?, String?) in
-            (try? FeaturePrintService.featurePrint(for: cutout), ImageProcessing.dominantColorHex(ImageProcessing.downsample(cutout, maxLongEdge: 64)))
+        // 1. Local features (primary), feature print (fallback), colour.
+        let computed = await Task.detached(priority: .utility) { () -> (Data, Data?, String?) in
+            (LocalFeatureMatcher.extract(cutout).encoded(),
+             try? FeaturePrintService.featurePrint(for: cutout),
+             ImageProcessing.dominantColorHex(ImageProcessing.downsample(cutout, maxLongEdge: 64)))
         }.value
         guard let artwork = fetch(artworkID, in: context) else { return }
-        artwork.featurePrint = printAndColor.0
-        artwork.dominantColorHex = printAndColor.1
+        artwork.localFeatures = computed.0
+        artwork.featurePrint = computed.1
+        artwork.dominantColorHex = computed.2
         try? context.save()
 
         // 2. Series matching.
-        if let print = printAndColor.0 {
-            await SeriesAssigner.assign(artwork, print: print, in: context)
-        }
+        await SeriesAssigner.assign(artwork, in: context)
 
         // 3. Place, if the save sheet didn't manage it in time.
         if needsPlace, let c = artwork.coordinate {
@@ -125,22 +129,23 @@ enum ArtworkSaver {
     }
 }
 
-/// Puts an artwork into the right series based on its feature print.
+/// Puts an artwork into the right series based on its cached local features.
 @MainActor
 enum SeriesAssigner {
     static var matcher = SeriesMatcher()
 
-    static func assign(_ artwork: Artwork, print: Data, in context: ModelContext) async {
+    static func assign(_ artwork: Artwork, in context: ModelContext) async {
         guard !artwork.isSeriesManuallyAssigned else { return }
         let id = artwork.id
         let others = (try? context.fetch(FetchDescriptor<Artwork>())) ?? []
         let candidates = others.compactMap { o -> SeriesMatcher.Candidate? in
-            guard o.id != id, let fp = o.featurePrint else { return nil }
-            return .init(artworkID: o.id, seriesID: o.series?.id, featurePrint: fp)
+            guard o.id != id, o.localFeatures != nil || o.featurePrint != nil else { return nil }
+            return .init(artworkID: o.id, seriesID: o.series?.id, featurePrint: o.featurePrint, localFeatures: o.localFeatures)
         }
         guard !candidates.isEmpty else { return }
         let m = matcher
-        let verdict = await Task.detached(priority: .utility) { m.evaluate(newPrint: print, against: candidates) }.value
+        let features = artwork.localFeatures, print = artwork.featurePrint
+        let verdict = await Task.detached(priority: .utility) { m.evaluate(newFeatures: features, newPrint: print, against: candidates) }.value
         guard case .match(let otherID, let seriesID, _) = verdict else { return }
 
         if let seriesID, let series = fetchSeries(seriesID, in: context) {
@@ -161,11 +166,23 @@ enum SeriesAssigner {
         return try? context.fetch(FetchDescriptor(predicate: predicate)).first
     }
 
-    /// Re-run matching for every artwork that isn't manually assigned (used after threshold changes).
-    static func rematchAll(in context: ModelContext) async {
+    /// Compute missing local features (older artworks), then re-run matching for every artwork
+    /// that isn't manually assigned. Safe to call repeatedly; does nothing when everything is current.
+    static func backfillAndRematch(in context: ModelContext, force: Bool = false) async {
         let all = (try? context.fetch(FetchDescriptor<Artwork>())) ?? []
-        for a in all where a.series == nil && !a.isSeriesManuallyAssigned {
-            if let fp = a.featurePrint { await assign(a, print: fp, in: context) }
+        for a in all where a.localFeatures == nil {
+            let id = a.id, imageID = a.cutoutImageID
+            let data = await Task.detached(priority: .utility) { () -> Data? in
+                guard let cg = ImageStore.shared.loadImage(artworkID: id, imageID: imageID) else { return nil }
+                return LocalFeatureMatcher.extract(cg).encoded()
+            }.value
+            if let data { a.localFeatures = data; try? context.save() }
+        }
+        for a in all where (force || a.series == nil) && !a.isSeriesManuallyAssigned {
+            await assign(a, in: context)
         }
     }
+
+    /// Kept for callers that only want the matching pass.
+    static func rematchAll(in context: ModelContext) async { await backfillAndRematch(in: context) }
 }

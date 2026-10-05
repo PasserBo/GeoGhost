@@ -9,7 +9,8 @@ struct SettingsView: View {
     @State private var confirmWipe = false
     @State private var exportURL: URL?
     @State private var isExporting = false
-    @AppStorage("seriesStrictness") private var strictness: Double = 0.55
+    /// Minimum geometrically consistent feature matches to auto-link two pieces.
+    @AppStorage("seriesMinInliers") private var minInliers: Int = 8
 
     var body: some View {
         NavigationStack {
@@ -17,12 +18,16 @@ struct SettingsView: View {
                 proSection
                 Section("Series matching") {
                     VStack(alignment: .leading) {
-                        HStack { Text("Strictness"); Spacer(); Text(strictness < 0.5 ? "Strict" : strictness > 0.6 ? "Loose" : "Balanced").foregroundStyle(Theme.inkSecondary) }
-                        Slider(value: $strictness, in: 0.4...0.7, step: 0.05) { Text("Strictness") }
-                            .onChange(of: strictness) { _, v in SeriesAssigner.matcher.matchThreshold = Float(v); SeriesAssigner.matcher.suggestionThreshold = Float(v) + 0.2 }
-                        Text("Lower is stricter: fewer false links between different designs.").font(.caption).foregroundStyle(Theme.inkSecondary)
+                        HStack { Text("Strictness"); Spacer(); Text(minInliers >= 12 ? "Strict" : minInliers <= 6 ? "Loose" : "Balanced").foregroundStyle(Theme.inkSecondary) }
+                        Picker("Strictness", selection: $minInliers) {
+                            Text("Loose").tag(6); Text("Balanced").tag(8); Text("Strict").tag(12)
+                        }
+                        .pickerStyle(.segmented)
+                        .onChange(of: minInliers) { _, v in SeriesAssigner.matcher.matchInliers = v; SeriesAssigner.matcher.suggestionInliers = max(3, v - 3) }
+                        Text("Pieces are linked when enough of their details line up geometrically, so rotation, tears and extra background don't matter. Strict needs more matching details.").font(.caption).foregroundStyle(Theme.inkSecondary)
                     }
-                    Button("Re-run matching for unlinked pieces") { Task { await SeriesAssigner.rematchAll(in: context) } }
+                    Button("Re-run matching for unlinked pieces") { Task { await SeriesAssigner.backfillAndRematch(in: context) } }
+                    Button("Rebuild all series") { Task { await SeriesAssigner.backfillAndRematch(in: context, force: true) } }
                 }
                 Section("Data") {
                     LabeledContent("Pieces", value: "\(artworks.count)")
@@ -46,7 +51,7 @@ struct SettingsView: View {
             
             .navigationTitle("Settings")
             .task { storageBytes = await ImageStore.shared.totalSize() }
-            .onAppear { SeriesAssigner.matcher.matchThreshold = Float(strictness) }
+            .onAppear { SeriesAssigner.matcher.matchInliers = minInliers; SeriesAssigner.matcher.suggestionInliers = max(3, minInliers - 3) }
             .confirmationDialog("Delete all pieces?", isPresented: $confirmWipe, titleVisibility: .visible) {
                 Button("Delete everything", role: .destructive) { wipe() }
             } message: { Text("This removes every piece, photo and series from GeoGhost on this device. It cannot be undone.") }

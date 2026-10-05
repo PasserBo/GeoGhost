@@ -38,6 +38,8 @@ final class Artwork {
     var segmentationModeRaw: String = SegmentationMode.auto.rawValue
 
     @Attribute(.externalStorage) var featurePrint: Data?
+    /// Serialized `LocalFeatureMatcher.Features` of the cutout; drives series matching.
+    @Attribute(.externalStorage) var localFeatures: Data?
     var dominantColorHex: String?
     var deviceModel: String?
     var lensModel: String?
