@@ -23,6 +23,7 @@ struct ArtworkImageView: View {
     var contentMode: ContentMode = .fit
 
     @State private var image: CGImage?
+    @State private var isMissing = false
 
     private var imageID: String {
         switch variant {
@@ -39,11 +40,19 @@ struct ArtworkImageView: View {
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
                     .transition(.opacity)
+            } else if isMissing {
+                // The file is gone or unreadable; show that instead of an invisible piece.
+                Image(systemName: "photo.badge.exclamationmark")
+                    .font(.title2)
+                    .foregroundStyle(Theme.inkSecondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityLabel(Text("Image unavailable"))
             } else {
                 Color.clear
             }
         }
         .task(id: "\(artwork.id.uuidString)/\(imageID)") {
+            isMissing = false
             let id = artwork.id, imageID = self.imageID
             let key = "\(id.uuidString)/\(imageID)"
             if let cached = ImageCache.shared.image(for: key) { image = cached; return }
@@ -54,6 +63,8 @@ struct ArtworkImageView: View {
             if let loaded {
                 ImageCache.shared.set(loaded, for: key)
                 withAnimation(.easeOut(duration: 0.15)) { image = loaded }
+            } else if !Task.isCancelled {
+                isMissing = true
             }
         }
     }

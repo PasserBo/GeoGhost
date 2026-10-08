@@ -7,6 +7,9 @@ struct RootView: View {
     @State private var tab: Tab = .collection
     @State private var lastContentTab: Tab = .collection
     @State private var showCapture = false
+    @State private var storageWarningDismissed = false
+    @Environment(AppServices.self) private var services
+    @Environment(\.openURL) private var openURL
     @Environment(\.modelContext) private var context
     @Query private var artworks: [Artwork]
 
@@ -27,6 +30,14 @@ struct RootView: View {
                 lastContentTab = new
             }
         }
+        .environment(\.openCapture, OpenCaptureAction { showCapture = true })
+        .alert("Your collection couldn't be opened",
+               isPresented: Binding(get: { services.isRunningWithoutStorage && !storageWarningDismissed }, set: { if !$0 { storageWarningDismissed = true } })) {
+            Button("Contact support") { openURL(URL(string: "https://passerbo.github.io/GeoGhost/support/")!) }
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("GeoGhost is running without saving, so anything you add now will be lost when you close the app. Restart GeoGhost; if this keeps happening, contact support.")
+        }
         .fullScreenCover(isPresented: $showCapture) {
             CaptureView()
         }
@@ -40,4 +51,14 @@ struct RootView: View {
             }
         }
     }
+}
+
+/// Lets screens deep in the tab hierarchy (e.g. empty states) start the capture flow.
+struct OpenCaptureAction {
+    let run: @MainActor () -> Void
+    @MainActor func callAsFunction() { run() }
+}
+
+extension EnvironmentValues {
+    @Entry var openCapture = OpenCaptureAction(run: {})
 }

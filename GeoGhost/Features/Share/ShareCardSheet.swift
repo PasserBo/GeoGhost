@@ -11,6 +11,8 @@ struct ShareCardSheet: View {
     @State private var showsCredit = true
     @State private var showPaywall = false
     @State private var exportItem: ExportItem?
+    @State private var loadFailed = false
+    @State private var renderFailed = false
 
     private var isPro: Bool { services.pro.isPro }
 
@@ -43,6 +45,9 @@ struct ShareCardSheet: View {
             .task { await load() }
             .sheet(isPresented: $showPaywall) { PaywallView() }
             .sheet(item: $exportItem) { item in ShareSheet(items: [item.url]) }
+            .alert("Couldn't create the card", isPresented: $renderFailed) {
+                Button("OK", role: .cancel) {}
+            } message: { Text("Something went wrong while drawing the card. Please try again.") }
         }
     }
 
@@ -50,7 +55,10 @@ struct ShareCardSheet: View {
         GeometryReader { geo in
             let scale = min(geo.size.width / ShareCardView.size.width, geo.size.height / ShareCardView.size.height)
             ZStack {
-                if let content {
+                if loadFailed {
+                    EmptyStateView(systemImage: "photo.badge.exclamationmark", title: "Couldn't load this piece",
+                                   message: "Its image file is missing or damaged.")
+                } else if let content {
                     ShareCardView(content: content, style: style, showsCredit: showsCredit || !isPro)
                         .clipShape(RoundedRectangle(cornerRadius: 8 / scale, style: .continuous))
                         .scaleEffect(scale)
@@ -91,13 +99,17 @@ struct ShareCardSheet: View {
         let id = artwork.id, imageID = artwork.cutoutImageID
         // Cards render at 1080 px wide; 1600 px leaves headroom for the sticker without decoding huge cutouts.
         let image = await Task.detached { ImageStore.shared.loadImage(artworkID: id, imageID: imageID, maxPixelSize: 1600) }.value
-        guard let image else { return }
+        guard let image else { loadFailed = true; return }
         content = ShareCardContent(artwork: artwork, sticker: UIImage(cgImage: image))
     }
 
     private func share() {
         guard let content else { return }
-        exportItem = ShareCardView.renderPNG(content: content, style: style, showsCredit: showsCredit || !isPro).map { ExportItem(url: $0) }
+        if let url = ShareCardView.renderPNG(content: content, style: style, showsCredit: showsCredit || !isPro) {
+            exportItem = ExportItem(url: url)
+        } else {
+            renderFailed = true
+        }
     }
 }
 

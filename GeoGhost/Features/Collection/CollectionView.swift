@@ -21,6 +21,7 @@ struct CollectionView: View {
     @State private var sort: Sort = .newest
     @State private var kindFilter: ArtworkKind?
     @State private var favoritesOnly = false
+    @Environment(\.openCapture) private var openCapture
 
     private let columns = [GridItem(.adaptive(minimum: 104, maximum: 160), spacing: 10)]
 
@@ -29,7 +30,8 @@ struct CollectionView: View {
             Group {
                 if artworks.isEmpty {
                     EmptyStateView(systemImage: "seal", title: "Your field guide is empty",
-                                   message: "Tap the camera to collect the first sticker, graffiti or mural you spot on the street.")
+                                   message: "Tap the camera to collect the first sticker, graffiti or mural you spot on the street.",
+                                   action: (label: "Collect a piece", run: { openCapture() }))
                 } else {
                     grid
                 }
@@ -78,7 +80,14 @@ struct CollectionView: View {
         ScrollView {
             let items = filtered
             if items.isEmpty {
-                ContentUnavailableView.search(text: searchText).padding(.top, 80)
+                if !searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    ContentUnavailableView.search(text: searchText).padding(.top, 80)
+                } else {
+                    EmptyStateView(systemImage: "line.3.horizontal.decrease.circle", title: "Nothing matches these filters",
+                                   message: "Try another type, or turn off Favorites only.",
+                                   action: (label: "Clear filters", run: { kindFilter = nil; favoritesOnly = false }))
+                        .padding(.top, 40)
+                }
             } else {
                 summaryBar(items)
                 LazyVGrid(columns: columns, spacing: 10) {

@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var exportURL: URL?
     @State private var isExporting = false
     @State private var showPaywall = false
+    @State private var exportError: String?
     /// Minimum geometrically consistent feature matches to auto-link two pieces.
     @AppStorage("seriesMinInliers") private var minInliers: Int = 8
 
@@ -60,6 +61,9 @@ struct SettingsView: View {
                 ShareSheet(items: [item.url])
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .alert("Export failed", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(exportError ?? "") }
         }
     }
 
@@ -77,8 +81,8 @@ struct SettingsView: View {
                         .buttonStyle(PrimaryButtonStyle())
                 }
                 .padding(.vertical, 6)
-                Button("Restore purchase") { Task { await pro.restore() } }
-                if let e = pro.lastError { Text(e).font(.caption).foregroundStyle(.red) }
+                RestorePurchaseButton()
+                PurchaseStatusText()
             }
         } header: { Text("Pro") } footer: { Text("Collecting is free and unlimited.") }
     }
@@ -96,8 +100,14 @@ struct SettingsView: View {
         isExporting = true
         let manifest = artworks.map(ExportRecord.init)
         Task.detached(priority: .userInitiated) {
-            let url = try? DataExporter.exportAll(records: manifest)
-            await MainActor.run { exportURL = url; isExporting = false }
+            let result = Result { try DataExporter.exportAll(records: manifest) }
+            await MainActor.run {
+                isExporting = false
+                switch result {
+                case .success(let url): exportURL = url
+                case .failure(let error): exportError = error.localizedDescription
+                }
+            }
         }
     }
 }

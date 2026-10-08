@@ -613,6 +613,22 @@
         }
       }
     },
+    "Clear filters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除筛选"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "絞り込みを解除"
+          }
+        }
+      }
+    },
     "Clear selection" : {
       "localizations" : {
         "zh-Hans" : {
@@ -641,6 +657,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "閉じる"
+          }
+        }
+      }
+    },
+    "Collect a piece" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收集一件作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品を集める"
           }
         }
       }
@@ -689,6 +721,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "図鑑"
+          }
+        }
+      }
+    },
+    "Contact support" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "联系支持"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サポートに問い合わせる"
           }
         }
       }
@@ -773,6 +821,38 @@
         }
       }
     },
+    "Couldn't create the card" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法生成卡片"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カードを作成できませんでした"
+          }
+        }
+      }
+    },
+    "Couldn't export this piece" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法导出这件作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を書き出せませんでした"
+          }
+        }
+      }
+    },
     "Couldn't isolate that — try drawing a loop around it" : {
       "localizations" : {
         "zh-Hans" : {
@@ -785,6 +865,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "うまく切り抜けませんでした — ぐるっと囲んでみてください"
+          }
+        }
+      }
+    },
+    "Couldn't load this piece" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法加载这件作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を読み込めませんでした"
           }
         }
       }
@@ -1207,6 +1303,22 @@
         }
       }
     },
+    "Export failed" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出失败"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出しに失敗しました"
+          }
+        }
+      }
+    },
     "Export transparent PNG" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1369,6 +1481,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GeoGhost Pro は有効です"
+          }
+        }
+      }
+    },
+    "GeoGhost Pro restored" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已恢复 GeoGhost Pro"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost Pro を復元しました"
+          }
+        }
+      }
+    },
+    "GeoGhost is running without saving, so anything you add now will be lost when you close the app. Restart GeoGhost; if this keeps happening, contact support." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost 当前无法保存，现在添加的内容会在关闭 App 后丢失。请重新启动 GeoGhost；如果问题持续，请联系支持。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost は現在保存できない状態で動作しています。いま追加した内容はアプリを閉じると失われます。GeoGhost を再起動し、それでも続く場合はサポートにお問い合わせください。"
           }
         }
       }
@@ -1613,6 +1757,22 @@
         }
       }
     },
+    "Image unavailable" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图像不可用"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を表示できません"
+          }
+        }
+      }
+    },
     "Import from library" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1641,6 +1801,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "読み込み日時（EXIF 日付なし）"
+          }
+        }
+      }
+    },
+    "Its image file is missing or damaged." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它的图像文件丢失或已损坏。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像ファイルが見つからないか破損しています。"
+          }
+        }
+      }
+    },
+    "Its image file is missing or damaged. Try Edit this piece to cut it out again from the original photo." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它的图像文件丢失或已损坏。可以试试“重新抠图”，从原始照片重新抠出来。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像ファイルが見つからないか破損しています。「切り抜きを編集」で元の写真から切り抜き直してみてください。"
           }
         }
       }
@@ -1885,6 +2077,22 @@
         }
       }
     },
+    "No GeoGhost Pro purchase was found for this Apple Account." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 Apple 账户下没有找到 GeoGhost Pro 的购买记录。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この Apple アカウントでは GeoGhost Pro の購入が見つかりませんでした。"
+          }
+        }
+      }
+    },
     "No camera is available on this device." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1965,6 +2173,22 @@
         }
       }
     },
+    "None of your pieces have a location" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的作品都没有位置信息"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報のある作品がありません"
+          }
+        }
+      }
+    },
     "Not enough free storage to save this piece." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2029,6 +2253,22 @@
         }
       }
     },
+    "Nothing matches these filters" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有符合筛选条件的作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "条件に合う作品がありません"
+          }
+        }
+      }
+    },
     "Nothing on the map yet" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2041,6 +2281,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "マップにはまだ何もありません"
+          }
+        }
+      }
+    },
+    "Nothing to restore" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有可恢复的购买"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "復元できる購入はありません"
           }
         }
       }
@@ -2204,6 +2460,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "細部が幾何的に十分一致すると同じシリーズとしてまとめられるため、回転や破れ、余分な背景は影響しません。「厳しめ」はより多くの一致が必要です。"
+          }
+        }
+      }
+    },
+    "Pieces captured with location on, or imported photos that contain GPS data, appear here." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启定位时拍摄的作品，或带 GPS 信息的导入照片，会显示在这里。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報オンで撮影した作品や、GPS 情報を含む写真を読み込んだ作品がここに表示されます。"
           }
         }
       }
@@ -2866,6 +3138,22 @@
         }
       }
     },
+    "Something went wrong while drawing the card. Please try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成卡片时出了点问题，请重试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カードの作成中に問題が発生しました。もう一度お試しください。"
+          }
+        }
+      }
+    },
     "Somewhere on the street" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3074,6 +3362,22 @@
         }
       }
     },
+    "Thanks for supporting GeoGhost." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "感谢你支持 GeoGhost。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost を応援していただきありがとうございます。"
+          }
+        }
+      }
+    },
     "That photo could not be loaded." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3086,6 +3390,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "その写真を読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "The App Store can't be reached right now. Check your connection and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂时无法连接 App Store。请检查网络后重试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在 App Store に接続できません。通信環境を確認して、もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "The App Store couldn't verify this purchase. Try Restore purchase, or contact support." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store 无法验证此次购买。请尝试“恢复购买”，或联系支持。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store でこの購入を確認できませんでした。「購入を復元」を試すか、サポートにお問い合わせください。"
           }
         }
       }
@@ -3214,6 +3550,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "もう一度試す"
+          }
+        }
+      }
+    },
+    "Try another type, or turn off Favorites only." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换个类型试试，或关闭“仅显示收藏”。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別の種類を選ぶか、「お気に入りのみ」をオフにしてください。"
           }
         }
       }
@@ -3442,6 +3794,22 @@
         }
       }
     },
+    "Your collection couldn't be opened" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法打开你的图鉴"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "図鑑を開けませんでした"
+          }
+        }
+      }
+    },
     "Your field guide is empty" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3454,6 +3822,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "図鑑はまだ空っぽです"
+          }
+        }
+      }
+    },
+    "Your purchase is waiting for approval. Pro unlocks automatically once it's approved." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的购买正在等待批准，批准后 Pro 会自动解锁。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "購入は承認待ちです。承認されると Pro が自動的に有効になります。"
           }
         }
       }

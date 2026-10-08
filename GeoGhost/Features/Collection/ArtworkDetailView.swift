@@ -12,6 +12,7 @@ struct ArtworkDetailView: View {
     @State private var confirmDelete = false
     @State private var exportItem: ExportItem?
     @State private var showShareCard = false
+    @State private var exportFailed = false
     @State private var reopen: CaptureView.StoredPhoto?
     @Query private var siblings: [Artwork]
 
@@ -50,6 +51,9 @@ struct ArtworkDetailView: View {
         .sheet(isPresented: $isEditing) { EditArtworkSheet(artwork: artwork) }
         .sheet(item: $exportItem) { item in ShareSheet(items: [item.url]) }
         .sheet(isPresented: $showShareCard) { ShareCardSheet(artwork: artwork) }
+        .alert("Couldn't export this piece", isPresented: $exportFailed) {
+            Button("OK", role: .cancel) {}
+        } message: { Text("Its image file is missing or damaged. Try Edit this piece to cut it out again from the original photo.") }
         .fullScreenCover(item: Binding(get: { reopen.map { ReopenItem(photo: $0) } }, set: { if $0 == nil { reopen = nil } })) { item in
             CaptureView(stored: item.photo)
         }
@@ -224,16 +228,19 @@ struct ArtworkDetailView: View {
         let id = artwork.id, imageID = artwork.cutoutImageID
         let name = "GeoGhost-\(artwork.kind.rawValue)-\(artwork.displayDate.formatted(.iso8601.year().month().day())).png"
         let maxEdge = services.pro.isPro ? nil : ProStore.freeExportLongEdge
-        Task.detached {
-            guard var data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return }
-            if let maxEdge, let image = ImageStore.shared.loadImage(artworkID: id, imageID: imageID),
-               max(image.width, image.height) > maxEdge,
-               let png = ImageProcessing.pngData(ImageProcessing.downsample(image, maxLongEdge: maxEdge)) {
-                data = png
-            }
-            let url = FileManager.default.temporaryDirectory.appending(path: name)
-            try? data.write(to: url)
-            await MainActor.run { exportItem = ExportItem(url: url) }
+        Task {
+            let url = await Task.detached { () -> URL? in
+                guard var data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return nil }
+                if let maxEdge, let image = ImageStore.shared.loadImage(artworkID: id, imageID: imageID),
+                   max(image.width, image.height) > maxEdge,
+                   let png = ImageProcessing.pngData(ImageProcessing.downsample(image, maxLongEdge: maxEdge)) {
+                    data = png
+                }
+                let url = FileManager.default.temporaryDirectory.appending(path: name)
+                do { try data.write(to: url, options: .atomic) } catch { return nil }
+                return url
+            }.value
+            if let url { exportItem = ExportItem(url: url) } else { exportFailed = true }
         }
     }
 

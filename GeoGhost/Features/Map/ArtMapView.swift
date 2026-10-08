@@ -10,6 +10,7 @@ struct ArtMapView: View {
     @State private var selected: Artwork?
     @State private var selectedCluster: Cluster?
     @State private var showUserLocation = false
+    @Environment(\.openCapture) private var openCapture
 
     var body: some View {
         NavigationStack {
@@ -31,7 +32,13 @@ struct ArtMapView: View {
             .onMapCameraChange(frequency: .onEnd) { ctx in visibleRegion = ctx.region }
             .overlay {
                 if artworks.isEmpty {
-                    EmptyStateView(systemImage: "map", title: "Nothing on the map yet", message: "Pieces with a location appear here as you collect them.")
+                    EmptyStateView(systemImage: "map", title: "Nothing on the map yet", message: "Pieces with a location appear here as you collect them.",
+                                   action: (label: "Collect a piece", run: { openCapture() }))
+                        .background(.ultraThinMaterial)
+                } else if !artworks.contains(where: { $0.coordinate != nil }) {
+                    // Everything was captured with location off or imported without GPS.
+                    EmptyStateView(systemImage: "location.slash", title: "None of your pieces have a location",
+                                   message: "Pieces captured with location on, or imported photos that contain GPS data, appear here.")
                         .background(.ultraThinMaterial)
                 }
             }

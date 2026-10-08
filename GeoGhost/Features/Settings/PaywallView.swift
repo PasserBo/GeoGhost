@@ -39,8 +39,8 @@ struct PaywallView: View {
                             .buttonStyle(PrimaryButtonStyle())
                             .disabled(pro.isLoading)
                             Text("One-time purchase. No subscription.").font(.caption).foregroundStyle(Theme.inkSecondary)
-                            Button("Restore purchase") { Task { await pro.restore() } }.font(.subheadline)
-                            if let e = pro.lastError { Text(e).font(.caption).foregroundStyle(.red) }
+                            RestorePurchaseButton().font(.subheadline)
+                            PurchaseStatusText()
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -61,6 +61,50 @@ struct PaywallView: View {
                 Text(title).font(.headline)
                 Text(detail).font(.subheadline).foregroundStyle(Theme.inkSecondary)
             }
+        }
+    }
+}
+
+/// Pending / error line under purchase controls.
+struct PurchaseStatusText: View {
+    @Environment(AppServices.self) private var services
+
+    var body: some View {
+        if services.pro.isPending {
+            Text("Your purchase is waiting for approval. Pro unlocks automatically once it's approved.")
+                .font(.caption).foregroundStyle(Theme.inkSecondary).multilineTextAlignment(.center)
+        } else if let e = services.pro.lastError {
+            Text(e).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center)
+        }
+    }
+}
+
+/// "Restore purchase" that always tells the user what happened (App Review 3.1.1).
+struct RestorePurchaseButton: View {
+    @Environment(AppServices.self) private var services
+    @State private var isRestoring = false
+    @State private var outcome: ProStore.RestoreResult?
+
+    var body: some View {
+        Button {
+            isRestoring = true
+            Task {
+                let result = await services.pro.restore()
+                isRestoring = false
+                if result == .restored || result == .nothingToRestore { outcome = result }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text("Restore purchase")
+                if isRestoring { ProgressView().controlSize(.small) }
+            }
+        }
+        .disabled(isRestoring)
+        .alert(outcome == .restored ? Text("GeoGhost Pro restored") : Text("Nothing to restore"),
+               isPresented: Binding(get: { outcome != nil }, set: { if !$0 { outcome = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            outcome == .restored ? Text("Thanks for supporting GeoGhost.") : Text("No GeoGhost Pro purchase was found for this Apple Account.")
         }
     }
 }
