@@ -7,8 +7,6 @@ struct RootView: View {
     @State private var tab: Tab = .collection
     @State private var lastContentTab: Tab = .collection
     @State private var showCapture = false
-    @State private var showLimitAlert = false
-    @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var context
     @Query private var artworks: [Artwork]
 
@@ -24,7 +22,7 @@ struct RootView: View {
             // The middle tab is a button in disguise: open the capture flow and stay on the previous tab.
             if new == .capture {
                 tab = lastContentTab
-                if services.pro.canAddArtwork(currentCount: artworks.count) { showCapture = true } else { showLimitAlert = true }
+                showCapture = true
             } else {
                 lastContentTab = new
             }
@@ -40,12 +38,6 @@ struct RootView: View {
             if artworks.contains(where: { $0.localFeatures == nil }) {
                 await SeriesAssigner.backfillAndRematch(in: context)
             }
-        }
-        .alert("Free limit reached", isPresented: $showLimitAlert) {
-            Button("See GeoGhost Pro") { tab = .settings }
-            Button("Later", role: .cancel) {}
-        } message: {
-            Text("The free version holds \(ProStore.freeLimit) pieces. Unlock Pro for an unlimited collection.")
         }
     }
 }

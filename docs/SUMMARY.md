@@ -12,3 +12,4 @@
 * [Capture pipeline](03-capture-pipeline.md)
 * [Development plan](04-development-plan.md)
 * [App Store checklist](05-app-store-checklist.md)
+* [Monetization & online roadmap](06-product-roadmap.md)

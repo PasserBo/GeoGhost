@@ -81,6 +81,7 @@ schemes:
         GeoGhostTests: [test]
     run:
       config: Debug
+      storeKitConfiguration: Config/GeoGhost.storekit   # local purchase testing; not bundled
     test:
       config: Debug
       targets: [GeoGhostTests]

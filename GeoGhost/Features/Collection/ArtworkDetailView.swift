@@ -6,10 +6,12 @@ struct ArtworkDetailView: View {
     @Bindable var artwork: Artwork
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppServices.self) private var services
     @State private var showOriginal = false
     @State private var isEditing = false
     @State private var confirmDelete = false
     @State private var exportItem: ExportItem?
+    @State private var showShareCard = false
     @State private var reopen: CaptureView.StoredPhoto?
     @Query private var siblings: [Artwork]
 
@@ -36,7 +38,8 @@ struct ArtworkDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button { isEditing = true } label: { Label("Edit details", systemImage: "pencil") }
-                    Button { export() } label: { Label("Share sticker", systemImage: "square.and.arrow.up") }
+                    Button { showShareCard = true } label: { Label("Share card", systemImage: "rectangle.portrait.on.rectangle.portrait.angled") }
+                    Button { export() } label: { Label("Export transparent PNG", systemImage: "square.and.arrow.up") }
                     Button { reopenPhoto(recut: true) } label: { Label("Edit this piece", systemImage: "scissors") }
                     Button { reopenPhoto() } label: { Label("Add another from this photo", systemImage: "plus.viewfinder") }
                     Divider()
@@ -46,6 +49,7 @@ struct ArtworkDetailView: View {
         }
         .sheet(isPresented: $isEditing) { EditArtworkSheet(artwork: artwork) }
         .sheet(item: $exportItem) { item in ShareSheet(items: [item.url]) }
+        .sheet(isPresented: $showShareCard) { ShareCardSheet(artwork: artwork) }
         .fullScreenCover(item: Binding(get: { reopen.map { ReopenItem(photo: $0) } }, set: { if $0 == nil { reopen = nil } })) { item in
             CaptureView(stored: item.photo)
         }
@@ -215,11 +219,18 @@ struct ArtworkDetailView: View {
         item.openInMaps()
     }
 
+    /// Pro exports the stored cutout untouched; the free tier caps the long edge at `ProStore.freeExportLongEdge`.
     private func export() {
         let id = artwork.id, imageID = artwork.cutoutImageID
         let name = "GeoGhost-\(artwork.kind.rawValue)-\(artwork.displayDate.formatted(.iso8601.year().month().day())).png"
+        let maxEdge = services.pro.isPro ? nil : ProStore.freeExportLongEdge
         Task.detached {
-            guard let data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return }
+            guard var data = ImageStore.shared.loadData(artworkID: id, imageID: imageID) else { return }
+            if let maxEdge, let image = ImageStore.shared.loadImage(artworkID: id, imageID: imageID),
+               max(image.width, image.height) > maxEdge,
+               let png = ImageProcessing.pngData(ImageProcessing.downsample(image, maxLongEdge: maxEdge)) {
+                data = png
+            }
             let url = FileManager.default.temporaryDirectory.appending(path: name)
             try? data.write(to: url)
             await MainActor.run { exportItem = ExportItem(url: url) }

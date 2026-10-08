@@ -18,9 +18,9 @@ GeoGhost is a personal field guide for the stickers, graffiti and murals you fin
 
 Subject detection, cutout, design matching and type suggestion all run on your device using Apple's Vision framework. No image, location or note is sent to us or to any third party. Place names are looked up with Apple's geocoding service, which receives coordinates under Apple's privacy terms.
 
-## iCloud
+## iCloud and online features
 
-If you enable iCloud sync (a Pro feature), your collection is stored in your own private iCloud database, which only your Apple account can read. We cannot access it.
+GeoGhost does not currently sync or upload anything. If iCloud sync or optional online sharing are added later, they will be off by default, explained in the app before you turn them on, and described here before they ship.
 
 ## What we do not do
 
@@ -30,7 +30,7 @@ If you enable iCloud sync (a Pro feature), your collection is stored in your own
 
 ## Purchases
 
-GeoGhost Pro is a one-time purchase handled entirely by the App Store. We receive no payment details.
+GeoGhost Pro is a one-time purchase handled entirely by the App Store. We receive no payment details. Collecting pieces is free and unlimited without Pro.
 
 ## Your control
 

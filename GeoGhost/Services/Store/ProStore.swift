@@ -2,12 +2,14 @@ import Foundation
 import Observation
 import StoreKit
 
-/// GeoGhost Pro: one-time unlock. Free tier is capped at `freeLimit` artworks.
+/// GeoGhost Pro: one-time unlock. Collecting is never limited; Pro adds polish on top
+/// (all share-card styles, unbranded cards, full-resolution exports). See docs/06-product-roadmap.md.
 @Observable
 @MainActor
 final class ProStore {
     static let productID = "com.passerbo.geoghost.pro"
-    static let freeLimit = 50
+    /// Long edge of exported transparent PNGs on the free tier; Pro exports the stored cutout untouched.
+    static let freeExportLongEdge = 1600
 
     private(set) var isPro: Bool = UserDefaults.standard.bool(forKey: "isPro")
     private(set) var product: Product?
@@ -57,10 +59,6 @@ final class ProStore {
     func restore() async {
         try? await AppStore.sync()
         await refreshEntitlements()
-    }
-
-    func canAddArtwork(currentCount: Int) -> Bool {
-        isPro || currentCount < Self.freeLimit
     }
 
     private func handle(_ t: Transaction) async {

@@ -9,4 +9,5 @@
 | [02-data-model.md](02-data-model.md) | SwiftData 模型与文件布局 |
 | [03-capture-pipeline.md](03-capture-pipeline.md) | 拍照→分割→保存→匹配 的详细设计 |
 | [04-development-plan.md](04-development-plan.md) | 里程碑、状态、风险 |
-| [05-app-store-checklist.md](05-app-store-checklist.md) | 上架清单 |
+| [05-app-store-checklist.md](05-app-store-checklist.md) | 上架清单与 TestFlight / 发布流程 |
+| [06-product-roadmap.md](06-product-roadmap.md) | 免费 / Pro 划分、定价、线上功能分阶段计划 |

@@ -36,9 +36,10 @@
 
 ## M3 · 打磨与商业化
 
-- ◐ 导出透明 PNG ☑ / 分享卡片 ☐
-- ☑ StoreKit 2 Pro（50 件上限、买断、恢复购买）— 需在 App Store Connect 建产品后用 StoreKit Configuration 测试
-- ☐ iCloud 私有同步（SwiftData + CloudKit，图片走 CKAsset）
+- ☑ 导出透明 PNG（免费长边 1600 px，Pro 原尺寸）/ 分享卡片 4 种样式（Field note 免费，其余 Pro；免费版带署名）
+- ☑ 商业化改版（2026-10-09，见 [06](06-product-roadmap.md)）：取消 50 件上限；Pro = 卡片样式 + 去署名 + 原尺寸导出 + 创始会员；Pro 介绍页（PaywallView）
+- ☑ StoreKit 2 Pro（买断、恢复购买）；本地测试用 `Config/GeoGhost.storekit`（已挂到 Run scheme）
+- ☐ iCloud 私有同步（SwiftData + CloudKit，图片走 CKAsset）— **移出 v1.0**，与线上阶段一起做
 - ☑ 全量导出 ZIP / 删除全部数据
 - ☐ 本地化 en / zh-Hans / ja；深色模式；Dynamic Type；VoiceOver 标签
 - ☐ 空状态、加载态、错误态全覆盖
@@ -50,12 +51,18 @@
 - ☐ TestFlight 内测 2 周（≥ 10 人）
 - ☐ 提交审核
 
-## v1.x · 多人（上架后）
+### v1.0 上架范围（2026-10-09 确定）
 
-- ☐ CloudKit Public DB：`PublicArtwork` 记录（模糊坐标 100 m、抠图缩略、featurePrint）
-- ☐ Explore 地图：他人公开作品
-- ☐ 全球系列：服务端 featurePrint 比对（CloudKit 无计算能力 → 客户端拉取附近记录本地比对，或引入 Cloud Functions 级别的最小后端再评估）
-- ☐ 举报/下架机制（UGC 合规必需）
+最快上架 = 本地单人图鉴 + 新的免费/Pro 划分。**不含** iCloud 同步、任何线上功能、三语以外的本地化。
+上架前必须：☐ 本地化 en/zh-Hans/ja · ☐ 空/错误态 · ☐ App 图标终稿 · ☐ 截图 · ☐ 真机冒烟（相机、分割、购买）。
+
+## v1.x · 线上（上架后）
+
+按 [商业化与线上路线图](06-product-roadmap.md) §4 分阶段：
+
+- ☐ 阶段 1：后端选型（倾向 Supabase）、Sign in with Apple、发布（默认私密、坐标模糊、剥 EXIF）、Explore 世界地图、点赞/灵感夹、举报/屏蔽/审核、Pro+ 订阅与创始会员兑现、iCloud 私有同步
+- ☐ 阶段 2：个人主页、关注、跨用户「贴纸迁徙地图」、首位发现者
+- ☐ 阶段 3：「还在吗？」、城市挑战、艺术家认领
 
 ## 已知风险
 

@@ -1,0 +1,30 @@
+{
+  "identifier" : "6A1E3B2C",
+  "nonRenewingSubscriptions" : [ ],
+  "products" : [
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : true,
+      "internalID" : "6A1E3B2D",
+      "localizations" : [
+        {
+          "description" : "All share card styles, unbranded cards and full-resolution exports.",
+          "displayName" : "GeoGhost Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.passerbo.geoghost.pro",
+      "referenceName" : "GeoGhost Pro",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_storeKitErrors" : [ ]
+  },
+  "subscriptionGroups" : [ ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

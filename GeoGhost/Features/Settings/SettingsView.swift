@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var confirmWipe = false
     @State private var exportURL: URL?
     @State private var isExporting = false
+    @State private var showPaywall = false
     /// Minimum geometrically consistent feature matches to auto-link two pieces.
     @AppStorage("seriesMinInliers") private var minInliers: Int = 8
 
@@ -58,6 +59,7 @@ struct SettingsView: View {
             .sheet(item: Binding(get: { exportURL.map { ExportItem(url: $0) } }, set: { _ in exportURL = nil })) { item in
                 ShareSheet(items: [item.url])
             }
+            .sheet(isPresented: $showPaywall) { PaywallView() }
         }
     }
 
@@ -69,21 +71,16 @@ struct SettingsView: View {
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("GeoGhost Pro").font(.display(20))
-                    Text("Unlimited pieces (free: \(ProStore.freeLimit)), high-resolution exports, and everything that comes next. One-time purchase.")
+                    Text("Every share card style, cards without the credit, full-resolution stickers — and a thank-you when GeoGhost goes online.")
                         .font(.footnote).foregroundStyle(Theme.inkSecondary)
-                    Button {
-                        Task { await pro.purchase() }
-                    } label: {
-                        Text(pro.product.map { "Unlock for \($0.displayPrice)" } ?? "Unlock Pro")
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(pro.isLoading)
+                    Button { showPaywall = true } label: { Text("See what's in Pro") }
+                        .buttonStyle(PrimaryButtonStyle())
                 }
                 .padding(.vertical, 6)
                 Button("Restore purchase") { Task { await pro.restore() } }
                 if let e = pro.lastError { Text(e).font(.caption).foregroundStyle(.red) }
             }
-        } header: { Text("Pro") } footer: { Text("\(artworks.count) of \(pro.isPro ? "∞" : "\(ProStore.freeLimit)") pieces used.") }
+        } header: { Text("Pro") } footer: { Text("Collecting is free and unlimited.") }
     }
 
     private func wipe() {
