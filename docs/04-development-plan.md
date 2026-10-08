@@ -41,7 +41,8 @@
 - ☑ StoreKit 2 Pro（买断、恢复购买）；本地测试用 `Config/GeoGhost.storekit`（已挂到 Run scheme）
 - ☐ iCloud 私有同步（SwiftData + CloudKit，图片走 CKAsset）— **移出 v1.0**，与线上阶段一起做
 - ☑ 全量导出 ZIP / 删除全部数据
-- ☐ 本地化 en / zh-Hans / ja；深色模式；Dynamic Type；VoiceOver 标签
+- ☑ 本地化 en / zh-Hans / ja（`Localizable.xcstrings` 全部 222 条 + `InfoPlist.xcstrings` 权限文案；英文复数）
+- ☐ 深色模式；Dynamic Type；VoiceOver 标签
 - ☐ 空状态、加载态、错误态全覆盖
 - ☐ App 图标、启动画面、截图
 
@@ -54,7 +55,7 @@
 ### v1.0 上架范围（2026-10-09 确定）
 
 最快上架 = 本地单人图鉴 + 新的免费/Pro 划分。**不含** iCloud 同步、任何线上功能、三语以外的本地化。
-上架前必须：☐ 本地化 en/zh-Hans/ja · ☐ 空/错误态 · ☐ App 图标终稿 · ☐ 截图 · ☐ 真机冒烟（相机、分割、购买）。
+上架前必须：☑ 本地化 en/zh-Hans/ja · ☐ 空/错误态 · ☐ App 图标终稿 · ☐ 截图 · ☐ 真机冒烟（相机、分割、购买）。
 
 ## v1.x · 线上（上架后）
 

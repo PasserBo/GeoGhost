@@ -9,7 +9,7 @@
 - ☐ iCloud 容器：`iCloud.com.passerbo.geoghost`（v1.0 不需要，线上阶段再建）
 
 ## 技术
-- ◐ Info.plist 权限文案（相机、位置使用时、相册仅添加）— 英文完成，三语 ☐
+- ◐ Info.plist 权限文案（相机、位置使用时、相册仅添加）— 三语完成 ☑
 - ☑ `PrivacyInfo.xcprivacy` 清单
 - ☐ 隐私营养标签：**「不收集数据」**（v1.0 无服务器、无分析；数据只在设备上，反地理编码由 Apple 处理）
 - ☐ 支持 iPhone 竖屏；iPad 以兼容模式运行（v1 不做 iPad 专属布局）
@@ -31,7 +31,7 @@
 - ☐ 截图 6.9"（1320×2868）与 6.5"（1284×2778）各 5 张：采集分割、图鉴、系列地图、详情、地图
 - ☐ 预览视频（可选）
 - ☑ 隐私政策 URL https://passerbo.github.io/GeoGhost/privacy/ · 支持 URL https://passerbo.github.io/GeoGhost/support/（GitSpec 构建的 GitHub Pages，仓库已公开）
-- ☐ 描述、关键词、What's New（en / zh-Hans / ja）
+- ◐ 描述、关键词、推广文本、内购显示名（en / zh-Hans / ja）：草稿见 [07-store-listing.md](07-store-listing.md)，待填入 App Store Connect
 
 ## 发布
 - ☑ 版本 1.0.0，构建号 = git 提交数自动生成；Release 归档验证通过

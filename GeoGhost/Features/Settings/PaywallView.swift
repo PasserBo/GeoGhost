@@ -33,7 +33,7 @@ struct PaywallView: View {
                         VStack(spacing: 10) {
                             Button { Task { await pro.purchase() } } label: {
                                 if pro.isLoading { ProgressView().tint(.white) } else {
-                                    Text(pro.product.map { "Unlock for \($0.displayPrice)" } ?? String(localized: "Unlock Pro"))
+                                    Text(pro.product.map { String(localized: "Unlock for \($0.displayPrice)") } ?? String(localized: "Unlock Pro"))
                                 }
                             }
                             .buttonStyle(PrimaryButtonStyle())
