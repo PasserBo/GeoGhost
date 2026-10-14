@@ -15,22 +15,26 @@ struct ShareCardSheet: View {
     @State private var renderFailed = false
 
     private var isPro: Bool { services.pro.isPro }
+    /// With purchasing off (v1.0), Pro styles and the credit toggle are hidden rather than shown locked.
+    private var styles: [ShareCardStyle] { services.pro.showsProFeatures ? ShareCardStyle.allCases : ShareCardStyle.allCases.filter { !$0.isPro } }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
                 preview
-                stylePicker
-                Toggle(isOn: Binding(get: { showsCredit || !isPro }, set: { newValue in
-                    if isPro { showsCredit = newValue } else { showPaywall = true }
-                })) {
-                    HStack(spacing: 6) {
-                        Text("Show GeoGhost credit")
-                        if !isPro { ProBadge() }
+                if styles.count > 1 { stylePicker }
+                if services.pro.showsProFeatures {
+                    Toggle(isOn: Binding(get: { showsCredit || !isPro }, set: { newValue in
+                        if isPro { showsCredit = newValue } else { showPaywall = true }
+                    })) {
+                        HStack(spacing: 6) {
+                            Text("Show GeoGhost credit")
+                            if !isPro { ProBadge() }
+                        }
                     }
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 20)
                 }
-                .tint(Theme.accent)
-                .padding(.horizontal, 20)
                 Spacer(minLength: 0)
                 Button { share() } label: { Label("Share card", systemImage: "square.and.arrow.up") }
                     .buttonStyle(PrimaryButtonStyle())
@@ -76,7 +80,7 @@ struct ShareCardSheet: View {
     private var stylePicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                ForEach(ShareCardStyle.allCases) { s in
+                ForEach(styles) { s in
                     Button {
                         if s.isPro && !isPro { showPaywall = true } else { style = s }
                     } label: {

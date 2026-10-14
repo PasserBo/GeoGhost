@@ -39,6 +39,7 @@
 - ☑ 导出透明 PNG（免费长边 1600 px，Pro 原尺寸）/ 分享卡片 4 种样式（Field note 免费，其余 Pro；免费版带署名）
 - ☑ 商业化改版（2026-10-09，见 [06](06-product-roadmap.md)）：取消 50 件上限；Pro = 卡片样式 + 去署名 + 原尺寸导出 + 创始会员；Pro 介绍页（PaywallView）
 - ☑ StoreKit 2 Pro（买断、恢复购买）；本地测试用 `Config/GeoGhost.storekit`（已挂到 Run scheme）
+- ☑ **v1.0 关闭内购**（2026-10-14）：`ProStore.isPurchasingEnabled = false`，不调用 StoreKit，Pro 入口与 Pro 专属选项全部隐藏
 - ☐ iCloud 私有同步（SwiftData + CloudKit，图片走 CKAsset）— **移出 v1.0**，与线上阶段一起做
 - ☑ 全量导出 ZIP / 删除全部数据
 - ☑ 本地化 en / zh-Hans / ja（`Localizable.xcstrings` 全部 222 条 + `InfoPlist.xcstrings` 权限文案；英文复数）
@@ -54,7 +55,7 @@
 
 ### v1.0 上架范围（2026-10-09 确定）
 
-最快上架 = 本地单人图鉴 + 新的免费/Pro 划分。**不含** iCloud 同步、任何线上功能、三语以外的本地化。
+最快上架 = 本地单人图鉴，**完全免费、无内购**。**不含** Pro、iCloud 同步、任何线上功能、三语以外的本地化。
 上架前必须：☑ 本地化 en/zh-Hans/ja · ☑ 空/错误态 · ☐ App 图标终稿 · ☐ 截图 · ☐ 真机冒烟（相机、分割、购买）。
 
 ## v1.x · 线上（上架后）

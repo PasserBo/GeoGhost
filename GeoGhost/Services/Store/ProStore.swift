@@ -8,12 +8,17 @@ import StoreKit
 @MainActor
 final class ProStore {
     static let productID = "com.passerbo.geoghost.pro"
+    /// v1.0 ships without in-app purchases: no StoreKit traffic, no Pro UI, Pro-only options hidden (not given away).
+    /// Flip on once usage data is in and the IAP exists in App Store Connect (docs/06-product-roadmap.md §4).
+    static let isPurchasingEnabled = false
     /// Long edge of exported transparent PNGs on the free tier; Pro exports the stored cutout untouched.
     static let freeExportLongEdge = 1600
 
     enum RestoreResult { case restored, nothingToRestore, cancelled, failed }
 
     private(set) var isPro: Bool = UserDefaults.standard.bool(forKey: "isPro")
+    /// Whether Pro-only options should appear at all (locked or not).
+    var showsProFeatures: Bool { Self.isPurchasingEnabled || isPro }
     private(set) var product: Product?
     private(set) var isLoading = false
     /// Shown under the purchase button; only set in response to something the user did.
@@ -23,6 +28,7 @@ final class ProStore {
     private var updates: Task<Void, Never>?
 
     init() {
+        guard Self.isPurchasingEnabled else { return }
         updates = Task { [weak self] in
             for await result in Transaction.updates {
                 if case .verified(let t) = result { await self?.handle(t) }

@@ -30,7 +30,7 @@ GeoGhost does not currently sync or upload anything. If iCloud sync or optional 
 
 ## Purchases
 
-GeoGhost Pro is a one-time purchase handled entirely by the App Store. We receive no payment details. Collecting pieces is free and unlimited without Pro.
+GeoGhost is free and currently has no in-app purchases. If optional purchases are added later, they will be handled entirely by the App Store, and we will receive no payment details. Collecting pieces will stay free and unlimited.
 
 ## Your control
 

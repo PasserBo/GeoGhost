@@ -1,6 +1,6 @@
 # GeoGhost — App Store 文案（en / zh-Hans / ja）
 
-> 草稿 · 2026-10-09。字数限制：名称 30、副标题 30、关键词 100（逗号分隔、不加空格、不重复名称/副标题里的词）、推广文本 170、描述 4000。
+> 草稿 · 2026-10-09，2026-10-14 按「v1.0 无内购」修订。字数限制：名称 30、副标题 30、关键词 100（逗号分隔、不加空格、不重复名称/副标题里的词）、推广文本 170、描述 4000。
 
 ## English (U.S.)
 
@@ -31,12 +31,8 @@ Turn any piece into a share card, or export it as a transparent PNG.
 PRIVATE BY DESIGN
 Detection, cutouts and matching all run on your iPhone. Your photos and locations never leave your device. No account, no ads, no tracking.
 
-GEOGHOST PRO — one-time purchase
-• Every share card style (Polaroid, Poster, Minimal)
-• Cards without the GeoGhost credit
-• Full-resolution sticker exports
-• Founding supporter: a thank-you when GeoGhost goes online
-Collecting is free and unlimited, with or without Pro.
+FREE AND UNLIMITED
+Collect as many pieces as you like. No account, no ads, no limits.
 
 ---
 
@@ -69,12 +65,8 @@ GeoGhost 是一本记录街头贴纸、涂鸦和壁画的图鉴。
 隐私优先
 识别、抠图和匹配全部在 iPhone 本机完成，照片和位置不会离开你的设备。无需账号，无广告，无追踪。
 
-GeoGhost Pro —— 一次性买断
-• 全部分享卡片样式（拍立得、海报、极简）
-• 卡片去除 GeoGhost 署名
-• 原尺寸导出贴纸
-• 创始会员：GeoGhost 上线在线功能时会有一份谢礼
-无论是否购买 Pro，收集都免费且不限数量。
+免费且不限量
+想收多少就收多少。无需账号，无广告，不限数量。
 
 ---
 
@@ -107,22 +99,10 @@ GeoGhost は、街で見つけたステッカー・グラフィティ・壁画�
 プライバシー重視
 検出・切り抜き・照合はすべて iPhone 上で行われ、写真や位置情報が端末の外に出ることはありません。アカウント不要、広告なし、トラッキングなし。
 
-GeoGhost Pro（買い切り）
-• すべてのシェアカードスタイル（ポラロイド・ポスター・ミニマル）
-• GeoGhost クレジットなしのカード
-• フル解像度でのステッカー書き出し
-• ファウンディングサポーター：GeoGhost オンライン化の際にお礼をご用意
-Pro の有無にかかわらず、コレクションは無料・無制限です。
+無料・無制限
+好きなだけ集められます。アカウント不要、広告なし、上限なし。
 
 ---
-
-## 内购项目显示信息（com.passerbo.geoghost.pro）
-
-| 语言 | 显示名称 | 描述（≤55 字符） |
-|---|---|---|
-| en | GeoGhost Pro | All card styles, unbranded cards, full-res exports |
-| zh-Hans | GeoGhost Pro | 全部卡片样式、去署名、原尺寸导出 |
-| ja | GeoGhost Pro | 全カードスタイル・クレジットなし・フル解像度 |
 
 ## 首个版本 What's New
 

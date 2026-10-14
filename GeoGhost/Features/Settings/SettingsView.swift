@@ -17,7 +17,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                proSection
+                if services.pro.showsProFeatures { proSection }
                 Section("Series matching") {
                     VStack(alignment: .leading) {
                         HStack { Text("Strictness"); Spacer(); Text(minInliers >= 12 ? "Strict" : minInliers <= 6 ? "Loose" : "Balanced").foregroundStyle(Theme.inkSecondary) }

@@ -26,7 +26,7 @@ struct GeoGhostApp: App {
             RootView()
                 .environment(services)
                 .tint(Theme.accent)
-                .task { await services.pro.load() }
+                .task { if ProStore.isPurchasingEnabled { await services.pro.load() } }
         }
         .modelContainer(container)
     }
