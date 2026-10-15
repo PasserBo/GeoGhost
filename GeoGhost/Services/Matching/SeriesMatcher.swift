@@ -31,6 +31,16 @@ struct SeriesMatcher: Sendable {
     var fallbackMatchDistance: Float = 0.45
     var fallbackSuggestionDistance: Float = 0.6
 
+    /// Every candidate that is confidently the same design by local features. The caller merges their
+    /// series: one design can otherwise end up split across several series, each linked by a different pair.
+    func confidentMatches(newFeatures: Data?, against candidates: [Candidate]) -> [Candidate] {
+        guard let mine = newFeatures.flatMap(LocalFeatureMatcher.Features.decode) else { return [] }
+        return candidates.filter { c in
+            guard let theirs = c.localFeatures.flatMap(LocalFeatureMatcher.Features.decode) else { return false }
+            return LocalFeatureMatcher.match(mine, theirs).inliers >= matchInliers
+        }
+    }
+
     func evaluate(newFeatures: Data?, newPrint: Data?, against candidates: [Candidate]) -> Verdict {
         let mine = newFeatures.flatMap(LocalFeatureMatcher.Features.decode)
         var bestLocal: (Candidate, Int)?

@@ -137,27 +137,48 @@ enum SeriesAssigner {
     static func assign(_ artwork: Artwork, in context: ModelContext) async {
         guard !artwork.isSeriesManuallyAssigned else { return }
         let id = artwork.id
-        let others = (try? context.fetch(FetchDescriptor<Artwork>())) ?? []
+        let others = ((try? context.fetch(FetchDescriptor<Artwork>())) ?? [])
+            // Pieces the user took out of a series stay out.
+            .filter { $0.id != id && !($0.isSeriesManuallyAssigned && $0.series == nil) }
         let candidates = others.compactMap { o -> SeriesMatcher.Candidate? in
-            guard o.id != id, o.localFeatures != nil || o.featurePrint != nil else { return nil }
+            guard o.localFeatures != nil || o.featurePrint != nil else { return nil }
             return .init(artworkID: o.id, seriesID: o.series?.id, featurePrint: o.featurePrint, localFeatures: o.localFeatures)
         }
         guard !candidates.isEmpty else { return }
         let m = matcher
         let features = artwork.localFeatures, print = artwork.featurePrint
-        let verdict = await Task.detached(priority: .utility) { m.evaluate(newFeatures: features, newPrint: print, against: candidates) }.value
-        guard case .match(let otherID, let seriesID, _) = verdict else { return }
-
-        if let seriesID, let series = fetchSeries(seriesID, in: context) {
-            artwork.series = series
-        } else if let other = ArtworkSaver.fetch(otherID, in: context) {
-            let series = ArtSeries()
-            series.coverArtworkID = other.id
-            series.representativeFeaturePrint = other.featurePrint
-            context.insert(series)
-            other.series = series
-            artwork.series = series
+        var matchedIDs = await Task.detached(priority: .utility) { m.confidentMatches(newFeatures: features, against: candidates).map(\.artworkID) }.value
+        if matchedIDs.isEmpty {
+            // Legacy FeaturePrint fallback, only against pieces that local features couldn't be compared with.
+            let pool = features == nil ? candidates : candidates.filter { $0.localFeatures == nil }
+            let verdict = await Task.detached(priority: .utility) { m.evaluate(newFeatures: features, newPrint: print, against: pool) }.value
+            if case .match(let otherID, _, _) = verdict { matchedIDs = [otherID] }
         }
+        let byID = Dictionary(uniqueKeysWithValues: others.map { ($0.id, $0) })
+        let matched = matchedIDs.compactMap { byID[$0] }
+        guard !matched.isEmpty else { return }
+
+        // Everything matched is one design: fold all their series into the largest one.
+        var involved: [ArtSeries] = []
+        for s in ([artwork.series] + matched.map(\.series)).compactMap({ $0 }) where !involved.contains(where: { $0 === s }) {
+            involved.append(s)
+        }
+        let target: ArtSeries
+        if let largest = involved.max(by: { $0.encounterCount < $1.encounterCount }) {
+            target = largest
+        } else {
+            target = ArtSeries()
+            target.coverArtworkID = matched[0].id
+            target.representativeFeaturePrint = matched[0].featurePrint
+            context.insert(target)
+        }
+        for s in involved where s !== target {
+            if target.title.isEmpty && !s.title.isEmpty { target.title = s.title }
+            for member in s.artworks ?? [] { member.series = target }
+            context.delete(s)
+        }
+        for a in matched where a.series == nil { a.series = target }
+        artwork.series = target
         try? context.save()
     }
 

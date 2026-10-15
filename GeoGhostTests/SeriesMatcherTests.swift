@@ -1,4 +1,5 @@
 import CoreGraphics
+import SwiftData
 import UIKit
 import XCTest
 @testable import GeoGhost
@@ -83,6 +84,34 @@ final class SeriesMatcherTests: XCTestCase {
         XCTAssertEqual(seriesID, sid)
         XCTAssertEqual(m.evaluate(newFeatures: fb, newPrint: nil, against: [.init(artworkID: UUID(), seriesID: nil, featurePrint: nil, localFeatures: fc)]), .none)
         XCTAssertEqual(m.evaluate(newFeatures: fb, newPrint: nil, against: []), .none)
+    }
+
+    /// A design that ended up split across two series (each linked by a different pair) is merged into
+    /// one as soon as a new encounter matches both; the user's series name survives, unrelated pieces stay out.
+    @MainActor func testAssignMergesSeriesOfTheSameDesign() async throws {
+        let container = try GeoGhostSchema.makeContainer(inMemory: true)
+        let context = container.mainContext
+        let base = sticker(seed: 3)
+        func piece(_ image: CGImage) -> Artwork {
+            let a = Artwork()
+            a.localFeatures = LocalFeatureMatcher.extract(image).encoded()
+            context.insert(a)
+            return a
+        }
+        let a1 = piece(base), a2 = piece(variant(of: base, degrees: 20))
+        let b1 = piece(variant(of: base, degrees: -15)), b2 = piece(variant(of: base, degrees: 40, tear: true))
+        let named = ArtSeries(title: "Pink cat"), unnamed = ArtSeries()
+        context.insert(named); context.insert(unnamed)
+        a1.series = named; a2.series = named; b1.series = unnamed; b2.series = unnamed
+        let unrelated = piece(sticker(seed: 99))
+
+        await SeriesAssigner.assign(piece(variant(of: base, degrees: 10)), in: context)
+
+        let series = try context.fetch(FetchDescriptor<ArtSeries>())
+        XCTAssertEqual(series.count, 1)
+        XCTAssertEqual(series.first?.encounterCount, 5)
+        XCTAssertEqual(series.first?.title, "Pink cat")
+        XCTAssertNil(unrelated.series)
     }
 
     func testFeaturesRoundTrip() {
