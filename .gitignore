@@ -10,3 +10,6 @@ build/
 *.dSYM.zip
 .DS_Store
 *.xcconfig.local
+
+# App Store screenshots: generated (scripts/compose-screenshots.swift), contain third-party street art — not committed
+AppStoreScreenshots/

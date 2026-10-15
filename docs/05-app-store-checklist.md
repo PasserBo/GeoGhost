@@ -12,7 +12,7 @@
 - ◐ Info.plist 权限文案（相机、位置使用时、相册仅添加）— 三语完成 ☑
 - ☑ `PrivacyInfo.xcprivacy` 清单
 - ☐ 隐私营养标签：**「不收集数据」**（v1.0 无服务器、无分析；数据只在设备上，反地理编码由 Apple 处理）
-- ☐ 支持 iPhone 竖屏；iPad 以兼容模式运行（v1 不做 iPad 专属布局）
+- ☑ 支持 iPhone 竖屏；iPad 以兼容模式运行（`TARGETED_DEVICE_FAMILY = 1`，因此不需要 iPad 截图）
 - ☐ 无崩溃：TestFlight 崩溃率 < 0.5%
 - ☐ 冷启动 ≤ 1.5 s（Instruments 验证）
 - ☐ 深色模式/Dynamic Type 检查
@@ -27,8 +27,11 @@
 - 审核备注：说明相机在审核设备上如何测试（附带示例照片可导入）
 
 ## 素材
-- ☐ 图标 1024×1024（无 alpha）
-- ☐ 截图 6.9"（1320×2868）与 6.5"（1284×2778）各 5 张：采集分割、图鉴、系列地图、详情、地图
+- ☑ 图标 1024×1024（无 alpha）+ 深色 / 着色变体，由 `scripts/make-app-icon.swift` 生成
+- ☑ 截图 6.9"（1320×2868）5 张 × 3 语言：图鉴、详情、系列路线、地图、分享卡片。只需上传 6.9"，更小尺寸由 App Store 自动缩放
+  - 成品在项目根目录 `AppStoreScreenshots/<语言>/1…5.png`（git 忽略：含第三方街头作品与真实拍摄地点）
+  - 流程：Debug 构建用 `-seedExport <导出目录>` 导入精选导出（`DebugSeeder`，只在 Debug 编译）→ 专用模拟器「GeoGhost Shots」(iPhone 17 Pro Max) 截原图 → `swift scripts/compose-screenshots.swift <raw> AppStoreScreenshots` 加标题合成
+  - 素材取舍：只用匿名街头作者的贴纸，剔除动漫/商业角色、品牌 logo、脏话；坐标取整到约 100 m
 - ☐ 预览视频（可选）
 - ☑ 隐私政策 URL https://passerbo.github.io/GeoGhost/privacy/ · 支持 URL https://passerbo.github.io/GeoGhost/support/（GitSpec 构建的 GitHub Pages，仓库已公开）
 - ◐ 描述、关键词、推广文本（en / zh-Hans / ja）：草稿见 [07-store-listing.md](07-store-listing.md)，待填入 App Store Connect

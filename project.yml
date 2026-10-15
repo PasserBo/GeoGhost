@@ -32,7 +32,6 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: GeoGhost
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_NSCameraUsageDescription: "GeoGhost uses the camera to capture stickers, graffiti and murals you find on the street."
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "GeoGhost records where you found each piece so it can appear on your map."
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: "GeoGhost saves exported stickers to your photo library."
@@ -40,7 +39,7 @@ targets:
         INFOPLIST_KEY_UIStatusBarStyle: UIStatusBarStyleDefault
         INFOPLIST_KEY_UIRequiresFullScreen: NO
         SUPPORTS_MACCATALYST: NO
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"   # iPhone only; iPad runs it in compatibility mode (no iPad screenshots/layout for v1)
         SWIFT_OBJC_BRIDGING_HEADER: ""
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.photography

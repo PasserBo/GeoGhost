@@ -42,6 +42,9 @@ struct RootView: View {
             CaptureView()
         }
         .task {
+            #if DEBUG
+            await DebugSeeder.seedIfRequested(into: context)
+            #endif
             // Older pieces have no cached local features; compute them once and link what matches.
             let minInliers = UserDefaults.standard.object(forKey: "seriesMinInliers") as? Int ?? 8
             SeriesAssigner.matcher.matchInliers = minInliers
