@@ -7,7 +7,7 @@
 
 | 项 | 状态 |
 |---|---|
-| 归档 | `GeoGhost 1.0.0 (22)`，已在 Xcode → Window → Organizer → Archives |
+| 归档 | `GeoGhost 1.0.0 (22)`，在 Mac 的 Xcode 应用 → 菜单 Window → Organizer → Archives |
 | 图标 | 1024 无 alpha + 深色/着色 |
 | 截图 | `AppStoreScreenshots/{en,zh-Hans,ja}/1…5.png`，6.9"（1320×2868），只需这一个尺寸 |
 | 隐私政策 | https://passerbo.github.io/GeoGhost/privacy/ （已上线、无内购表述） |
@@ -27,7 +27,8 @@
 
 ## 2. 上传构建
 
-Xcode → Organizer → Archives → 选中 **GeoGhost 1.0.0 (22)** → **Distribute App** → **App Store Connect** → **Upload** → 一路默认（自动签名）。
+在 **Mac 上的 Xcode 应用**里操作（不是 App Store Connect 网页）：菜单栏 **Window → Organizer**（或双击 `~/Library/Developer/Xcode/Archives/` 里的 .xcarchive）→ 左侧 **Archives** → 选中 **GeoGhost 1.0.0 (22)** → 右侧 **Distribute App** → **App Store Connect** → **Upload** → 一路默认（自动签名）。
+上传前必须先完成 §1（网页上已建好 App 记录），否则会报找不到对应 App。
 10–30 分钟后出现在 App Store Connect → TestFlight。建议先加入「内部测试」在真机装一次 TestFlight 版本再提交审核。
 
 ## 3. App 信息（左栏「App 信息」）
