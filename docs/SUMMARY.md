@@ -14,3 +14,4 @@
 * [App Store checklist](05-app-store-checklist.md)
 * [Monetization & online roadmap](06-product-roadmap.md)
 * [Store listing copy](07-store-listing.md)
+* [Submission sheet](08-app-store-submission.md)

@@ -43,6 +43,8 @@
 
 ## TestFlight → 上架流程
 
+> 逐字段的填写值见 [08-app-store-submission.md](08-app-store-submission.md)。
+
 > ☐ 标 **[你]** 的步骤需要本人在 App Store Connect / Xcode 中操作（涉及账号、协议、付款信息）。
 
 ### 1. 一次性准备

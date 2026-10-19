@@ -12,3 +12,4 @@
 | [05-app-store-checklist.md](05-app-store-checklist.md) | 上架清单与 TestFlight / 发布流程 |
 | [06-product-roadmap.md](06-product-roadmap.md) | 免费 / Pro 划分、定价、线上功能分阶段计划 |
 | [07-store-listing.md](07-store-listing.md) | App Store 文案三语草稿 |
+| [08-app-store-submission.md](08-app-store-submission.md) | App Store Connect 提交填写表（逐字段） |

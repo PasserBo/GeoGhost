@@ -21,7 +21,7 @@ GeoGhost needs location permission *while using the app* and a GPS fix at the mo
 Open the piece → menu → *Edit details* → *Remove from series*. You can also loosen or tighten matching in *Settings → Series matching*.
 
 **How do I move my collection to a new phone?**
-Use *Settings → Export everything* to get a ZIP, or enable iCloud sync with GeoGhost Pro.
+Your collection is included in your iPhone's iCloud or computer backup, so restoring a new phone from that backup brings GeoGhost along. You can also keep your own copy with *Settings → Export everything*, which saves every photo, cutout and location as a ZIP.
 
 ## Privacy
 
