@@ -84,11 +84,12 @@
 ```
 GeoGhost is a personal field guide for street stickers, graffiti and murals. No account or sign-in is needed, and there are no in-app purchases.
 
-How to test:
-1. Tap Capture (the center tab) and photograph any sticker, poster, label or logo. The camera screen also has a button to import a photo from the library instead.
-2. Hold on the subject to select it, or draw a loop around it. Tap the checkmark, then "Add to collection".
-3. The piece appears in Collection with its place and time. Photograph the same design a second time and both pieces are linked under the Series tab.
-4. Open a piece and use the ••• menu to create a share card or export a transparent PNG.
+How to test (same steps as the HOW IT WORKS section of the description):
+1. Tap Capture (the center tab) and photograph any sticker, poster, label or logo. Or tap the photo button at the bottom left of the camera screen to import a picture from the library.
+2. Hold a finger on the subject to select it, or draw a loop around it. Tap "Use this cutout".
+3. Tap "Save". The piece appears in Collection with its place and time.
+4. Photograph or import the same design a second time; both pieces are linked under the Series tab.
+5. Open a piece and use the ••• menu to create a share card or export a transparent PNG.
 
 Location is read only while the camera screen is open and is optional. Subject detection, cutouts and matching run entirely on-device; the app has no server and collects no data.
 ```
