@@ -1,7 +1,9 @@
 // Composes App Store screenshots: a caption on the brand orange above a framed raw screenshot.
 // Usage: swift scripts/compose-screenshots.swift <raw-dir> <out-dir>
-//   <raw-dir>/<lang>/<n>.png  — raw 1320×2868 simulator screenshots (lang: en, zh-Hans, ja; n: 1…5)
-//   <out-dir>/<lang>/<n>.png  — composed 1320×2868 PNGs, no alpha
+//   <raw-dir>/<lang>/<n>.png         — raw 1320×2868 simulator screenshots (lang: en, zh-Hans, ja; n: 1…5)
+//   <out-dir>/<lang>/6.3in/<n>.png   — 1206×2622, "iPhone with Dynamic Island (medium display)": the REQUIRED size
+//   <out-dir>/<lang>/6.9in/<n>.png   — 1320×2868, "large display": optional, sharper on Pro Max
+// All opaque PNGs (no alpha). Sizes per App Store Connect's screenshot specifications, checked 2026-10.
 import AppKit
 import UniformTypeIdentifiers
 
@@ -37,7 +39,7 @@ func color(_ hex: UInt32) -> NSColor {
     NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
 }
 
-func compose(raw: NSImage, caption: String, to url: URL) {
+func compose(raw: NSImage, caption: String, langDir: URL, fileName: String) {
     // No alpha channel: App Store screenshots must be opaque.
     let ctx = CGContext(data: nil, width: Int(W), height: Int(H), bitsPerComponent: 8, bytesPerRow: 0,
                         space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
@@ -73,17 +75,31 @@ func compose(raw: NSImage, caption: String, to url: URL) {
     NSGraphicsContext.restoreGraphicsState()
 
     NSGraphicsContext.restoreGraphicsState()
+    let image = ctx.makeImage()!
+    write(image, to: langDir.appending(path: "6.9in").appending(path: fileName))
+    write(scaled(image, width: 1206, height: 2622), to: langDir.appending(path: "6.3in").appending(path: fileName))
+}
+
+func write(_ image: CGImage, to url: URL) {
     try! FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
     let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)!
-    CGImageDestinationAddImage(dest, ctx.makeImage()!, nil)
+    CGImageDestinationAddImage(dest, image, nil)
     CGImageDestinationFinalize(dest)
     print("wrote", url.path)
+}
+
+func scaled(_ image: CGImage, width: Int, height: Int) -> CGImage {
+    let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                        space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+    ctx.interpolationQuality = .high
+    ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+    return ctx.makeImage()!
 }
 
 for (lang, list) in captions {
     for (i, caption) in list.enumerated() {
         let raw = rawDir.appending(path: "\(lang)/\(i + 1).png")
         guard let image = NSImage(contentsOf: raw) else { print("skip (missing)", raw.path); continue }
-        compose(raw: image, caption: caption, to: outDir.appending(path: "\(lang)/\(i + 1).png"))
+        compose(raw: image, caption: caption, langDir: outDir.appending(path: lang), fileName: "\(i + 1).png")
     }
 }
