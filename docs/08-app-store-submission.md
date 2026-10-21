@@ -9,7 +9,7 @@
 |---|---|
 | 归档 | `GeoGhost 1.0.0 (22)`，在 Mac 的 Xcode 应用 → 菜单 Window → Organizer → Archives |
 | 图标 | 1024 无 alpha + 深色/着色 |
-| 截图 | `AppStoreScreenshots/<语言>/6.3in/1…5.png`（1206×2622，**必需**）＋ `6.9in/`（1320×2868，选填） |
+| 截图 | `AppStoreScreenshots/<语言>/1…5.png`（1206×2622，iPhone with Dynamic Island (medium display)，唯一需要的尺寸） |
 | 隐私政策 | https://passerbo.github.io/GeoGhost/privacy/ （已上线、无内购表述） |
 | 支持页 | https://passerbo.github.io/GeoGhost/support/ |
 | 出口合规 | Info.plist 已声明 `ITSAppUsesNonExemptEncryption = NO`，上传后不会再问 |
@@ -84,8 +84,7 @@
 
 | 字段 | 值 |
 |---|---|
-| 截图 · iPhone with Dynamic Island **(medium display)** | **必需**。拖入 `AppStoreScreenshots/<语言>/6.3in/1…5.png`（1206×2622），顺序 1→5 |
-| 截图 · iPhone with Dynamic Island (large display) | 选填。`6.9in/1…5.png`（1320×2868）；不传则由 medium 缩放 |
+| 截图 · iPhone with Dynamic Island (medium display) | 拖入 `AppStoreScreenshots/<语言>/1…5.png`（1206×2622），顺序 1→5。App Store Connect 已不再提供 large display 栏位 |
 | 截图 · iPhone Duo | 现在不需要：2027 年 4 月起，用 iOS 27.1 SDK 及以上构建的 App 才要求（当前用 iOS 26.5 SDK） |
 | 推广文本 / 描述 / 关键词 | 07 对应语言 |
 | 技术支持网址 | `https://passerbo.github.io/GeoGhost/support/` |

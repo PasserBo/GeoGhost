@@ -28,9 +28,9 @@
 
 ## 素材
 - ☑ 图标 1024×1024（无 alpha）+ 深色 / 着色变体，由 `scripts/make-app-icon.swift` 生成
-- ☑ 截图 5 张 × 3 语言：图鉴、详情、系列路线、地图、分享卡片。**必需尺寸是 iPhone with Dynamic Island (medium display) 1206×2622**（2026-10 核对 Apple 规格；之前以为只要 6.9" 是错的，上传会报 File dimensions are invalid）；6.9" 1320×2868 选填。iPhone Duo 截图自 2027-04 起对 iOS 27.1 SDK+ 构建必需
-  - 成品在项目根目录 `AppStoreScreenshots/<语言>/{6.3in,6.9in}/1…5.png`（git 忽略：含第三方街头作品与真实拍摄地点）
-  - 流程：Debug 构建用 `-seedExport <导出目录>` 导入精选导出（`DebugSeeder`，只在 Debug 编译）→ 专用模拟器「GeoGhost Shots」(iPhone 17 Pro Max) 截原图 → `swift scripts/compose-screenshots.swift <raw> AppStoreScreenshots` 加标题合成
+- ☑ 截图 5 张 × 3 语言：图鉴、详情、系列路线、地图、分享卡片。**唯一需要的尺寸：iPhone with Dynamic Island (medium display) 1206×2622**（2026-10；6.9" 1320×2868 已不被接受，会报 File dimensions are invalid）。iPhone Duo 截图自 2027-04 起对 iOS 27.1 SDK+ 构建必需
+  - 成品在项目根目录 `AppStoreScreenshots/<语言>/1…5.png`；原图 `raw/`、精选种子 `seed/` 也在该目录（均 git 忽略：含第三方街头作品与真实拍摄地点）
+  - 流程：Debug 构建用 `-seedExport <导出目录>` 导入精选导出（`DebugSeeder`，只在 Debug 编译）→ `scripts/seed-screenshot-sim.sh` 在专用模拟器「GeoGhost Shots 6.3」(iPhone 17 Pro，原生 1206×2622) 上安装并导入 → 截原图存 `AppStoreScreenshots/raw/<语言>/` → `swift scripts/compose-screenshots.swift AppStoreScreenshots/raw AppStoreScreenshots` 加标题合成
   - 素材取舍：只用匿名街头作者的贴纸，剔除动漫/商业角色、品牌 logo、脏话；坐标取整到约 100 m
 - ☐ 预览视频（可选）
 - ☑ 隐私政策 URL https://passerbo.github.io/GeoGhost/privacy/ · 支持 URL https://passerbo.github.io/GeoGhost/support/（GitSpec 构建的 GitHub Pages，仓库已公开）

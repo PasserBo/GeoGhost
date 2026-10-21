@@ -1,9 +1,8 @@
-// Composes App Store screenshots: a caption on the brand orange above a framed raw screenshot.
+// Composes App Store screenshots: a caption on the brand orange above the whole framed phone screen.
 // Usage: swift scripts/compose-screenshots.swift <raw-dir> <out-dir>
-//   <raw-dir>/<lang>/<n>.png         — raw 1320×2868 simulator screenshots (lang: en, zh-Hans, ja; n: 1…5)
-//   <out-dir>/<lang>/6.3in/<n>.png   — 1206×2622, "iPhone with Dynamic Island (medium display)": the REQUIRED size
-//   <out-dir>/<lang>/6.9in/<n>.png   — 1320×2868, "large display": optional, sharper on Pro Max
-// All opaque PNGs (no alpha). Sizes per App Store Connect's screenshot specifications, checked 2026-10.
+//   <raw-dir>/<lang>/<n>.png  — raw simulator screenshots from an iPhone 17 Pro (1206×2622; lang: en, zh-Hans, ja; n: 1…5)
+//   <out-dir>/<lang>/<n>.png  — 1206×2622 opaque PNGs: "iPhone with Dynamic Island (medium display)",
+//                               the only iPhone size App Store Connect takes for this app (checked 2026-10).
 import AppKit
 import UniformTypeIdentifiers
 
@@ -31,7 +30,7 @@ let captions: [String: [String]] = [
     ],
 ]
 
-let W: CGFloat = 1320, H: CGFloat = 2868
+let W: CGFloat = 1206, H: CGFloat = 2622
 let args = CommandLine.arguments
 let rawDir = URL(fileURLWithPath: args[1]), outDir = URL(fileURLWithPath: args[2])
 
@@ -49,25 +48,29 @@ func compose(raw: NSImage, caption: String, langDir: URL, fileName: String) {
     // Background: the icon's orange gradient (AppKit is y-up, so "top" is maxY).
     NSGradient(starting: color(0xFF7F45), ending: color(0xF2541B))!.draw(in: NSRect(x: 0, y: 0, width: W, height: H), angle: -90)
 
-    // Caption.
-    let base = NSFont.systemFont(ofSize: 84, weight: .heavy)
-    let font = NSFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor, size: 84) ?? base
+    // Caption, centred near the top.
+    let fontSize: CGFloat = 78
+    let base = NSFont.systemFont(ofSize: fontSize, weight: .heavy)
+    let font = NSFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor, size: fontSize) ?? base
     let para = NSMutableParagraphStyle(); para.alignment = .center; para.lineSpacing = 6
     let text = NSAttributedString(string: caption, attributes: [.font: font, .foregroundColor: NSColor.white, .paragraphStyle: para])
-    let textBox = NSRect(x: 60, y: H - 150 - 380, width: W - 120, height: 380)
-    let bounds = text.boundingRect(with: textBox.size, options: [.usesLineFragmentOrigin, .usesFontLeading])
-    text.draw(with: NSRect(x: textBox.minX, y: textBox.maxY - bounds.height, width: textBox.width, height: bounds.height),
-              options: [.usesLineFragmentOrigin, .usesFontLeading])
+    let opts: NSString.DrawingOptions = [.usesLineFragmentOrigin, .usesFontLeading]
+    let textWidth = W - 110
+    let bounds = text.boundingRect(with: NSSize(width: textWidth, height: 600), options: opts)
+    let captionTop: CGFloat = 130
+    let captionRect = NSRect(x: (W - textWidth) / 2, y: H - captionTop - bounds.height, width: textWidth, height: bounds.height)
+    text.draw(with: captionRect, options: opts)
 
-    // Framed screenshot, bleeding off the bottom edge.
-    let scale: CGFloat = 0.84
-    let sw = W * scale, sh = H * scale
-    let frame = NSRect(x: (W - sw) / 2, y: H - 560 - sh, width: sw, height: sh)
-    let radius: CGFloat = 96
+    // The whole phone screen below it: a fixed gap under the caption, a margin above the bottom edge.
+    let gap: CGFloat = 70, bottomMargin: CGFloat = 80, bezel: CGFloat = 13
+    let sh = captionRect.minY - gap - bottomMargin - 2 * bezel
+    let sw = sh * raw.size.width / raw.size.height
+    let frame = NSRect(x: (W - sw) / 2, y: bottomMargin + bezel, width: sw, height: sh)
+    let radius = sw * 0.087
     ctx.saveGState()
-    ctx.setShadow(offset: CGSize(width: 0, height: -24), blur: 60, color: NSColor.black.withAlphaComponent(0.3).cgColor)
+    ctx.setShadow(offset: CGSize(width: 0, height: -22), blur: 55, color: NSColor.black.withAlphaComponent(0.3).cgColor)
     NSColor.black.setFill()
-    NSBezierPath(roundedRect: frame.insetBy(dx: -14, dy: -14), xRadius: radius + 14, yRadius: radius + 14).fill()
+    NSBezierPath(roundedRect: frame.insetBy(dx: -bezel, dy: -bezel), xRadius: radius + bezel, yRadius: radius + bezel).fill()
     ctx.restoreGState()
     NSGraphicsContext.saveGraphicsState()
     NSBezierPath(roundedRect: frame, xRadius: radius, yRadius: radius).addClip()
@@ -76,8 +79,7 @@ func compose(raw: NSImage, caption: String, langDir: URL, fileName: String) {
 
     NSGraphicsContext.restoreGraphicsState()
     let image = ctx.makeImage()!
-    write(image, to: langDir.appending(path: "6.9in").appending(path: fileName))
-    write(scaled(image, width: 1206, height: 2622), to: langDir.appending(path: "6.3in").appending(path: fileName))
+    write(image, to: langDir.appending(path: fileName))
 }
 
 func write(_ image: CGImage, to url: URL) {
@@ -86,14 +88,6 @@ func write(_ image: CGImage, to url: URL) {
     CGImageDestinationAddImage(dest, image, nil)
     CGImageDestinationFinalize(dest)
     print("wrote", url.path)
-}
-
-func scaled(_ image: CGImage, width: Int, height: Int) -> CGImage {
-    let ctx = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-                        space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
-    ctx.interpolationQuality = .high
-    ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-    return ctx.makeImage()!
 }
 
 for (lang, list) in captions {
