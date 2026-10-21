@@ -5,6 +5,8 @@ title: Privacy Policy
 
 # GeoGhost Privacy Policy
 
+_Last updated: October 21, 2026_
+
 GeoGhost is a personal field guide for the stickers, graffiti and murals you find on the street. It is built so that your photos and your whereabouts stay with you.
 
 ## What the app stores
@@ -16,7 +18,7 @@ GeoGhost is a personal field guide for the stickers, graffiti and murals you fin
 
 ## Where processing happens
 
-Subject detection, cutout, design matching and type suggestion all run on your device using Apple's Vision framework. No image, location or note is sent to us or to any third party. Place names are looked up with Apple's geocoding service, which receives coordinates under Apple's privacy terms.
+Subject detection, cutout, design matching and type suggestion all run on your device using Apple's Vision framework. No image, location or note is sent to us or to any third party. Place names are looked up with Apple's geocoding service, and maps are loaded from Apple Maps; both receive coordinates under Apple's privacy terms, not ours.
 
 ## iCloud and online features
 
