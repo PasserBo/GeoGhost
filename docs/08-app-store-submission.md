@@ -98,7 +98,7 @@
 
 - 只在 iOS 27 及以上显示；不填时搜索结果改用截图，不影响提交。
 - 每种语言上传 `AppStoreScreenshots/<语言>/header.png`：**通用尺寸 5244×2950（16:9）PNG，无透明**，同时用于页眉（裁成 21:9）和搜索卡片（裁成 3:2）。
-- 文字与贴纸都在两种裁切的重叠区内；上传后用 App Store Connect 的「预览」确认两种裁切。
+- 三种裁切（Apple 未公开，按 Device Preview 实测）：**iPhone 产品页**＝顶部对齐、水平居中的约 3:2 窗口（约 x 1250–4100、y 0–1900），上三分之一被状态栏和返回/分享按钮遮住；**搜索卡片**＝整张图；**iPad/Mac 产品页**＝中间 21:9 横条。标语和主贴纸放在 iPhone 窗口按钮以下，其余贴纸填充外围。上传后务必在「预览」里切换 Product Page / Search Results 再确认。
 - 由 `swift scripts/make-store-header.swift <贴纸抠图目录> AppStoreScreenshots` 生成。
 
 ### App 审核信息
