@@ -7,7 +7,9 @@ title: Support
 
 ## Getting help
 
-Open an issue at [github.com/PasserBo/GeoGhost/issues](https://github.com/PasserBo/GeoGhost/issues) with what you expected, what happened, and your iPhone model and iOS version. For a cutout that came out wrong, attaching the original photo helps most.
+In the app, open **Settings → Send feedback** and tell us what you expected and what happened. You can attach a screenshot, and leave your email if you'd like a reply; the app version, iPhone model and iOS version are included automatically. Ideas and feature wishes are welcome there too.
+
+You can also open an issue at [github.com/PasserBo/GeoGhost/issues](https://github.com/PasserBo/GeoGhost/issues). Issues there are public. For a cutout that came out wrong, attaching the original photo helps most.
 
 ## Frequently asked
 

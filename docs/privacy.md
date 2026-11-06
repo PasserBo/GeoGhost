@@ -5,7 +5,7 @@ title: Privacy Policy
 
 # GeoGhost Privacy Policy
 
-_Last updated: October 21, 2026_
+_Last updated: November 7, 2026_
 
 GeoGhost is a personal field guide for the stickers, graffiti and murals you find on the street. It is built so that your photos and your whereabouts stay with you.
 
@@ -24,10 +24,27 @@ Subject detection, cutout, design matching and type suggestion all run on your d
 
 GeoGhost does not currently sync or upload anything. If iCloud sync or optional online sharing are added later, they will be off by default, explained in the app before you turn them on, and described here before they ship.
 
+## Crash and error reports (only if you agree)
+
+GeoGhost asks once whether you'd like to share crash and error reports, and you can change your answer anytime in **Settings → Share crash & error reports**. If you agree, the app sends a short technical report when it crashes, freezes or runs into an error:
+
+- the app version, device model, iOS version and language/region setting;
+- the crash or error itself: which part of the app it happened in and the technical call stack provided by Apple's MetricKit.
+
+Reports never contain your photos, cutouts, locations, notes or tags, and are not linked to you: there is no account, name or device identifier in them. Until you decide, reports wait on your device; if you say no, they are deleted there and never sent.
+
+## Feedback you send
+
+**Settings → Send feedback** sends your message, the screenshot you choose to attach (if any) and the email address you enter (if any, so we can reply), together with the app version, device model and iOS version. It is sent only when you press Send.
+
+## Where reports and feedback go
+
+Reports and feedback are sent over an encrypted connection to a small service we run on Cloudflare, which holds them only until they are downloaded to the developer's own computer, then deletes them. They are used only to fix problems and improve GeoGhost, and are never sold or shared.
+
 ## What we do not do
 
-- We do not run our own servers and do not receive your data.
-- We do not use analytics, advertising or tracking SDKs.
+- We do not receive your photos, cutouts, locations or notes.
+- We do not use analytics, advertising or tracking SDKs, and do not track you across apps or websites.
 - We do not sell or share data with anyone.
 
 ## Purchases
