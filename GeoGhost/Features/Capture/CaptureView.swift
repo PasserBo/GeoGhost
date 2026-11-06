@@ -211,6 +211,7 @@ struct CaptureView: View {
             let data = try await services.camera.capturePhoto(metadata: sensor)
             model.receiveCameraPhoto(data, sensor: sensor)
         } catch {
+            Diagnostics.record(error, context: "CaptureView")
             errorMessage = error.localizedDescription
         }
     }

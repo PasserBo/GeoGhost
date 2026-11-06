@@ -37,7 +37,7 @@ struct SeriesListView: View {
             for a in s.members { a.series = nil; a.isSeriesManuallyAssigned = true }
             context.delete(s)
         }
-        try? context.save()
+        context.saveReportingErrors("SeriesList.save")
     }
 }
 

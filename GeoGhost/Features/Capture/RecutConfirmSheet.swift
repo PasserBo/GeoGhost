@@ -63,6 +63,7 @@ struct RecutConfirmSheet: View {
             try await ArtworkSaver.replaceCutout(of: artwork, with: cutout, rect: model.cutoutRect, mode: model.segmentationMode, in: context)
             onDone()
         } catch {
+            Diagnostics.record(error, context: "RecutConfirmSheet")
             errorMessage = error.localizedDescription
         }
     }

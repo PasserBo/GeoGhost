@@ -28,7 +28,7 @@ struct SeriesDetailView: View {
         }
         .alert("Name this series", isPresented: $isRenaming) {
             TextField("e.g. Pink cat sticker", text: $draftTitle)
-            Button("Save") { series.title = draftTitle.trimmingCharacters(in: .whitespaces); try? context.save() }
+            Button("Save") { series.title = draftTitle.trimmingCharacters(in: .whitespaces); context.saveReportingErrors("SeriesDetail.rename") }
             Button("Cancel", role: .cancel) {}
         }
     }

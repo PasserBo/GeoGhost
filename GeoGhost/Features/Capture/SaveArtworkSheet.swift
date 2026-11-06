@@ -160,6 +160,7 @@ struct SaveArtworkSheet: View {
             try await ArtworkSaver.save(input, in: context)
             onSaved(keepEditing)
         } catch {
+            Diagnostics.record(error, context: "SaveArtworkSheet")
             errorMessage = error.localizedDescription
         }
     }

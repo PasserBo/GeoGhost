@@ -14,6 +14,7 @@ struct GeoGhostApp: App {
             // A broken store is not recoverable at runtime; fall back to memory so the app still opens,
             // and tell the user (RootView) rather than letting them collect into a store that is never saved.
             Logger(subsystem: "com.passerbo.geoghost", category: "App").error("Store failed to open: \(error.localizedDescription, privacy: .public)")
+            Diagnostics.record(error, context: "GeoGhostApp.openStore")
             container = try! GeoGhostSchema.makeContainer(inMemory: true)
             let services = AppServices()
             services.isRunningWithoutStorage = true

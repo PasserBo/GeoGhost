@@ -405,6 +405,22 @@
         }
       }
     },
+    "Attach a screenshot" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットを添付"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "附加截图"
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "zh-Hans" : {
@@ -609,6 +625,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "クレジットなしのカード"
+          }
+        }
+      }
+    },
+    "Choose a different screenshot" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のスクリーンショットを選択"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换一张截图"
           }
         }
       }
@@ -1207,6 +1239,22 @@
         }
       }
     },
+    "Email" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メールアドレス"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邮箱"
+          }
+        }
+      }
+    },
     "Error" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1501,6 +1549,38 @@
         }
       }
     },
+    "GeoGhost is just getting started. When it crashes or something goes wrong, a short technical report helps us fix it and improve your experience. Reports contain the app version, device model, iOS version and where in the app the problem happened — never your photos, locations or notes. You can change this anytime in Settings." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost はまだ始まったばかりのアプリです。クラッシュや不具合が起きたときに短い技術レポートを送っていただけると、問題の修正と使い心地の改善に役立ちます。レポートに含まれるのはアプリのバージョン、デバイスの機種、iOS のバージョン、アプリ内で問題が起きた場所だけで、写真・位置情報・メモは一切含まれません。設定からいつでも変更できます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost 刚刚起步。App 崩溃或出错时，一份简短的技术报告能帮助我们修复问题、改进你的使用体验。报告只包含 App 版本、设备型号、iOS 版本以及问题发生在 App 的哪个位置，绝不包含你的照片、位置或笔记。你可以随时在设置中更改。"
+          }
+        }
+      }
+    },
+    "GeoGhost is made by one person, and every message is read." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost は一人で開発しています。いただいたメッセージはすべて読んでいます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost 由一个人开发，每条留言都会被认真阅读。"
+          }
+        }
+      }
+    },
     "GeoGhost is running without saving, so anything you add now will be lost when you close the app. Restart GeoGhost; if this keeps happening, contact support." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1593,6 +1673,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手動切り抜き"
+          }
+        }
+      }
+    },
+    "Help improve GeoGhost" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost の改善にご協力ください"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮助改进 GeoGhost"
           }
         }
       }
@@ -1753,6 +1849,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "長押しして上にスワイプ"
+          }
+        }
+      }
+    },
+    "Ideas, problems, anything" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイデア、不具合、なんでもどうぞ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "想法、问题，什么都可以"
           }
         }
       }
@@ -2205,6 +2317,22 @@
         }
       }
     },
+    "Not now" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今はしない"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂不"
+          }
+        }
+      }
+    },
     "Not recorded" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2361,6 +2489,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定を開く"
+          }
+        }
+      }
+    },
+    "Optional — only if you'd like a reply." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意です。返信をご希望の場合のみご入力ください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选，仅在你希望收到回复时填写。"
+          }
+        }
+      }
+    },
+    "Optional." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意です。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选。"
           }
         }
       }
@@ -2768,6 +2928,22 @@
         }
       }
     },
+    "Remove screenshot" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットを削除"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除截图"
+          }
+        }
+      }
+    },
     "Replace" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2780,6 +2956,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "置き換える"
+          }
+        }
+      }
+    },
+    "Reports contain the app version, device model, iOS version and where in the app a problem happened — never your photos, locations or notes." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レポートに含まれるのはアプリのバージョン、デバイスの機種、iOS のバージョン、アプリ内で問題が起きた場所だけで、写真・位置情報・メモは含まれません。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告只包含 App 版本、设备型号、iOS 版本以及问题发生在 App 的哪个位置，绝不包含你的照片、位置或笔记。"
           }
         }
       }
@@ -2876,6 +3068,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存して、この写真から続けて選ぶ"
+          }
+        }
+      }
+    },
+    "Saved" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しました"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存"
           }
         }
       }
@@ -2994,6 +3202,54 @@
         }
       }
     },
+    "Send" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送"
+          }
+        }
+      }
+    },
+    "Send feedback" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フィードバックを送信"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送反馈"
+          }
+        }
+      }
+    },
+    "Sent with" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信される情報"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "附带信息"
+          }
+        }
+      }
+    },
     "Series" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3070,6 +3326,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "シェアカード"
+          }
+        }
+      }
+    },
+    "Share crash & error reports" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クラッシュとエラーのレポートを共有"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享崩溃与错误报告"
+          }
+        }
+      }
+    },
+    "Share reports" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レポートを共有"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享报告"
           }
         }
       }
@@ -3358,6 +3646,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "カメラをタップして、街で見つけたステッカー・グラフィティ・壁画を集めましょう。"
+          }
+        }
+      }
+    },
+    "Thank you!" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ありがとうございます！"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "谢谢！"
           }
         }
       }
@@ -3794,6 +4098,22 @@
         }
       }
     },
+    "You seem to be offline. Your feedback is saved and will be sent automatically." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフラインのようです。フィードバックは保存され、接続時に自動で送信されます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你似乎处于离线状态。反馈已保存，联网后会自动发送。"
+          }
+        }
+      }
+    },
     "Your collection couldn't be opened" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3810,6 +4130,22 @@
         }
       }
     },
+    "Your feedback was sent." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フィードバックを送信しました。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的反馈已发送。"
+          }
+        }
+      }
+    },
     "Your field guide is empty" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3822,6 +4158,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "図鑑はまだ空っぽです"
+          }
+        }
+      }
+    },
+    "Your photos, locations and notes are not included unless you attach a screenshot of them." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットに写っていない限り、写真・位置情報・メモは送信されません。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "除非你附加的截图中包含，否则不会发送你的照片、位置或笔记。"
           }
         }
       }

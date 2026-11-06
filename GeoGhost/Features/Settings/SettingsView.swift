@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var isExporting = false
     @State private var showPaywall = false
     @State private var exportError: String?
+    @State private var showFeedback = false
     /// Minimum geometrically consistent feature matches to auto-link two pieces.
     @AppStorage("seriesMinInliers") private var minInliers: Int = 8
 
@@ -41,12 +42,24 @@ struct SettingsView: View {
                     Text("Photos, cutouts and locations stay on this device. Subject detection, matching and classification run entirely on-device.")
                         .font(.footnote).foregroundStyle(Theme.inkSecondary)
                     if let url = URL(string: UIApplication.openSettingsURLString) { Link("Camera & location permissions", destination: url) }
+                    Toggle("Share crash & error reports", isOn: Binding(
+                        get: { services.diagnostics.consent == .granted },
+                        set: { services.diagnostics.consent = $0 ? .granted : .declined }))
+                    Text("Reports contain the app version, device model, iOS version and where in the app a problem happened — never your photos, locations or notes.")
+                        .font(.footnote).foregroundStyle(Theme.inkSecondary)
                 }
                 Section("About") {
+                    Button("Send feedback") { showFeedback = true }
                     LabeledContent("Version", value: Bundle.main.versionString)
                     Link("Privacy policy", destination: URL(string: "https://passerbo.github.io/GeoGhost/privacy/")!)
                     Link("Support", destination: URL(string: "https://passerbo.github.io/GeoGhost/support/")!)
                 }
+                #if DEBUG
+                Section("Debug") {
+                    // Lands in the debug archive on the receiving end (env "debug"), never triaged.
+                    Button("Record a test error") { Diagnostics.record(NSError(domain: "GeoGhostDebug", code: 1), context: "Settings.debugTestError") }
+                }
+                #endif
             }
             .scrollContentBackground(.hidden)
             .background(PaperBackground())
@@ -61,6 +74,7 @@ struct SettingsView: View {
                 ShareSheet(items: [item.url])
             }
             .sheet(isPresented: $showPaywall) { PaywallView() }
+            .sheet(isPresented: $showFeedback) { FeedbackView() }
             .alert("Export failed", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
                 Button("OK", role: .cancel) {}
             } message: { Text(exportError ?? "") }
@@ -91,7 +105,7 @@ struct SettingsView: View {
         for a in artworks { context.delete(a) }
         for s in (try? context.fetch(FetchDescriptor<ArtSeries>())) ?? [] { context.delete(s) }
         for t in (try? context.fetch(FetchDescriptor<Tag>())) ?? [] { context.delete(t) }
-        try? context.save()
+        context.saveReportingErrors("Settings.wipe")
         ImageCache.shared.remove(prefix: "")
         Task { try? await ImageStore.shared.deleteAll(); storageBytes = 0 }
     }

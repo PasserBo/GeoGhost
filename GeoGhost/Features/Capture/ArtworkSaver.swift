@@ -68,7 +68,7 @@ enum ArtworkSaver {
         artwork.localFeatures = computed.0
         artwork.featurePrint = computed.1
         artwork.dominantColorHex = computed.2
-        try? context.save()
+        context.saveReportingErrors("ArtworkSaver.replaceCutout")
         if artwork.series == nil {
             await SeriesAssigner.assign(artwork, in: context)
         }
@@ -102,7 +102,7 @@ enum ArtworkSaver {
         artwork.localFeatures = computed.0
         artwork.featurePrint = computed.1
         artwork.dominantColorHex = computed.2
-        try? context.save()
+        context.saveReportingErrors("ArtworkSaver.enrich")
 
         // 2. Series matching.
         await SeriesAssigner.assign(artwork, in: context)
@@ -113,7 +113,7 @@ enum ArtworkSaver {
                 a.placeName = place.placeName
                 a.localityName = place.locality
                 a.countryCode = place.countryCode
-                try? context.save()
+                context.saveReportingErrors("ArtworkSaver.enrich.place")
             }
         }
     }
@@ -179,7 +179,7 @@ enum SeriesAssigner {
         }
         for a in matched where a.series == nil { a.series = target }
         artwork.series = target
-        try? context.save()
+        context.saveReportingErrors("SeriesAssigner.assign")
     }
 
     static func fetchSeries(_ id: UUID, in context: ModelContext) -> ArtSeries? {
@@ -197,7 +197,7 @@ enum SeriesAssigner {
                 guard let cg = ImageStore.shared.loadImage(artworkID: id, imageID: imageID) else { return nil }
                 return LocalFeatureMatcher.extract(cg).encoded()
             }.value
-            if let data { a.localFeatures = data; try? context.save() }
+            if let data { a.localFeatures = data; context.saveReportingErrors("SeriesAssigner.backfill") }
         }
         for a in all where (force || a.series == nil) && !a.isSeriesManuallyAssigned {
             await assign(a, in: context)
