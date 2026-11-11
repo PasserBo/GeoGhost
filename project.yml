@@ -42,8 +42,12 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"   # iPhone only; iPad runs it in compatibility mode (no iPad screenshots/layout for v1)
         SWIFT_OBJC_BRIDGING_HEADER: ""
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Config/Online-Info.plist   # merged into the generated plist: online backend keys
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.photography
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+    configFiles:
+      Debug: Config/Online.xcconfig
+      Release: Config/Online.xcconfig
     entitlements:
       path: GeoGhost/GeoGhost.entitlements
       properties: {}

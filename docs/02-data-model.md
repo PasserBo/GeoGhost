@@ -33,6 +33,9 @@
 | `isSeriesManuallyAssigned` | Bool | 用户手动归类后自动匹配不再覆盖 |
 | `isFavorite` | Bool | |
 | `visibility` | Visibility | private / public（v1.x） |
+| `remotePostID` | UUID? | 公开副本在服务端的 ID；未发布为空 |
+| `publishState` | PublishState | unpublished / uploading / pending / published / rejected（见 spec/changes/add-publishing） |
+| `publishedAt` | Date? | 首次公开的时间 |
 
 ## ArtSeries（同一设计的集合）
 

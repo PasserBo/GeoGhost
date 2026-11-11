@@ -47,6 +47,11 @@ final class Artwork {
     var note: String = ""
     var isFavorite: Bool = false
     var visibilityRaw: String = Visibility.privateOnly.rawValue
+    /// The public copy on the world map, if any. It is a snapshot taken when publishing:
+    /// later edits here do not change it.
+    var remotePostID: UUID?
+    var publishStateRaw: String = PublishState.unpublished.rawValue
+    var publishedAt: Date?
 
     var isSeriesManuallyAssigned: Bool = false
     var series: ArtSeries?
@@ -79,6 +84,16 @@ extension Artwork {
     var visibility: Visibility {
         get { Visibility(rawValue: visibilityRaw) ?? .privateOnly }
         set { visibilityRaw = newValue.rawValue }
+    }
+
+    /// Setting it keeps `visibility` in step: anything with a copy on the server is shared.
+    var publishState: PublishState {
+        get { PublishState(rawValue: publishStateRaw) ?? .unpublished }
+        set {
+            publishStateRaw = newValue.rawValue
+            visibility = newValue.hasRemoteCopy ? .publicShared : .privateOnly
+            if newValue == .unpublished { remotePostID = nil; publishedAt = nil }
+        }
     }
 
     var coordinate: CLLocationCoordinate2D? {

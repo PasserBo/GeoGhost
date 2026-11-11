@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>GGSupabaseURL</key>
+	<string>$(GG_SUPABASE_URL)</string>
+	<key>GGSupabaseAnonKey</key>
+	<string>$(GG_SUPABASE_ANON_KEY)</string>
+	<key>GGOnlineAPIURL</key>
+	<string>$(GG_ONLINE_API_URL)</string>
+	<key>GGImageBaseURL</key>
+	<string>$(GG_IMAGE_BASE_URL)</string>
+</dict>
+</plist>
