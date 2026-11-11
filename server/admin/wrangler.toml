@@ -1,0 +1,21 @@
+# GeoGhost moderation console (docs/spec/changes/add-moderation-console/design.md).
+# The repository is public: placeholders only. Real values at deploy time:
+#   npx wrangler deploy --var SUPABASE_URL:https://<ref>.supabase.co \
+#     --var ACCESS_TEAM_DOMAIN:<team>.cloudflareaccess.com --var ACCESS_AUD:<aud tag> \
+#     --var ALLOWED_EMAILS:<you@example.com>
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# Until every value is set the console answers 503 to everyone.
+name = "geoghost-admin"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co"
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""
+ALLOWED_EMAILS = ""
+
+[[r2_buckets]]
+binding = "POSTS"
+bucket_name = "geoghost-posts"

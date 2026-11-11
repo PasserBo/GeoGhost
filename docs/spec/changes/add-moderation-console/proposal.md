@@ -1,6 +1,6 @@
 # Proposal: 一个能看图、一键处理的审核后台
 
-> State: idea · Updated: 2026-11-12
+> State: in-progress · Updated: 2026-11-12
 
 ## Intent
 UGC 上架要求每条举报 24 小时内处理（审核指南 1.2），新用户的前 3 张也要人工审核。现在只能在 Supabase SQL Editor 里查 id、手写 `moderate_post`，而且**看不到图片**，审核既慢又容易出错。一个人运营时，审核必须能在手机上几十秒处理完一条。衡量：待审核最久的一条始终不超过 24 小时。
@@ -26,9 +26,9 @@ Out of scope:
 
 ## Decisions
 - 2026-11-12: 提出 — 用户认为有必要在 Worker 里做一个简易审核后台，替代 SQL Editor。
+- 2026-11-12: 决定做，按推荐方案：独立 Worker `geoghost-admin` + Cloudflare Access 登录（只放行开发者邮箱） — 不自己存密码和会话，管理接口不出现在 App 能访问的地址上。
 
 ## Open questions
-- 登录方式：Cloudflare Access（推荐，免费 50 人内，邮箱验证码登录）还是自己写一个共享口令。
 - 新举报 / 待审核的通知是否一起做（`add-reporting-and-blocking` T5），通知里直接带审核页链接。
 
 ## Links

@@ -18,3 +18,5 @@ AppStoreScreenshots/
 server/worker/node_modules/
 server/worker/dist/
 .wrangler/
+server/admin/node_modules/
+server/admin/dist/

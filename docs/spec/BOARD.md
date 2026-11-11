@@ -10,7 +10,7 @@
 | 4 | [add-explore-map](changes/add-explore-map/proposal.md) | in-progress | T1 决定世界地图入口（查询客户端 T3 已完成） | me |
 | 5 | [add-likes-and-saves](changes/add-likes-and-saves/proposal.md) | accepted | 等 4 | agent |
 | 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | accepted | 等 3 | agent |
-| 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | idea | 等 me 决定是否做、登录方式 | me |
+| 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | in-progress | T4–T6：执行迁移、开启 Access、设置 secret（代码已部署） | me |
 | 8 | [prepare-ugc-release](changes/prepare-ugc-release/proposal.md) | accepted | 等 2–6 | me + agent |
 | 9 | [add-apple-account-linking](changes/add-apple-account-linking/proposal.md) | accepted | 阶段 1 上线后开始 | agent |
 

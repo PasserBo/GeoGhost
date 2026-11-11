@@ -103,3 +103,21 @@ Worker 返回的错误统一为 `{"error": "<code>", "message": "…"}`，`error
 ```sh
 server/scripts/smoke.sh   # 读取 Config/Online.xcconfig
 ```
+
+## 审核后台（`server/admin/`，Worker `geoghost-admin`）
+
+独立的 Worker，前面由 Cloudflare Access 保护，只放行 `ALLOWED_EMAILS` 里的运营者。Access、Supabase 任一项没配好时一律返回 503。设计见 `docs/spec/changes/add-moderation-console/design.md`。
+
+1. 在 SQL Editor 执行 `supabase/migrations/20261112010000_moderation_console.sql`（只执行一次）。
+2. Workers & Pages → geoghost-admin → Settings → Domains & Routes → workers.dev → **Enable Cloudflare Access**；在生成的 Access 应用里把策略限制为自己的邮箱，复制 **Application Audience (AUD) Tag** 和 Zero Trust 的 **team domain**。
+3. `cd server/admin && npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY`
+4. 部署（真实值只在命令里传，不写进 `wrangler.toml`）：
+   ```sh
+   npx wrangler deploy --var SUPABASE_URL:https://<ref>.supabase.co \
+     --var ACCESS_TEAM_DOMAIN:<team>.cloudflareaccess.com --var ACCESS_AUD:<aud tag> \
+     --var ALLOWED_EMAILS:<you@example.com>
+   ```
+
+图片是 HEIC：用 Safari（iPhone / Mac）打开后台；Chrome 不显示 HEIC。
+
+本地检查：`npm install && npx tsc --noEmit && npx vitest run`。
