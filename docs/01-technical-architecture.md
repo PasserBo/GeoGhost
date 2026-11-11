@@ -17,7 +17,7 @@
 | 相机 | AVFoundation `AVCapturePhotoOutput`，写入 EXIF/GPS | 完整控制元数据 |
 | 元数据 | ImageIO `CGImageSource` 读取 EXIF/GPS/TIFF；`CLGeocoder` 反地理编码 | |
 | 地图 | **MapKit（SwiftUI `Map`）**，自研网格聚合 | 无 API key，无费用 |
-| 后端 | **无自建服务器。CloudKit**：v1 私有库同步；v1.x 公共库做公开地图 | 零运维、免费额度足够、身份即 iCloud |
+| 后端 | v1 无服务器。线上阶段：**Supabase**（匿名认证、Postgres/PostGIS）+ **Cloudflare R2**（公开图片，Worker 签发上传 URL）；私有同步仍走 CloudKit（ADR-007） | 地理聚合与审核查询用 SQL；图片下行流量免费 |
 | 支付 | StoreKit 2，非消耗型「Pro」 | |
 | 项目生成 | XcodeGen (`project.yml`) | pbxproj 不手写，可 diff、可 review |
 | 依赖 | **零第三方依赖**（v1） | 减少审核/维护风险 |
@@ -111,8 +111,14 @@ GeoGhost/
 ## 7. 架构决策记录（ADR）
 
 - **ADR-001 放弃 Flutter 改原生**：分割/FeaturePrint/SwiftData/MapKit 全是系统框架，Flutter 无等价物；ML Kit 模拟器不可用已严重拖慢迭代；App 定位单平台精品。代价：放弃 Android，v1 可接受。
-- **ADR-002 无自建后端**：v1 单人本地 + iCloud；多人阶段用 CloudKit Public DB。避免服务器成本与隐私合规负担；缺点是难以做跨平台/Web，接受。
+- **ADR-002 无自建后端**：v1 单人本地 + iCloud；多人阶段用 CloudKit Public DB。避免服务器成本与隐私合规负担；缺点是难以做跨平台/Web，接受。（多人阶段部分已被 ADR-007 取代）
 - **ADR-003 对抠图而非原图计算特征**：原图背景（墙面、杆子）会主导相似度；抠图后只剩设计本身。
 - **ADR-006 系列匹配由全局嵌入改为局部特征几何校验**（2026-10-05）：FeaturePrint 面向「相似照片」聚类，对旋转、残缺、多余内容敏感，真实数据上无法区分；ORB 风格匹配只需局部细节对上且几何一致，天然满足三种场景。代价是手绘变体与角点稀少的极简图案仍匹配不上，接受。
 - **ADR-004 图片走文件系统**：SwiftData/CloudKit 对大 blob 支持弱；文件 + 相对路径最稳。
 - **ADR-005 iOS 17 为最低版本**：`VNGenerateForegroundInstanceMaskRequest` 与 SwiftData 均需 17；2026 年 iOS 17+ 覆盖率 > 95%。
+- **ADR-007 线上阶段用 Supabase + Cloudflare R2**（2026-11-09）：
+  - **数据与身份放 Supabase**：帖子、举报、屏蔽在 Postgres，地图的视口查询与网格聚合一条 SQL 即可，审核运营直接写查询。
+  - **身份先用匿名账号**：首次发布时静默创建，凭证存 Keychain，昵称挂在这个 ID 上；以后开放 Sign in with Apple 时把匿名账号绑定过去，ID 不变，历史帖子不迁移。不能做成「上传后与用户不关联」：审核指南 1.2 要求能屏蔽滥用用户，「撤回全部公开内容」也需要知道帖子归属。
+  - **图片放 R2**：Worker 校验 Supabase JWT 后签发上传 URL，客户端直传；下行流量免费，没有按量计费的失控风险。
+  - **只上传抠图**，压成带 alpha 的 HEIC：长边 1024 约 80 KB，400 缩略图约 21 KB，按 74 张真实抠图实测；原图不上传。
+  - **放弃的方案**：Supabase Storage 免费版每月流量 5 GB，约 1700 次地图浏览就用完。Firebase 的匿名登录和 App Check 更成熟，但 Firestore 没有地理查询，格子计数要靠 Functions 预先维护，SDK 也重，Blaze 方案没有费用硬上限。CloudKit 公共库没有服务端计算。
