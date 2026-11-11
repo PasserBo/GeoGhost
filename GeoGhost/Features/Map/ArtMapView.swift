@@ -2,9 +2,16 @@ import MapKit
 import SwiftData
 import SwiftUI
 
-/// Every collected piece on a map, clustered by screen-space grid.
+/// The map page: one's own pieces (clustered on the phone) or, when online features exist, everyone's
+/// public pieces (clustered by the server) — spec: explore-map.
 struct ArtMapView: View {
+    enum Mode: String { case mine, world }
+
     @Query private var artworks: [Artwork]
+    @Environment(AppServices.self) private var services
+    @AppStorage("mapMode") private var modeRaw = Mode.mine.rawValue
+    @State private var explore: ExploreModel?
+    @State private var selectedPost: ExplorePost?
     @State private var position: MapCameraPosition = .automatic
     @State private var visibleRegion: MKCoordinateRegion?
     @State private var selected: Artwork?
@@ -16,6 +23,18 @@ struct ArtMapView: View {
         NavigationStack {
             Map(position: $position, interactionModes: .all) {
                 if showUserLocation { UserAnnotation() }
+                if isWorld, let explore, let config = services.online?.config {
+                    ForEach(explore.posts) { post in
+                        Annotation("", coordinate: post.coordinate) {
+                            if post.cellCount > 1 {
+                                ExploreClusterPin(post: post, config: config).onTapGesture { zoom(into: post.coordinate) }
+                            } else {
+                                ExplorePostPin(post: post, config: config).onTapGesture { selectedPost = post }
+                            }
+                        }
+                        .annotationTitles(.hidden)
+                    }
+                } else {
                 ForEach(clusters) { cluster in
                     Annotation("", coordinate: cluster.center) {
                         if cluster.artworks.count == 1, let a = cluster.artworks.first {
@@ -26,12 +45,19 @@ struct ArtMapView: View {
                     }
                     .annotationTitles(.hidden)
                 }
+                }
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
             .mapControls { MapCompass(); MapUserLocationButton() }
-            .onMapCameraChange(frequency: .onEnd) { ctx in visibleRegion = ctx.region }
+            .onMapCameraChange(frequency: .onEnd) { ctx in
+                visibleRegion = ctx.region
+                if isWorld { explore?.regionChanged(ctx.region) }
+            }
+            .overlay(alignment: .bottom) { if isWorld, let explore { WorldStatusBanner(model: explore) } }
             .overlay {
-                if artworks.isEmpty {
+                if isWorld {
+                    EmptyView()
+                } else if artworks.isEmpty {
                     EmptyStateView(systemImage: "map", title: "Nothing on the map yet", message: "Pieces with a location appear here as you collect them.",
                                    action: (label: "Collect a piece", run: { openCapture() }))
                         .background(.ultraThinMaterial)
@@ -50,10 +76,46 @@ struct ArtMapView: View {
                 ClusterSheet(cluster: c) { a in selectedCluster = nil; selected = a }
                     .presentationDetents([.medium, .large])
             }
+            .sheet(item: $selectedPost) { post in
+                if let config = services.online?.config {
+                    RemotePostSheet(post: post, config: config).presentationDetents([.medium, .large])
+                }
+            }
             .navigationTitle("Map")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if services.online != nil {
+                    ToolbarItem(placement: .principal) {
+                        Picker("Map", selection: $modeRaw) {
+                            Text("Mine").tag(Mode.mine.rawValue)
+                            Text("World").tag(Mode.world.rawValue)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 200)
+                    }
+                }
+            }
+            .onChange(of: modeRaw) { startWorldIfNeeded() }
+            .task { startWorldIfNeeded() }
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear { showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse }
+        }
+    }
+
+    private var isWorld: Bool { modeRaw == Mode.world.rawValue && services.online != nil }
+
+    private func startWorldIfNeeded() {
+        guard isWorld, let online = services.online else { return }
+        if explore == nil { explore = ExploreModel(client: ExploreClient(services: online)) }
+        if let visibleRegion { explore?.regionChanged(visibleRegion) }
+    }
+
+    /// Tapping a cluster zooms into its cell.
+    private func zoom(into center: CLLocationCoordinate2D) {
+        let span = visibleRegion?.span ?? MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+        withAnimation {
+            position = .region(MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: span.latitudeDelta / 4,
+                                                                                         longitudeDelta: span.longitudeDelta / 4)))
         }
     }
 
@@ -121,5 +183,29 @@ struct ClusterSheet: View {
             .navigationTitle("\(cluster.artworks.count) pieces here")
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+}
+
+/// Loading, empty and error states of the world map, at the bottom so the map stays usable.
+struct WorldStatusBanner: View {
+    let model: ExploreModel
+
+    var body: some View {
+        Group {
+            if let error = model.error {
+                HStack(spacing: 10) {
+                    Text(OnlineMessage.text(for: error)).font(.footnote)
+                    Button("Try again") { model.reload() }.font(.footnote.weight(.semibold))
+                }
+            } else if model.isLoading {
+                ProgressView().controlSize(.small)
+            } else if model.hasLoaded, model.posts.isEmpty {
+                Text("No public pieces here yet.").font(.footnote)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.bottom, 100)
+        .opacity(model.error != nil || model.isLoading || (model.hasLoaded && model.posts.isEmpty) ? 1 : 0)
     }
 }

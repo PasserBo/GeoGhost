@@ -1,7 +1,7 @@
 # Tasks: setup-online-backend
 
 ## Now
-后端已上线并通过端到端冒烟测试。只剩 T6（是否买自有域名）由 me 决定；决定后归档本变更。
+全部完成。合并到 main 后归档。
 
 ## M0 · 云端资源
 - [x] T1 建 Supabase 项目 — owner: me · verify: 能打开项目 Dashboard · done 2026-11-13
@@ -23,7 +23,8 @@
   - `server/worker` 下：`npm install` → `npx wrangler login` → `npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY` → `npx wrangler deploy --var SUPABASE_URL:https://<ref>.supabase.co --var SUPABASE_ANON_KEY:<anon key>`。
   - 仓库是公开的：真实值只在部署命令里传，**不要写进 `wrangler.toml`**（里面只有占位符；占位符没换掉时 Worker 返回 500）。
   - 交回给 agent：Worker URL。
-- [ ] T6 决定是否买自有域名 — owner: me · verify: 在 proposal 的 Decisions 里记下结论
+- [x] T6 决定是否买自有域名 — owner: me · verify: 在 proposal 的 Decisions 里记下结论 · done 2026-11-12
+  - evidence: 用户决定暂不购买（2026-11-12）
 
 ## M1 · 代码
 - [x] T7 SQL 迁移与本地测试（表、RLS、RPC、额度） — owner: agent · verify: Docker Postgres 上全部 SQL 测试通过 · done 2026-11-12

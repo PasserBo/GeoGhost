@@ -2445,6 +2445,22 @@
         }
       }
     },
+    "Mine" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分"
+          }
+        }
+      }
+    },
     "Minimal" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2633,6 +2649,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "位置情報なし"
+          }
+        }
+      }
+    },
+    "No public pieces here yet." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这里还没有公开的作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このあたりにはまだ公開された作品がありません。"
           }
         }
       }
@@ -5058,6 +5090,22 @@
         }
       }
     },
+    "Unknown" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明"
+          }
+        }
+      }
+    },
     "Unknown area" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5230,6 +5278,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同じステッカーを 2 か所で集めると、GeoGhost が自動でここにまとめます。"
+          }
+        }
+      }
+    },
+    "World" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "世界"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワールド"
           }
         }
       }

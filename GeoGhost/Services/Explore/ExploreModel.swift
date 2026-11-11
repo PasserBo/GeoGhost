@@ -13,6 +13,8 @@ final class ExploreModel {
     private(set) var isLoading = false
     /// The last load failed (offline, server); the previous posts stay on screen.
     private(set) var error: OnlineError?
+    /// At least one area has been loaded, so an empty list means "nothing here" rather than "not yet".
+    private(set) var hasLoaded = false
 
     private struct Key: Hashable { let bounds: ExploreBounds; let cell: Double }
     private let fetch: Fetch
@@ -53,6 +55,7 @@ final class ExploreModel {
         if useCache, let hit = cache[key], now().timeIntervalSince(hit.at) < ttl {
             posts = hit.posts
             error = nil
+            hasLoaded = true
             isLoading = false
             return
         }
@@ -68,6 +71,7 @@ final class ExploreModel {
                 cache[key] = (now(), result)
                 posts = result
                 error = nil
+                hasLoaded = true
             } catch is CancellationError {
                 return
             } catch {

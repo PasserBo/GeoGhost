@@ -24,9 +24,10 @@ Out of scope:
 ## Decisions
 - 2026-11-11: 举报每天 20 次；3 个不同举报人自动隐藏（09 §4–§6）。
 
+- 2026-11-12: 举报原因：几个基本原因 + 「其他」（需填写说明）。
+
 ## Open questions
-- 举报原因列表（色情、暴力、仇恨、个人信息、垃圾内容、其他？）。
-- 开发者通知走哪条路：复用 TestFlight 反馈的 triage 管道，还是邮件。
+- 通知走哪条路（**待讨论，不要先做**）：用户的想法是打开 App 时弹窗提示，并有地方查看过去的通知；还不确定这是否合适，之后一起讨论再定。
 
 ## Links
 - 后端契约: [setup-online-backend/design.md](../setup-online-backend/design.md) §5 `report_post`、`moderate_post`

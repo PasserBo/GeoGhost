@@ -4,8 +4,10 @@
 T3 查询客户端已完成（`GeoGhost/Services/Explore/`），与入口位置无关。等 me 决定 T1 入口，然后写 delta（T2）并接界面（T4–T6）。
 
 ## M1 · 规划
-- [ ] T1 决定世界地图入口（新标签页 / 地图图层） — owner: me · verify: proposal Decisions
-- [ ] T2 delta `explore-map` 与 design（缩放级别 → 网格大小、请求节流、缓存） — owner: agent · after: T1 · verify: spec_tool check-delta 无错误 + 用户确认
+- [x] T1 决定世界地图入口（新标签页 / 地图图层） — owner: me · verify: proposal Decisions · done 2026-11-12
+  - evidence: 用户决定：现有地图上加「我的 / 世界」切换
+- [x] T2 delta `explore-map` 与 design（缩放级别 → 网格大小、请求节流、缓存） — owner: agent · after: T1 · verify: spec_tool check-delta 无错误 + 用户确认 · done 2026-11-12
+  - evidence: `specs/explore-map/spec.md`（7 条要求）check-delta 无警告；`design.md`
 
 ## M2 · 实现
 - [x] T3 explore 查询客户端（视口去抖、取消过期请求、内存缓存） — owner: agent · after: T2 · verify: 单元测试 · done 2026-11-12

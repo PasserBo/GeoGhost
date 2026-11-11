@@ -25,8 +25,9 @@ Out of scope:
 - 2026-11-12: MVP 阶段图片由 Worker 读 R2 返回；买自有域名后改为 R2 自定义域名，客户端只换配置 — Worker 免费额度每天 10 万次请求，早期足够。
 - 2026-11-12: Supabase 选东京（ap-northeast-1），虽然 App 面向全球 — 早期用户和种子内容在日本；数据量最大的图片走 Cloudflare 边缘缓存，与数据库区域无关；远距离用户只在小体积的查询上多一次往返，之后可用边缘缓存 explore 结果或只读副本补上；日本有欧盟充分性认定，欧洲用户数据存放在日本合规成本低。
 
+- 2026-11-12: 暂不购买自有域名 — 图片继续由 Worker 返回，早期的免费额度足够。
+
 ## Open questions
-- 是否购买自有域名（图片 CDN、隐私政策页、以后的通用链接都会用到）。
 
 ## Links
 - Design: [design.md](design.md) · ADR: [ADR-007](../../../01-technical-architecture.md) · 身份设计: [09](../../../09-online-identity.md)
