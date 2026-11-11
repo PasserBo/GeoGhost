@@ -20,3 +20,4 @@ server/worker/dist/
 .wrangler/
 server/admin/node_modules/
 server/admin/dist/
+server/admin/public/vendor/

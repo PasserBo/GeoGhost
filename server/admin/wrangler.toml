@@ -19,3 +19,7 @@ ALLOWED_EMAILS = ""
 [[r2_buckets]]
 binding = "POSTS"
 bucket_name = "geoghost-posts"
+
+# libheif (decodes HEIC in the browser) and heic.js. Run `npm run vendor` before deploying.
+[assets]
+directory = "./public"

@@ -5,7 +5,8 @@
 - **Worker `geoghost-admin`**（`server/admin/`），独立于 `geoghost-api`。workers.dev 上开启 Cloudflare Access（只放行运营者邮箱）。
 - Worker 校验每个请求的 `Cf-Access-Jwt-Assertion`：RS256，公钥来自 `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`，`aud` 等于 Access 应用的 AUD，`iss` 等于 team 域名，未过期；邮箱在 `ALLOWED_EMAILS` 里（双保险）。缺配置时一律 503，不放行。
 - 页面由 Worker 输出 HTML（无框架、无外部资源），所有用户内容转义。操作是同源表单 POST（检查 `Origin`），处理后 303 跳回（刷新不会重复提交）。
-- 图片：`GET /img/<key>` 从 R2 读（同一个 bucket 绑定），只允许 `posts/` 前缀。
+- 图片：`GET /img/<key>` 从 R2 读（同一个 bucket 绑定），只允许 `posts/` 前缀。浏览器大多不能直接显示 HEIC，所以页面用 libheif（WebAssembly，作为 Worker 静态资源 `/vendor/` 提供）在浏览器里解码成 PNG，保留透明；Worker 免费版的 CPU 时间不够在服务端转换。
+- CSP 不允许内联脚本（`script-src 'self' 'wasm-unsafe-eval'`），删除 / 封禁的二次确认也在 `public/admin.js` 里。
 - 数据：service role 调用下面的 RPC。删除时 Worker 先调 `admin_remove_post`（帖子立即消失并拿到图片 key），再删 R2 两张图；删图失败只会留下没人能看到的孤立文件。
 
 ## 数据库（迁移 `20261112010000_moderation_console.sql`，全部只给 service_role）

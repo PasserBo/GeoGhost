@@ -29,6 +29,7 @@ Out of scope:
 - 2026-11-12: 决定做，按推荐方案：独立 Worker `geoghost-admin` + Cloudflare Access 登录（只放行开发者邮箱） — 不自己存密码和会话，管理接口不出现在 App 能访问的地址上。
 
 - 2026-11-12: Access 策略用「Cloudflare account members」（workers.dev 一键开启的选项），Worker 再用邮箱白名单（Cloudflare 账号邮箱）做第二道检查 — 两层都要通过。
+- 2026-11-12: 图片在浏览器里用 libheif 解码显示 — 用户觉得只能用 Safari 太麻烦；不改 App 的上传格式，也不占服务器 CPU。
 
 ## Open questions
 - 新举报 / 待审核的通知是否一起做（`add-reporting-and-blocking` T5），通知里直接带审核页链接。

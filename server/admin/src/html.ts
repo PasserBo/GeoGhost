@@ -28,6 +28,7 @@ export function page(opts: { tab: Tab; stats: Stats; actor: string; body: string
     `<a class="tab${t === tab ? ' on' : ''}" href="/?tab=${t}">${label}</a>`;
   return `<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>GeoGhost 审核</title>
+<script src="/vendor/libheif.js" defer></script><script src="/admin.js" defer></script>
 <style>
 body{font:15px/1.45 -apple-system,system-ui,sans-serif;margin:0;background:#f4f0e8;color:#1f1b16}
 header{position:sticky;top:0;background:#f4f0e8;padding:12px 14px 0;border-bottom:1px solid #ddd5c8;z-index:1}
@@ -38,6 +39,8 @@ h1{font-size:18px;margin:0 0 8px}.who{float:right;font-size:12px;color:#7a7066}
 main{padding:12px 14px 40px;max-width:760px;margin:auto}
 .card{background:#fffaf2;border-radius:16px;padding:12px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap}
 .noheic{width:160px;height:160px;display:flex;align-items:center;padding:10px;box-sizing:border-box;font-size:12px;color:#c62828;background:#fdecea;border-radius:10px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);color:#fff;display:flex;align-items:center;justify-content:center;z-index:9;cursor:zoom-out}
+.overlay img{max-width:95vw;max-height:95vh;background:repeating-conic-gradient(#e8e2d8 0 25%,#fff 0 50%) 0 0/16px 16px}
 .card img{width:160px;height:160px;object-fit:contain;background:repeating-conic-gradient(#e8e2d8 0 25%,#fff 0 50%) 0 0/16px 16px;border-radius:10px}
 .meta{flex:1;min-width:200px}.meta div{margin:2px 0}.muted{color:#7a7066;font-size:13px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.actions form{margin:0}
@@ -58,7 +61,7 @@ ${tabLink('pending', '待审核')}${tabLink('reported', '被举报')}${tabLink('
 
 function actionButton(tab: Tab, action: string, label: string, cls: string, fields: Record<string, string>, confirmText?: string): string {
   const hidden = Object.entries(fields).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('');
-  const confirm = confirmText ? ` onsubmit="return confirm('${esc(confirmText)}')"` : '';
+  const confirm = confirmText ? ` data-confirm="${esc(confirmText)}"` : '';
   return `<form method="post" action="/action"${confirm}><input type="hidden" name="action" value="${esc(action)}">` +
     `<input type="hidden" name="tab" value="${tab}">${hidden}<button class="${cls}">${label}</button></form>`;
 }
@@ -72,7 +75,7 @@ export function queue(tab: 'pending' | 'reported', rows: QueueRow[], reports: Ma
       .map((r) => `<li>${esc(r.reason)}${r.note ? ` — ${esc(r.note)}` : ''} <span class="muted">${esc(waited(r.created_at, now).text)}前</span></li>`).join('');
     const post = { post_id: row.id };
     const user = { user_id: row.author_id };
-    return `<div class="card"><a href="/img/${esc(row.image_key)}" target="_blank"><img src="/img/${esc(row.thumb_key)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noheic',textContent:'图片是 HEIC 格式，这个浏览器无法显示。请用 Safari（Mac / iPhone）打开。'}))"></a>
+    return `<div class="card"><a href="/img/${esc(row.image_key)}" data-heic-full><img data-heic="/img/${esc(row.thumb_key)}" alt=""></a>
 <div class="meta">
 <div><b>${esc(row.author_nickname ?? '（无昵称）')}</b>${row.author_banned ? ' <span class="late">已封禁</span>' : ''}
  <span class="muted">通过 ${row.author_approved} · 被隐藏 ${row.author_hidden}</span></div>

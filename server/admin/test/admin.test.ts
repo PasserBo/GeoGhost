@@ -98,6 +98,10 @@ describe('html', () => {
     expect(out).toContain('&lt;script&gt;');
     expect(out).not.toContain('<b>Shibuya');
     expect(out).toContain('class="late"');
+    expect(out).toContain('data-heic="/img/posts/11111111-1111-1111-1111-111111111111/thumb.heic"');
+    // Confirmation lives in admin.js: inline handlers would be blocked by the CSP.
+    expect(out).not.toContain('onsubmit');
+    expect(out).toContain('data-confirm=');
   });
 
   it('marks waits over 24 hours', () => {
@@ -144,7 +148,10 @@ describe('worker', () => {
     stubNetwork({ admin_stats: { pending_count: 0, oldest_pending_at: null, reported_count: 0, oldest_report_at: null }, admin_queue: [] });
     const r = await worker.fetch(req(await sign(valid())), env);
     expect(r.status).toBe(200);
-    expect(r.headers.get('content-security-policy')).toContain("frame-ancestors 'none'");
+    const csp = r.headers.get('content-security-policy') ?? '';
+    expect(csp).toContain("frame-ancestors 'none'");
+    expect(csp).not.toContain("'unsafe-inline'; script-src 'unsafe-inline'");
+    expect(csp).toMatch(/script-src 'self' 'wasm-unsafe-eval'/);
     expect(await r.text()).toContain('没有待审核的帖子');
   });
 

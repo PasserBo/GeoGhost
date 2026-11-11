@@ -113,11 +113,12 @@ server/scripts/smoke.sh   # 读取 Config/Online.xcconfig
 3. `cd server/admin && npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY`
 4. 部署（真实值只在命令里传，不写进 `wrangler.toml`）：
    ```sh
+   npm run vendor
    npx wrangler deploy --var SUPABASE_URL:https://<ref>.supabase.co \
      --var ACCESS_TEAM_DOMAIN:<team>.cloudflareaccess.com --var ACCESS_AUD:<aud tag> \
      --var ALLOWED_EMAILS:<you@example.com>
    ```
 
-图片是 HEIC：用 Safari（iPhone / Mac）打开后台；Chrome 不显示 HEIC。
+图片是 HEIC，页面在浏览器里用 libheif（WebAssembly）解码成 PNG，所以任何现代浏览器都能看。解码库来自 npm 的 `libheif-js`（LGPL-3.0），部署前 `npm run vendor` 会把它复制到 `public/vendor/`（不入库）。
 
 本地检查：`npm install && npx tsc --noEmit && npx vitest run`。
