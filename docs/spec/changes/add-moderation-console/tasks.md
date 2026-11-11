@@ -1,7 +1,7 @@
 # Tasks: add-moderation-console
 
 ## Now
-agent 部分（T1–T3）完成，后台已部署但在配置完成前对所有人返回 503。等 me：T4 执行迁移、T5 开启 Access 并交回 team domain 与 AUD、T6 设置 secret；然后 agent 重新部署（T7）。
+Access 与部署完成。等 me：T4 执行迁移、T6 设置 admin 的 secret，然后用 Safari 登录确认（T7）并审核测试帖子（T8）。
 
 ## M1 · 代码
 - [x] T1 迁移：操作记录表与 admin_* 函数 — owner: agent · verify: SQL 测试通过（含 anon/authenticated 不能调用） · done 2026-11-12
@@ -13,9 +13,11 @@ agent 部分（T1–T3）完成，后台已部署但在配置完成前对所有�
 
 ## M2 · 上线
 - [ ] T4 在 SQL Editor 执行迁移 `server/supabase/migrations/20261112010000_moderation_console.sql` — owner: me · verify: `select public.admin_stats();` 有结果
-- [ ] T5 开启 Cloudflare Access — owner: me · after: T3 · verify: 打开后台地址出现 Cloudflare 登录页
+- [x] T5 开启 Cloudflare Access — owner: me · after: T3 · verify: 打开后台地址出现 Cloudflare 登录页 · done 2026-11-12
+  - evidence: Access 已开启（team `passerbo-studio.cloudflareaccess.com`），策略为「Cloudflare account members」（workers.dev 一键开启时没有按邮箱的选项）；未登录访问被 302 到 Access 登录页
   - Workers & Pages → geoghost-admin → Settings → Domains & Routes → workers.dev 一行的「Enable Cloudflare Access」。
   - 打开生成的 Access 应用：Policies 只允许你的邮箱；在应用概览里复制 **Application Audience (AUD) Tag**；Zero Trust → Settings 里复制 **team domain**。两者都不是密钥，可以贴给 agent。
 - [ ] T6 设置 secret：`cd server/admin && npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY` — owner: me · after: T3 · verify: `wrangler secret list` 有这一项
 - [ ] T7 用 team domain、AUD、邮箱重新部署 — owner: agent · after: T5, T6 · verify: me 登录后看到队列
+  - 2026-11-12 已用 team domain、AUD、`ALLOWED_EMAILS=passerbo.studio@gmail.com`（Cloudflare 账号邮箱）部署；伪造令牌也被边缘 302。等 T4、T6 后由 me 登录确认。
 - [ ] T8 在后台审核模拟器上的测试帖子，并检查操作记录 — owner: me · after: T4, T7 · verify: 帖子在 App 里变为「已公开」
