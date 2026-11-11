@@ -13,3 +13,8 @@ build/
 
 # App Store screenshots: generated (scripts/compose-screenshots.swift), contain third-party street art — not committed
 AppStoreScreenshots/
+
+# Cloudflare Worker (server/worker)
+server/worker/node_modules/
+server/worker/dist/
+.wrangler/

@@ -1,0 +1,17 @@
+# GeoGhost online API (design.md §7). The repository is public:
+# only placeholders here. Pass real values at deploy time, e.g.
+#   npx wrangler deploy --var SUPABASE_URL:https://<ref>.supabase.co --var SUPABASE_ANON_KEY:<anon key>
+# and store the service role key as a secret:
+#   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+name = "geoghost-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co"
+SUPABASE_ANON_KEY = "YOUR-SUPABASE-ANON-KEY"
+
+[[r2_buckets]]
+binding = "POSTS"
+bucket_name = "geoghost-posts"
