@@ -1,7 +1,7 @@
 # Tasks: add-guest-identity
 
 ## Now
-T6 完成；T7 规则正文草稿待 me 确认；T8、T9 已实现，待网络可用的模拟器 / 真机验证。
+T1–T4、T6、T8 完成。剩 T7 规则正文（me 确认 `docs/community-rules.md`）、T9 身份失效提示（逻辑有单测，UI 未实际触发）、T10 换机方案研究、T11 真机。
 
 ## M1 · 会话层
 - [x] T1 Keychain 存取（会话存储，本机、首次解锁后可读、不同步） — owner: agent · verify: 单元测试 · done 2026-11-12
@@ -19,7 +19,8 @@ T6 完成；T7 规则正文草稿待 me 确认；T8、T9 已实现，待网络�
   - evidence: 模拟器截图：昵称、四条规则摘要、全文链接、同意开关；未同意时「Continue」不可用，同意后可用
 - [ ] T7 社区规则正文（EULA，零容忍条款）放在 docs/ 公开页 — owner: agent 起草 · me 确认 · verify: 用户确认
   - 2026-11-12 草稿：`docs/community-rules.md`（公开页 /community-rules/，App 内链接）。等 me 确认。
-- [ ] T8 设置页「线上身份」区：昵称、改昵称（冷却提示）、删除我的线上数据 — owner: agent · after: T4 · verify: 模拟器截图
+- [x] T8 设置页「线上身份」区：昵称、改昵称（冷却提示）、删除我的线上数据 — owner: agent · after: T4 · verify: 模拟器截图 · done 2026-11-12
+  - evidence: 模拟器真实后端：发布 → 审核中 → 后台通过 → 详情页自动同步为「On the world map · Public since Nov 12」，匿名世界地图查询可见；设置页删除线上数据后昵称「Not set」、已公开 0、世界地图为空、两张图 404
   - 2026-11-12 已实现（`GeoGhost/Features/Online/`）；模拟器端到端被本机公司代理（Netskope 重签 TLS）挡住，待在信任该证书的模拟器或真机上验证。
   - 2026-11-12 客户端已就绪：`OnlineAccountClient`（读资料、`saveProfile`、`deleteMyOnlineData`），真实后端已验证；剩界面。
 - [ ] T9 身份失效提示 — owner: agent · after: T3 · verify: 单元测试 + 模拟器

@@ -1,7 +1,7 @@
 # Tasks: add-moderation-console
 
 ## Now
-配置全部完成。等 me 用 Safari 登录确认（T7），并审核模拟器上的测试帖子（T8）。
+全部完成，可以归档。归档前把 design.md 中长期有效的部分并入 `capabilities/moderation-console/design.md`。
 
 ## M1 · 代码
 - [x] T1 迁移：操作记录表与 admin_* 函数 — owner: agent · verify: SQL 测试通过（含 anon/authenticated 不能调用） · done 2026-11-12
@@ -20,6 +20,8 @@
   - 打开生成的 Access 应用：Policies 只允许你的邮箱；在应用概览里复制 **Application Audience (AUD) Tag**；Zero Trust → Settings 里复制 **team domain**。两者都不是密钥，可以贴给 agent。
 - [x] T6 设置 secret：`cd server/admin && npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY` — owner: me · after: T3 · verify: `wrangler secret list` 有这一项 · done 2026-11-12
   - evidence: 用户在终端 `wrangler secret put` 成功（geoghost-admin）
-- [ ] T7 用 team domain、AUD、邮箱重新部署 — owner: agent · after: T5, T6 · verify: me 登录后看到队列
+- [x] T7 用 team domain、AUD、邮箱重新部署 — owner: agent · after: T5, T6 · verify: me 登录后看到队列 · done 2026-11-12
+  - evidence: me 登录 Safari / Chrome 后看到队列与图片（浏览器内 libheif 解码）
   - 2026-11-12 已用 team domain、AUD、`ALLOWED_EMAILS=passerbo.studio@gmail.com`（Cloudflare 账号邮箱）部署；伪造令牌也被边缘 302。等 T4、T6 后由 me 登录确认。
-- [ ] T8 在后台审核模拟器上的测试帖子，并检查操作记录 — owner: me · after: T4, T7 · verify: 帖子在 App 里变为「已公开」
+- [x] T8 在后台审核模拟器上的测试帖子，并检查操作记录 — owner: me · after: T4, T7 · verify: 帖子在 App 里变为「已公开」 · done 2026-11-12
+  - evidence: me 在后台点通过；App 同步为已公开，匿名世界地图可见
