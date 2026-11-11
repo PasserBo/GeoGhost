@@ -37,6 +37,7 @@ h1{font-size:18px;margin:0 0 8px}.who{float:right;font-size:12px;color:#7a7066}
 .tab{display:inline-block;padding:8px 12px;color:#7a7066;text-decoration:none}.tab.on{color:#ff6b2c;border-bottom:2px solid #ff6b2c}
 main{padding:12px 14px 40px;max-width:760px;margin:auto}
 .card{background:#fffaf2;border-radius:16px;padding:12px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap}
+.noheic{width:160px;height:160px;display:flex;align-items:center;padding:10px;box-sizing:border-box;font-size:12px;color:#c62828;background:#fdecea;border-radius:10px}
 .card img{width:160px;height:160px;object-fit:contain;background:repeating-conic-gradient(#e8e2d8 0 25%,#fff 0 50%) 0 0/16px 16px;border-radius:10px}
 .meta{flex:1;min-width:200px}.meta div{margin:2px 0}.muted{color:#7a7066;font-size:13px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.actions form{margin:0}
@@ -71,7 +72,7 @@ export function queue(tab: 'pending' | 'reported', rows: QueueRow[], reports: Ma
       .map((r) => `<li>${esc(r.reason)}${r.note ? ` — ${esc(r.note)}` : ''} <span class="muted">${esc(waited(r.created_at, now).text)}前</span></li>`).join('');
     const post = { post_id: row.id };
     const user = { user_id: row.author_id };
-    return `<div class="card"><a href="/img/${esc(row.image_key)}" target="_blank"><img src="/img/${esc(row.thumb_key)}" alt="" loading="lazy"></a>
+    return `<div class="card"><a href="/img/${esc(row.image_key)}" target="_blank"><img src="/img/${esc(row.thumb_key)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'noheic',textContent:'图片是 HEIC 格式，这个浏览器无法显示。请用 Safari（Mac / iPhone）打开。'}))"></a>
 <div class="meta">
 <div><b>${esc(row.author_nickname ?? '（无昵称）')}</b>${row.author_banned ? ' <span class="late">已封禁</span>' : ''}
  <span class="muted">通过 ${row.author_approved} · 被隐藏 ${row.author_hidden}</span></div>
