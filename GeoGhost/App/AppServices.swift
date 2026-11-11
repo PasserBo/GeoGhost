@@ -9,8 +9,10 @@ final class AppServices {
     let camera = CameraService()
     let pro = ProStore()
     let diagnostics = DiagnosticsReporter()
-    /// The online backend, when this build has one configured; nil hides every online feature.
-    let online = OnlineConfig.current.map(OnlineServices.init)
+    /// The online backend and the state its screens share, when this build has one configured;
+    /// nil hides every online feature.
+    let onlineState = OnlineConfig.current.map { OnlineState(services: OnlineServices(config: $0)) }
+    var online: OnlineServices? { onlineState?.services }
     /// The on-disk store failed to open and the app is running on an in-memory store: nothing will persist.
     var isRunningWithoutStorage = false
 }

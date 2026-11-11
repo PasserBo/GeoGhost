@@ -261,6 +261,22 @@
         }
       }
     },
+    "A nickname can't be only spaces." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昵称不能只有空格。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネームを空白だけにすることはできません。"
+          }
+        }
+      }
+    },
     "About" : {
       "localizations" : {
         "zh-Hans" : {
@@ -405,6 +421,22 @@
         }
       }
     },
+    "Area" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "区域"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エリア"
+          }
+        }
+      }
+    },
     "Attach a screenshot" : {
       "localizations" : {
         "ja" : {
@@ -469,6 +501,22 @@
         }
       }
     },
+    "Before you publish" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公开之前"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開する前に"
+          }
+        }
+      }
+    },
     "Belongs to" : {
       "localizations" : {
         "zh-Hans" : {
@@ -481,6 +529,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所属"
+          }
+        }
+      }
+    },
+    "By" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现者"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "見つけた人"
           }
         }
       }
@@ -629,6 +693,22 @@
         }
       }
     },
+    "Change nickname" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改昵称"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネームを変更"
+          }
+        }
+      }
+    },
     "Choose a different screenshot" : {
       "localizations" : {
         "ja" : {
@@ -641,6 +721,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "换一张截图"
+          }
+        }
+      }
+    },
+    "Choose a nickname and agree to the community rules first." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先设置昵称并同意社区规则。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "先にニックネームを決めて、コミュニティルールに同意してください。"
           }
         }
       }
@@ -757,6 +853,22 @@
         }
       }
     },
+    "Community rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "社区规则"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コミュニティルール"
+          }
+        }
+      }
+    },
     "Contact support" : {
       "localizations" : {
         "zh-Hans" : {
@@ -769,6 +881,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サポートに問い合わせる"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続ける"
           }
         }
       }
@@ -865,6 +993,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "カードを作成できませんでした"
+          }
+        }
+      }
+    },
+    "Couldn't delete everything" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法全部删除"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてを削除できませんでした"
+          }
+        }
+      }
+    },
+    "Couldn't delete this piece" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法删除这件作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を削除できませんでした"
           }
         }
       }
@@ -1013,6 +1173,38 @@
         }
       }
     },
+    "Delete my online data" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除我的线上数据"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンラインデータを削除"
+          }
+        }
+      }
+    },
+    "Delete online data" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除线上数据"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンラインデータを削除"
+          }
+        }
+      }
+    },
     "Delete this piece?" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1025,6 +1217,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "この作品を削除しますか？"
+          }
+        }
+      }
+    },
+    "Delete your online data?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除你的线上数据？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンラインデータを削除しますか？"
           }
         }
       }
@@ -1303,6 +1511,38 @@
         }
       }
     },
+    "Everyone can now see this piece on the world map." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在所有人都能在世界地图上看到这件作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品はワールドマップで誰でも見られるようになりました。"
+          }
+        }
+      }
+    },
+    "Everyone can see this piece." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所有人都能看到这件作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品は誰でも見られます。"
+          }
+        }
+      }
+    },
     "Everything inside that doesn't match the background is selected — best for busy stickers with text." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1475,6 +1715,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "現在地を取得中…"
+          }
+        }
+      }
+    },
+    "Found on" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发现日期"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "見つけた日"
           }
         }
       }
@@ -1853,6 +2109,22 @@
         }
       }
     },
+    "I agree to the community rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我同意社区规则"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コミュニティルールに同意します"
+          }
+        }
+      }
+    },
     "Ideas, problems, anything" : {
       "localizations" : {
         "ja" : {
@@ -1917,6 +2189,54 @@
         }
       }
     },
+    "In review" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审核中"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "審査中"
+          }
+        }
+      }
+    },
+    "It didn't pass review or was hidden after reports. Others can't see it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未通过审核，或因被举报而隐藏。其他人看不到它。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "審査を通らなかったか、通報により非表示になりました。ほかの人には見えません。"
+          }
+        }
+      }
+    },
+    "It disappears from the world map for everyone and becomes private again. The post used this month is not given back." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它会从所有人的世界地图上消失并恢复为私密。本月已用的公开次数不会返还。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての人のワールドマップから消え、非公開に戻ります。今月使った公開回数は戻りません。"
+          }
+        }
+      }
+    },
     "Its image file is missing or damaged." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1945,6 +2265,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "画像ファイルが見つからないか破損しています。「切り抜きを編集」で元の写真から切り抜き直してみてください。"
+          }
+        }
+      }
+    },
+    "Kind" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "类型"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "種類"
           }
         }
       }
@@ -2173,6 +2509,22 @@
         }
       }
     },
+    "New publishers' first posts are checked before others can see them. Retracting a post doesn't give the post back." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新用户最初的几次公开会先经过审核，通过后其他人才能看到。撤回不会返还次数。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "初めて公開する人の最初の数件は、審査後にほかの人に表示されます。取り下げても公開回数は戻りません。"
+          }
+        }
+      }
+    },
     "Newest first" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2185,6 +2537,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新しい順"
+          }
+        }
+      }
+    },
+    "Nickname" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "昵称"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ニックネーム"
           }
         }
       }
@@ -2205,6 +2573,22 @@
         }
       }
     },
+    "No ads or spam." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "禁止广告和垃圾内容。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "広告やスパムは禁止です。"
+          }
+        }
+      }
+    },
     "No camera is available on this device." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2217,6 +2601,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "このデバイスでは使用できるカメラがありません。"
+          }
+        }
+      }
+    },
+    "No faces, licence plates, addresses or other personal information." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "禁止出现人脸、车牌、地址等个人信息。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顔、ナンバープレート、住所などの個人情報は禁止です。"
           }
         }
       }
@@ -2249,6 +2649,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "まだシリーズはありません"
+          }
+        }
+      }
+    },
+    "No sexual, violent or hateful content, and nothing that harasses anyone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "禁止色情、暴力、仇恨内容，禁止骚扰任何人。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "性的・暴力的・差別的な内容や、誰かへの嫌がらせは禁止です。"
           }
         }
       }
@@ -2301,6 +2717,22 @@
         }
       }
     },
+    "Not approved" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未通过"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非承認"
+          }
+        }
+      }
+    },
     "Not enough free storage to save this piece." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2313,6 +2745,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "空き容量が足りないため、この作品を保存できません。"
+          }
+        }
+      }
+    },
+    "Not finished" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完成"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完了"
           }
         }
       }
@@ -2345,6 +2793,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記録なし"
+          }
+        }
+      }
+    },
+    "Not set" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未设置"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未設定"
           }
         }
       }
@@ -2461,6 +2925,22 @@
         }
       }
     },
+    "On the world map" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已公开在世界地图上"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワールドマップに公開中"
+          }
+        }
+      }
+    },
     "One-time purchase. No subscription." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2473,6 +2953,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "買い切り。サブスクリプションではありません。"
+          }
+        }
+      }
+    },
+    "Online" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "线上"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンライン"
+          }
+        }
+      }
+    },
+    "Online features aren't available in this build." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个版本没有线上功能。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このビルドではオンライン機能を利用できません。"
+          }
+        }
+      }
+    },
+    "Only publish what you found in public space." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只公开在公共空间里发现的作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公共の場所で見つけたものだけを公開してください。"
+          }
+        }
+      }
+    },
+    "Only you can see it until it has been checked." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审核通过前只有你能看到。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "審査が終わるまではあなただけが見られます。"
+          }
+        }
+      }
+    },
+    "Only you can see this piece." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有你能看到这件作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品はあなただけが見られます。"
           }
         }
       }
@@ -2557,6 +3117,22 @@
         }
       }
     },
+    "Others will see this piece once it has been checked, usually within a day. Until then only you can see it." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审核通过后其他人才能看到这件作品，通常在一天之内。在此之前只有你能看到。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "審査が終わるとほかの人にも表示されます（通常 1 日以内）。それまではあなただけが見られます。"
+          }
+        }
+      }
+    },
     "PRO" : {
       "shouldTranslate" : false
     },
@@ -2572,6 +3148,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "写真のメタデータ"
+          }
+        }
+      }
+    },
+    "Photos, cutouts and locations stay on this device unless you publish a piece; then only its cutout, rough area and date are shared. Subject detection, matching and classification run entirely on-device." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "照片、抠图和位置都只保存在这台设备上；只有你公开某件作品时，才会分享它的抠图、大致区域和日期。主体识别、匹配和分类全部在设备上完成。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真、切り抜き、位置情報はこのデバイスにだけ保存されます。作品を公開したときだけ、その切り抜き、おおよそのエリア、日付が共有されます。被写体の検出、照合、分類はすべてデバイス上で行われます。"
           }
         }
       }
@@ -2640,6 +3232,22 @@
         }
       }
     },
+    "Pieces need a location to appear on the world map." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品需要有位置才能出现在世界地图上。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワールドマップに表示するには位置情報が必要です。"
+          }
+        }
+      }
+    },
     "Pieces with a location appear here as you collect them." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2652,6 +3260,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "位置情報のある作品は、集めるとここに表示されます。"
+          }
+        }
+      }
+    },
+    "Pieces you published before can no longer be managed from this phone. They become private here; to have them taken down from the world map, contact support." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "之前公开的作品无法再从这台手机管理。它们在这里会恢复为私密；如需从世界地图上撤下，请联系支持。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以前に公開した作品は、この iPhone から管理できなくなります。ここでは非公開に戻ります。ワールドマップから取り下げたい場合はサポートにご連絡ください。"
           }
         }
       }
@@ -2768,6 +3392,22 @@
         }
       }
     },
+    "Private" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "私密"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非公開"
+          }
+        }
+      }
+    },
     "Pro" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2780,6 +3420,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pro"
+          }
+        }
+      }
+    },
+    "Public since %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 起公开"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ から公開中"
+          }
+        }
+      }
+    },
+    "Publish" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公开"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開"
+          }
+        }
+      }
+    },
+    "Publish to the world map" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公开到世界地图"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワールドマップに公開"
+          }
+        }
+      }
+    },
+    "Published" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已公开"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開しました"
+          }
+        }
+      }
+    },
+    "Published pieces" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已公开的作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開中の作品"
+          }
+        }
+      }
+    },
+    "Publishing was interrupted. Trying again won't use another post." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公开过程被中断了。重试不会再占用一次公开次数。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開が中断されました。もう一度試しても公開回数は増えません。"
           }
         }
       }
@@ -2812,6 +3548,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未分類の作品を再照合"
+          }
+        }
+      }
+    },
+    "Read the full community rules" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阅读完整的社区规则"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コミュニティルールの全文を読む"
           }
         }
       }
@@ -3020,6 +3772,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "撮り直す"
+          }
+        }
+      }
+    },
+    "Retract" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取り下げる"
+          }
+        }
+      }
+    },
+    "Retract all" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部撤回"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて取り下げる"
+          }
+        }
+      }
+    },
+    "Retract all published pieces" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回所有已公开的作品"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開中の作品をすべて取り下げる"
+          }
+        }
+      }
+    },
+    "Retract all published pieces?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回所有已公开的作品？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開中の作品をすべて取り下げますか？"
+          }
+        }
+      }
+    },
+    "Retract this piece?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤回这件作品？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を取り下げますか？"
           }
         }
       }
@@ -3234,6 +4066,22 @@
         }
       }
     },
+    "Sent for review" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已提交审核"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "審査に送信しました"
+          }
+        }
+      }
+    },
     "Sent with" : {
       "localizations" : {
         "ja" : {
@@ -3394,6 +4242,22 @@
         }
       }
     },
+    "Shown next to the pieces you publish. You don't need an account." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示在你公开的作品旁边。无需注册账号。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開した作品の横に表示されます。アカウントは不要です。"
+          }
+        }
+      }
+    },
     "Shows what will be selected. Release to add it." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3442,6 +4306,22 @@
         }
       }
     },
+    "Something went wrong. Please try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "出了点问题，请重试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "問題が発生しました。もう一度お試しください。"
+          }
+        }
+      }
+    },
     "Somewhere on the street" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3470,6 +4350,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "並べ替え"
+          }
+        }
+      }
+    },
+    "Start as a new guest" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以新游客身份开始"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいゲストとして始める"
+          }
+        }
+      }
+    },
+    "Stays on this phone" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只留在这台手机上"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この iPhone だけに残るもの"
           }
         }
       }
@@ -3762,6 +4674,22 @@
         }
       }
     },
+    "The cutout and the original photo will be removed from GeoGhost, and the piece will disappear from the world map." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "抠图和原照片将从 GeoGhost 中删除，这件作品也会从世界地图上消失。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切り抜きと元の写真が GeoGhost から削除され、この作品はワールドマップからも消えます。"
+          }
+        }
+      }
+    },
     "The cutout and the original photo will be removed from GeoGhost." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3774,6 +4702,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切り抜きと元の写真が GeoGhost から削除されます。"
+          }
+        }
+      }
+    },
+    "The location is shown only to within about 100 m." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置只显示到约 100 米范围。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置は約 100 m の範囲でのみ表示されます。"
+          }
+        }
+      }
+    },
+    "The original photo, the exact location, the time of day, your device, notes and tags are never published." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原照片、精确位置、拍摄时刻、设备、备注和标签都不会公开。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元の写真、正確な位置、撮影時刻、デバイス、メモ、タグは公開されません。"
           }
         }
       }
@@ -3806,6 +4766,134 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "写真を読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "The server couldn't complete this. Please try again later." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务器暂时无法完成操作，请稍后再试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバーで処理できませんでした。しばらくしてからお試しください。"
+          }
+        }
+      }
+    },
+    "There is zero tolerance for objectionable content. Posts that break the rules are removed, and their authors can be blocked from publishing." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对不当内容零容忍。违反规则的内容会被删除，发布者可能被禁止公开。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不適切なコンテンツは一切容認しません。ルールに違反した投稿は削除され、投稿者は公開を禁止されることがあります。"
+          }
+        }
+      }
+    },
+    "They disappear from the world map for everyone and become private again on this phone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "它们会从所有人的世界地图上消失，并在这台手机上恢复为私密。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての人のワールドマップから消え、この iPhone では非公開に戻ります。"
+          }
+        }
+      }
+    },
+    "This cutout couldn't be uploaded." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这张抠图无法上传。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この切り抜きはアップロードできませんでした。"
+          }
+        }
+      }
+    },
+    "This cutout is too large to publish." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这张抠图太大，无法公开。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この切り抜きは大きすぎて公開できません。"
+          }
+        }
+      }
+    },
+    "This piece has no location, so it can't appear on the world map." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这件作品没有位置，无法出现在世界地图上。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品には位置情報がないため、ワールドマップに表示できません。"
+          }
+        }
+      }
+    },
+    "This piece's cutout is missing. Use Edit this piece to cut it out again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这件作品的抠图丢失了。请用「重新抠图」再抠一次。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品の切り抜きが見つかりません。「切り抜きを編集」でもう一度切り抜いてください。"
+          }
+        }
+      }
+    },
+    "This removes every piece, photo and series from GeoGhost on this device, and takes your published pieces off the world map. It cannot be undone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这会删除这台设备上 GeoGhost 中的所有作品、照片和系列，并把你公开的作品从世界地图上撤下。此操作无法撤销。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このデバイスの GeoGhost からすべての作品、写真、シリーズを削除し、公開中の作品をワールドマップから取り下げます。この操作は取り消せません。"
           }
         }
       }
@@ -3970,6 +5058,22 @@
         }
       }
     },
+    "Unknown area" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知区域"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明なエリア"
+          }
+        }
+      }
+    },
     "Unknown place" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4034,6 +5138,22 @@
         }
       }
     },
+    "Use at most 24 characters." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多 24 个字符。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 文字以内にしてください。"
+          }
+        }
+      }
+    },
     "Use this crop" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4082,6 +5202,22 @@
         }
       }
     },
+    "What others will see" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他人会看到的内容"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ほかの人に見える内容"
+          }
+        }
+      }
+    },
     "When you collect the same sticker in two places, GeoGhost links them here automatically." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4098,6 +5234,54 @@
         }
       }
     },
+    "You can change your nickname again on %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 之后可以再次修改昵称。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 以降にニックネームを再度変更できます。"
+          }
+        }
+      }
+    },
+    "You can publish %lld more this month." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月还可以公开 %lld 件。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今月はあと %lld 件公開できます。"
+          }
+        }
+      }
+    },
+    "You changed your nickname recently. Please wait a few days before changing it again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你最近改过昵称，请过几天再改。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近ニックネームを変更しました。数日たってから再度変更してください。"
+          }
+        }
+      }
+    },
     "You seem to be offline. Your feedback is saved and will be sent automatically." : {
       "localizations" : {
         "ja" : {
@@ -4110,6 +5294,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你似乎处于离线状态。反馈已保存，联网后会自动发送。"
+          }
+        }
+      }
+    },
+    "You take part as a guest, without an account. Your guest identity stays on this phone, even if you reinstall GeoGhost." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你以游客身份参与，无需注册账号。游客身份保存在这台手机上，重装 GeoGhost 也不会丢失。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アカウントなしでゲストとして参加しています。ゲストの情報はこの iPhone に保存され、GeoGhost を再インストールしても残ります。"
+          }
+        }
+      }
+    },
+    "You're offline. Connect to the internet and try again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有网络。请联网后重试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフラインです。インターネットに接続してもう一度お試しください。"
+          }
+        }
+      }
+    },
+    "You're offline. This piece is on the world map, so it can only be deleted while connected, to take it down too." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前没有网络。这件作品已公开在世界地图上，需要联网才能删除，以便同时撤回。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフラインです。この作品はワールドマップに公開されているため、同時に取り下げられるようオンラインのときだけ削除できます。"
+          }
+        }
+      }
+    },
+    "You've reached this month's publishing limit. It resets on the 1st." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月的公开次数已用完，下月 1 日恢复。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今月の公開上限に達しました。毎月 1 日にリセットされます。"
+          }
+        }
+      }
+    },
+    "You've reached today's limit. Please try again later." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天的次数已用完，请稍后再试。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日の上限に達しました。しばらくしてからお試しください。"
+          }
+        }
+      }
+    },
+    "You've reached today's limit. You can publish again tomorrow." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天的次数已用完，明天可以继续公开。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日の上限に達しました。明日また公開できます。"
+          }
+        }
+      }
+    },
+    "You've reached today's publishing limit. You can publish again tomorrow." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今天的公开次数已用完，明天可以继续。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日の公開上限に達しました。明日また公開できます。"
+          }
+        }
+      }
+    },
+    "You've used this month's %lld posts. You can publish again on %@." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本月的 %lld 次公开已用完，%@ 可以再次公开。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今月の公開 %lld 回分を使い切りました。%@ からまた公開できます。"
+          }
+        }
+      }
+    },
+    "Your account can no longer publish because it broke the community rules." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "由于违反社区规则，你已无法公开作品。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コミュニティルールに違反したため、公開できなくなりました。"
           }
         }
       }
@@ -4162,6 +5490,54 @@
         }
       }
     },
+    "Your nickname" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的昵称"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "あなたのニックネーム"
+          }
+        }
+      }
+    },
+    "Your online identity is no longer valid" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的线上身份已失效"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンラインの身元が無効になりました"
+          }
+        }
+      }
+    },
+    "Your online identity is no longer valid." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的线上身份已失效。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンラインの身元が無効になりました。"
+          }
+        }
+      }
+    },
     "Your photos, locations and notes are not included unless you attach a screenshot of them." : {
       "localizations" : {
         "ja" : {
@@ -4174,6 +5550,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "除非你附加的截图中包含，否则不会发送你的照片、位置或笔记。"
+          }
+        }
+      }
+    },
+    "Your published pieces couldn't be taken off the world map, so nothing was deleted." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法把你公开的作品从世界地图上撤下，因此没有删除任何内容。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開中の作品をワールドマップから取り下げられなかったため、何も削除していません。"
+          }
+        }
+      }
+    },
+    "Your published pieces, likes, saved pieces, blocked users and nickname are deleted from the server. The pieces in your collection stay on this phone and become private. This cannot be undone." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你公开的作品、点赞、收藏、屏蔽列表和昵称都会从服务器删除。图鉴里的作品仍保留在这台手机上，并恢复为私密。此操作无法撤销。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開した作品、いいね、保存した作品、ブロックしたユーザー、ニックネームがサーバーから削除されます。図鑑の作品はこの iPhone に残り、非公開になります。この操作は取り消せません。"
           }
         }
       }

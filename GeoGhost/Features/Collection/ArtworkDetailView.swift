@@ -14,6 +14,8 @@ struct ArtworkDetailView: View {
     @State private var showShareCard = false
     @State private var exportFailed = false
     @State private var reopen: CaptureView.StoredPhoto?
+    @State private var isDeleting = false
+    @State private var deleteError: String?
     @Query private var siblings: [Artwork]
 
     var body: some View {
@@ -21,6 +23,7 @@ struct ArtworkDetailView: View {
             VStack(spacing: 18) {
                 hero
                 header
+                if let online = services.onlineState { PublishStatusCard(artwork: artwork, state: online) }
                 if let series = artwork.series, series.encounterCount > 1 { seriesCard(series) }
                 metadataCard
                 if !artwork.note.isEmpty || !artwork.tagList.isEmpty { notesCard }
@@ -58,8 +61,18 @@ struct ArtworkDetailView: View {
             CaptureView(stored: item.photo)
         }
         .confirmationDialog("Delete this piece?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { delete() }
-        } message: { Text("The cutout and the original photo will be removed from GeoGhost.") }
+            Button("Delete", role: .destructive) { requestDelete() }
+        } message: {
+            if artwork.publishState.hasRemoteCopy {
+                Text("The cutout and the original photo will be removed from GeoGhost, and the piece will disappear from the world map.")
+            } else {
+                Text("The cutout and the original photo will be removed from GeoGhost.")
+            }
+        }
+        .alert("Couldn't delete this piece", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(deleteError ?? "") }
+        .overlay { if isDeleting { ProgressView().padding(24).background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14)) } }
     }
 
     private var hero: some View {
@@ -256,6 +269,27 @@ struct ArtworkDetailView: View {
             let data = await Task.detached { ImageStore.shared.loadData(artworkID: id, imageID: imageID) }.value
             guard let data else { return }
             reopen = CaptureView.StoredPhoto(data: data, metadata: metadata, savedRegions: saved, replacing: recut ? artwork : nil)
+        }
+    }
+
+    /// A piece with a public copy is retracted first (spec: publishing › 删除已公开的贴纸); if that
+    /// fails (offline), nothing is deleted.
+    private func requestDelete() {
+        guard artwork.publishState.hasRemoteCopy else { delete(); return }
+        guard let online = services.onlineState else { delete(); return }
+        isDeleting = true
+        Task {
+            defer { isDeleting = false }
+            do {
+                try await ArtworkPublisher(backend: online.services.publishing, context: context).retract(artwork)
+                delete()
+            } catch {
+                if let shown = online.handle(error) {
+                    deleteError = error as? OnlineError == .offline
+                        ? String(localized: "You're offline. This piece is on the world map, so it can only be deleted while connected, to take it down too.")
+                        : OnlineMessage.text(for: shown)
+                }
+            }
         }
     }
 

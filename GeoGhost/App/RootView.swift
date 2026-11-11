@@ -33,6 +33,7 @@ struct RootView: View {
             }
         }
         .environment(\.openCapture, OpenCaptureAction { showCapture = true })
+        .modifier(IdentityExpiredAlert(state: services.onlineState))
         .alert("Your collection couldn't be opened",
                isPresented: Binding(get: { services.isRunningWithoutStorage && !storageWarningDismissed }, set: { if !$0 { storageWarningDismissed = true } })) {
             Button("Contact support") { openURL(URL(string: "https://passerbo.github.io/GeoGhost/support/")!) }

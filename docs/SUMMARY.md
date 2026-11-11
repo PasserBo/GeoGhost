@@ -3,6 +3,7 @@
 * [Overview](README.md)
 * [Privacy Policy](privacy.md)
 * [Support](support.md)
+* [Community Rules](community-rules.md)
 
 ## Design
 
