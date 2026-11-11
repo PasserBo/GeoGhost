@@ -34,6 +34,13 @@ struct RootView: View {
         }
         .environment(\.openCapture, OpenCaptureAction { showCapture = true })
         .modifier(IdentityExpiredAlert(state: services.onlineState))
+        .task(id: scenePhase) {
+            // Review results and hidden posts show up without opening each piece.
+            guard scenePhase == .active, let online = services.onlineState else { return }
+            let shared = artworks.filter { $0.publishState.hasRemoteCopy }
+            guard !shared.isEmpty else { return }
+            try? await ArtworkPublisher(backend: online.services.publishing, context: context).refreshStates(shared)
+        }
         .alert("Your collection couldn't be opened",
                isPresented: Binding(get: { services.isRunningWithoutStorage && !storageWarningDismissed }, set: { if !$0 { storageWarningDismissed = true } })) {
             Button("Contact support") { openURL(URL(string: "https://passerbo.github.io/GeoGhost/support/")!) }
