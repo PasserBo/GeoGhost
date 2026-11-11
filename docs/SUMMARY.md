@@ -16,3 +16,8 @@
 * [Store listing copy](07-store-listing.md)
 * [Submission sheet](08-app-store-submission.md)
 * [Online identity & guest access](09-online-identity.md)
+
+## Spec
+
+* [Spec system](spec/SPEC_SYSTEM.md)
+* [Board](spec/BOARD.md)

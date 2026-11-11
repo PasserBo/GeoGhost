@@ -62,6 +62,8 @@
 
 按 [商业化与线上路线图](06-product-roadmap.md) §4 分阶段：
 
+> 2026-11-12 起，进行中的工作以 [spec/BOARD.md](spec/BOARD.md) 为准：每个变更的提案、行为 spec、任务（含负责人与验证方式）都在 `docs/spec/changes/` 下。本节只保留阶段概览。
+
 - ☐ 阶段 1：后端 Supabase + R2（已定，ADR-007）、匿名身份（之后再绑定 Sign in with Apple，设计见 [09](09-online-identity.md)）、发布（默认私密、坐标模糊、剥 EXIF）、Explore 世界地图、点赞/灵感夹、举报/屏蔽/审核、Pro+ 订阅与创始会员兑现、iCloud 私有同步
 - ☐ 阶段 2：个人主页、关注、跨用户「贴纸迁徙地图」、首位发现者
 - ☐ 阶段 3：「还在吗？」、城市挑战、艺术家认领
