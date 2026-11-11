@@ -7,7 +7,7 @@
 | 1 | [setup-online-backend](changes/setup-online-backend/proposal.md) | in-progress | 已完成，合并 main 后归档 | agent |
 | 2 | [add-guest-identity](changes/add-guest-identity/proposal.md) | in-progress | T7 确认社区规则正文；T11 真机检查 | me |
 | 3 | [add-publishing](changes/add-publishing/proposal.md) | in-progress | T11 真机发布并审核（端到端已在模拟器验证） | me |
-| 4 | [add-explore-map](changes/add-explore-map/proposal.md) | in-progress | T2 delta 与 design，然后界面（入口已定：地图页「我的 / 世界」切换） | agent |
+| 4 | [add-explore-map](changes/add-explore-map/proposal.md) | in-progress | 界面完成并验证；剩 T7 种子内容、T8 真机 | me |
 | 5 | [add-likes-and-saves](changes/add-likes-and-saves/proposal.md) | accepted | 等 4 | agent |
 | 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | accepted | 原因列表已定；通知方式待讨论（不先做） | agent |
 | 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | in-progress | 已完成并验证，待归档 | agent |
