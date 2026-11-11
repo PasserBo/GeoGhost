@@ -9,7 +9,8 @@ export interface Env extends AccessEnv, DbEnv {
 const SECURITY_HEADERS = {
   'content-security-policy': "default-src 'none'; img-src 'self' blob:; connect-src 'self'; style-src 'unsafe-inline'; script-src 'self' 'wasm-unsafe-eval'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
   'x-content-type-options': 'nosniff',
-  'referrer-policy': 'no-referrer',
+  // 'no-referrer' would make browsers send `Origin: null` on our own form posts.
+  'referrer-policy': 'same-origin',
   'cache-control': 'no-store',
 };
 
@@ -80,11 +81,17 @@ async function dashboard(url: URL, env: Env, actor: string): Promise<Response> {
   return html(page({ tab, stats, actor, body, flash: done ? FLASH[done] ?? null : null }));
 }
 
+/** Same-origin form posts only: the Origin header, or the browser's Sec-Fetch-Site when Origin is absent or null. */
+export function sameOrigin(request: Request, url: URL): boolean {
+  const origin = request.headers.get('origin');
+  if (origin && origin !== 'null') return origin === url.origin;
+  return request.headers.get('sec-fetch-site') === 'same-origin';
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function action(request: Request, url: URL, env: Env, actor: string): Promise<Response> {
-  // Same-origin form posts only.
-  if (request.headers.get('origin') !== url.origin) return html(message(403, 'Cross-site request refused.'), 403);
+  if (!sameOrigin(request, url)) return html(message(403, 'Cross-site request refused.'), 403);
   const form = await request.formData();
   const kind = String(form.get('action') ?? '');
   const tab = tabOf(String(form.get('tab') ?? ''));

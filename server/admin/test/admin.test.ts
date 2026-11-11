@@ -163,6 +163,18 @@ describe('worker', () => {
     expect(calls.filter((c) => c.fn.startsWith('admin_moderate'))).toHaveLength(0);
   });
 
+  it('accepts a same-origin post whose Origin is null, by Sec-Fetch-Site', async () => {
+    stubNetwork({ admin_moderate: { status: 'public' } });
+    const body = () => new URLSearchParams({ action: 'approve', post_id: '11111111-1111-1111-1111-111111111111' });
+    const token = await sign(valid());
+    const ok = await worker.fetch(req(token, { method: 'POST', body: body(), headers: { origin: 'null', 'sec-fetch-site': 'same-origin' } }, '/action'), env);
+    expect(ok.status).toBe(303);
+    const cross = await worker.fetch(req(token, { method: 'POST', body: body(), headers: { origin: 'null', 'sec-fetch-site': 'cross-site' } }, '/action'), env);
+    expect(cross.status).toBe(403);
+    const none = await worker.fetch(req(token, { method: 'POST', body: body() }, '/action'), env);
+    expect(none.status).toBe(403);
+  });
+
   it('approves with the operator as actor and redirects back', async () => {
     const calls = stubNetwork({ admin_moderate: { status: 'public' } });
     const body = new URLSearchParams({ action: 'approve', tab: 'pending', post_id: '11111111-1111-1111-1111-111111111111' });
