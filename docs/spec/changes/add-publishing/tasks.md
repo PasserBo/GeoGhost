@@ -1,7 +1,7 @@
 # Tasks: add-publishing
 
 ## Now
-界面 T5–T9 已实现，T5、T6 已在模拟器确认。T7–T9 及 T10 的真实发布等可用的模拟器 / 真机（本机网络经公司代理，模拟器 TLS 失败）。
+模拟器上已对真实后端发布 1 张（黑猫，审核中）。等 me 在 SQL Editor 审核通过，然后 agent 验证「已公开」、撤回、设置页删除线上数据（顺便清理测试数据）。
 
 ## M1 · 基础
 - [x] T1 发布用图片编码：长边 1024 与 400 两张、保留透明、不含任何元数据 — owner: agent · verify: 单元测试（尺寸、透明、无 GPS/EXIF/TIFF） · done 2026-11-12
@@ -19,7 +19,7 @@
 - [x] T6 发布预览页：抠图、区域、日期、昵称、隐私说明、剩余额度；首次发布先走昵称与规则页 — owner: agent · after: T4, add-guest-identity T6 · verify: 模拟器截图 · done 2026-11-12
   - evidence: 模拟器截图：预览页区域、日期、类型、发现者、约 100 m 模糊圈、隐私说明；点发布先弹出昵称与规则页
 - [ ] T7 发布状态显示（审核中 / 已公开 / 未通过 / 未完成 + 重试）与撤回 — owner: agent · after: T4 · verify: 模拟器截图
-  - 2026-11-12 已实现（`GeoGhost/Features/Online/`）；模拟器端到端被本机公司代理（Netskope 重签 TLS）挡住，待在信任该证书的模拟器或真机上验证。
+  - 2026-11-12 已实现（`GeoGhost/Features/Online/`）。模拟器（已装公司代理根证书）真实后端：预览读到额度 20、首次发布先走昵称与规则页、发布后「已提交审核」、详情页「In review」+ 撤回。
 - [ ] T8 额度用完与离线的提示 — owner: agent · after: T4 · verify: 单元测试 + 模拟器
   - 2026-11-12 已实现（`GeoGhost/Features/Online/`）；模拟器端到端被本机公司代理（Netskope 重签 TLS）挡住，待在信任该证书的模拟器或真机上验证。
 - [ ] T9 设置页「撤回全部公开内容」；删除已公开贴纸时的确认与撤回 — owner: agent · after: T4 · verify: 模拟器
