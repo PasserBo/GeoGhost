@@ -5,7 +5,7 @@ title: Privacy Policy
 
 # GeoGhost Privacy Policy
 
-_Last updated: November 7, 2026_
+_Last updated: November 12, 2026_
 
 GeoGhost is a personal field guide for the stickers, graffiti and murals you find on the street. It is built so that your photos and your whereabouts stay with you.
 
@@ -20,9 +20,32 @@ GeoGhost is a personal field guide for the stickers, graffiti and murals you fin
 
 Subject detection, cutout, design matching and type suggestion all run on your device using Apple's Vision framework. No image, location or note is sent to us or to any third party. Place names are looked up with Apple's geocoding service, and maps are loaded from Apple Maps; both receive coordinates under Apple's privacy terms, not ours.
 
-## iCloud and online features
+## Online features (only when you use them)
 
-GeoGhost does not currently sync or upload anything. If iCloud sync or optional online sharing are added later, they will be off by default, explained in the app before you turn them on, and described here before they ship.
+Everything above stays on your phone until you use an online feature yourself. Browsing the world map sends nothing about you.
+
+**A guest identity, not an account.** The first time you publish, report or block, GeoGhost creates an anonymous guest identity for you: no name, email address or phone number. A random identifier and a sign-in token are kept in this iPhone's Keychain, so you stay the same guest if you reinstall the app on this phone.
+
+**When you publish a piece.** You publish one piece at a time, after a preview of exactly what others will see. Only this is sent, and it is shown to everyone on the world map:
+
+- the cut-out image, in two sizes, with no photo metadata;
+- the rough location, rounded to about 100 m, with the area and country name;
+- the day you found it (not the time) and its kind;
+- the nickname you chose.
+
+The original photo, the exact location, the time of day, your device, notes and tags are never sent.
+
+**Reports and blocks.** If you report a post, the reason and any note you write are stored with your guest identity so the developer can review it; the author is not told who reported it, and the post disappears for you right away. If you block someone, that is stored so their posts stay hidden for you; they are not told.
+
+**Moderation.** The first posts of new publishers, and posts reported by several people, are checked by the developer before others can see them. Each moderation decision is recorded (which post, what was decided, when).
+
+**Publishing limits.** The number of posts you publish each day and month is counted to apply the publishing limits.
+
+**Where it is stored.** Online data is stored with [Supabase](https://supabase.com/privacy) (database and sign-in) and [Cloudflare](https://www.cloudflare.com/privacypolicy/) (image storage and the service that receives uploads). Like any web service, they process your IP address to deliver requests. Everything is sent over encrypted connections.
+
+**How long it is kept.** Published pieces stay until you retract them or delete your online data. When you retract a piece, its images are deleted at once and the remaining record is deleted later. If you delete your online data, reports you made are kept without your identity, so earlier moderation decisions stay explainable; moderation records are kept as well.
+
+**Deleting it.** **Settings → Online → Delete my online data** deletes your published pieces and their images, your blocks, your nickname and your guest identity from our servers. The pieces in your collection stay on your phone and become private.
 
 ## Crash and error reports (only if you agree)
 
@@ -43,7 +66,7 @@ Reports and feedback are sent over an encrypted connection to a small service we
 
 ## What we do not do
 
-- We do not receive your photos, cutouts, locations or notes.
+- We never receive your original photos, exact locations, notes or tags. For a piece you choose to publish, we receive only its cutout, rough location, day and kind, as described above.
 - We do not use analytics, advertising or tracking SDKs, and do not track you across apps or websites.
 - We do not sell or share data with anyone.
 
@@ -55,6 +78,8 @@ GeoGhost is free and currently has no in-app purchases. If optional purchases ar
 
 - Export everything as a ZIP from **Settings → Export everything**.
 - Delete everything from **Settings → Delete all data**. Deleting the app also removes all data on the device.
+- Retract a published piece from its page, or all of them from **Settings → Online**.
+- Delete everything you put online from **Settings → Online → Delete my online data**.
 - Camera and location permissions can be changed at any time in iOS Settings.
 
 ## Changes and contact
