@@ -1,7 +1,7 @@
 # Tasks: add-explore-map
 
 ## Now
-T1–T6 完成，测试帖与临时游客已删除。剩 me：T7 冷启动内容（在几个城市发布种子贴纸）、T8 真机浏览体验。
+T1–T6 完成，测试帖与临时游客已删除。2026-11-12 独立审查修复：缩到接近全球时视口取整后只剩日界线附近一条窄带（`ExploreBounds.snapped`），已修，测试 `ExploreGeometryTests.testSnappingAWideRegionCoversTheWholeWorld`。剩 me：T7 冷启动内容（在几个城市发布种子贴纸）、T8 真机浏览体验。
 
 ## M1 · 规划
 - [x] T1 决定世界地图入口（新标签页 / 地图图层） — owner: me · verify: proposal Decisions · done 2026-11-12

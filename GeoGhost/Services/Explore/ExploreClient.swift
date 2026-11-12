@@ -58,11 +58,14 @@ struct ExploreBounds: Equatable, Hashable, Sendable {
         guard step > 0 else { return self }
         func down(_ v: Double) -> Double { (v / step).rounded(.down) * step }
         func up(_ v: Double) -> Double { (v / step).rounded(.up) * step }
-        if minLng == -180, maxLng == 180 {
+        // Snap longitudes unwrapped (east edge past the west one), so growing a wide region past
+        // ±180° on both sides becomes the whole world instead of a thin band after wrapping.
+        let west = down(minLng), east = up(minLng <= maxLng ? maxLng : maxLng + 360)
+        if (minLng == -180 && maxLng == 180) || east - west >= 360 {
             return ExploreBounds(minLat: max(-90, down(minLat)), minLng: -180, maxLat: min(90, up(maxLat)), maxLng: 180)
         }
-        return ExploreBounds(minLat: max(-90, down(minLat)), minLng: Self.wrap(down(minLng)),
-                             maxLat: min(90, up(maxLat)), maxLng: Self.wrap(up(maxLng)))
+        return ExploreBounds(minLat: max(-90, down(minLat)), minLng: Self.wrap(west),
+                             maxLat: min(90, up(maxLat)), maxLng: Self.wrap(east))
     }
 
     static func wrap(_ lng: Double) -> Double {

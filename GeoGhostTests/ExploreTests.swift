@@ -28,6 +28,25 @@ final class ExploreGeometryTests: XCTestCase {
         XCTAssertEqual(b.snapped(to: 32).minLng, -180)
     }
 
+    /// Zoomed far out, a region just under 360° wide grows past ±180° on both sides when snapped;
+    /// wrapping each edge on its own used to turn it into a thin band around the antimeridian.
+    func testSnappingAWideRegionCoversTheWholeWorld() {
+        let b = ExploreBounds(region: MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+                                                         span: MKCoordinateSpan(latitudeDelta: 150, longitudeDelta: 340)))
+        let s = b.snapped(to: 32)
+        XCTAssertEqual(s.minLng, -180)
+        XCTAssertEqual(s.maxLng, 180)
+    }
+
+    func testSnappingPastOneEdgeStillCoversTheRegion() {
+        let b = ExploreBounds(minLat: 0, minLng: -170, maxLat: 10, maxLng: 10)
+        let s = b.snapped(to: 32)
+        // Grown west across the antimeridian: 168°…32° the long way round contains -170°…10°.
+        XCTAssertEqual(s.minLng, 168)
+        XCTAssertEqual(s.maxLng, 32)
+        XCTAssertGreaterThan(s.minLng, s.maxLng)
+    }
+
     func testGridSizeFollowsZoom() {
         XCTAssertEqual(ExploreGrid.cellDegrees(forLatitudeSpan: 0.02), 0, "zoomed in: individual posts")
         let city = ExploreGrid.cellDegrees(forLatitudeSpan: 0.2)
