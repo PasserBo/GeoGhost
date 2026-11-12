@@ -5634,22 +5634,6 @@
         }
       }
     },
-    "We review every report within 24 hours." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每条举报都会在 24 小时内处理。"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "すべての報告を 24 時間以内に確認します。"
-          }
-        }
-      }
-    },
     "What others will see" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5806,6 +5790,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "世界マップに相手の作品が表示されなくなります。相手には通知されません。設定でブロックを解除できます。"
+          }
+        }
+      }
+    },
+    "You won't see this piece again. We review every report within 24 hours." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你不会再看到这张贴纸。每条举报都会在 24 小时内处理。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品は今後表示されません。すべての報告を 24 時間以内に確認します。"
           }
         }
       }

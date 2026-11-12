@@ -70,7 +70,7 @@ App ──(GET 图片)───────────▶ 图片地址（MVP：
 
 **读**
 
-- `posts`：`status = 'public'` 且作者未被封禁，且（未登录或作者不在我的屏蔽列表里）→ 所有人可读；作者可读自己的全部帖子。
+- `posts`：`status = 'public'` 且作者未被封禁，且（未登录或作者不在我的屏蔽列表里）→ 所有人可读；作者可读自己的全部帖子。2026-11-12 起（add-reporting-and-blocking，迁移 `20261112020000`）：我举报过的帖子对我不可读。
 - `profiles`：所有人可读 `id, nickname, avatar_post_id`；其余列只有本人可读。
 - `likes` / `saves` / `blocks`：只能读自己的。`reports`：客户端不可读。
 

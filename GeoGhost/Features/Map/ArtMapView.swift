@@ -98,7 +98,10 @@ struct ArtMapView: View {
             }
             .onChange(of: modeRaw) { startWorldIfNeeded() }
             .onReceive(NotificationCenter.default.publisher(for: .onlineBlocksChanged)) { note in
-                if let author = note.object as? UUID { explore?.authorBlocked(author) } else { explore?.blocksChanged() }
+                if let author = note.object as? UUID { explore?.authorBlocked(author) } else { explore?.invalidate() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .onlinePostReported)) { note in
+                if let post = note.object as? UUID { explore?.postReported(post) }
             }
             .task { startWorldIfNeeded() }
             .toolbarBackground(.visible, for: .navigationBar)

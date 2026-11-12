@@ -51,11 +51,18 @@ final class ExploreModel {
     /// again so grid cells they stood in for are recounted (spec: content-safety › 屏蔽发布者).
     func authorBlocked(_ authorID: UUID) {
         posts.removeAll { $0.authorId == authorID }
-        blocksChanged()
+        invalidate()
     }
 
-    /// Blocks changed (blocked or unblocked elsewhere): cached areas are stale.
-    func blocksChanged() {
+    /// The user reported this post: it leaves their map at once and the area is fetched again
+    /// (the server no longer returns it to them; spec: content-safety › 举报后自己不再看到).
+    func postReported(_ postID: UUID) {
+        posts.removeAll { $0.id == postID }
+        invalidate()
+    }
+
+    /// What the user may see changed (blocked, unblocked, reported): cached areas are stale.
+    func invalidate() {
         cache.removeAll()
         reload()
     }

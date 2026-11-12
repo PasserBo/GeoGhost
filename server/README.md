@@ -9,7 +9,9 @@
 ```
 server/
 ├── supabase/
-│   ├── migrations/20261112000000_online_phase1.sql   唯一的迁移：表、索引、RLS、触发器、RPC、quota_config 初始值
+│   ├── migrations/20261112000000_online_phase1.sql   表、索引、RLS、触发器、RPC、quota_config 初始值
+│   ├── migrations/20261112010000_moderation_console.sql   审核后台的函数与操作日志
+│   ├── migrations/20261112020000_hide_reported_from_reporter.sql   举报人立即看不到自己举报的帖子
 │   └── tests/
 │       ├── run.sh                    在一次性 postgres:16 容器里跑迁移 + 全部测试
 │       ├── 00_supabase_stub.sql      仅本地测试用：模拟 Supabase 的 auth schema / 角色 / 默认权限
@@ -122,3 +124,7 @@ server/scripts/smoke.sh   # 读取 Config/Online.xcconfig
 图片是 HEIC，页面在浏览器里用 libheif（WebAssembly）解码成 PNG，所以任何现代浏览器都能看。解码库来自 npm 的 `libheif-js`（LGPL-3.0），部署前 `npm run vendor` 会把它复制到 `public/vendor/`（不入库）。
 
 本地检查：`npm install && npx tsc --noEmit && npx vitest run`。
+
+## 举报后对举报人隐藏（add-reporting-and-blocking）
+
+在 SQL Editor 执行 `supabase/migrations/20261112020000_hide_reported_from_reporter.sql`（在前两个迁移之后，只执行一次）。它替换 `posts_select_public` 策略：举报过的帖子对举报人不再可读（`explore` 随之不返回），其他人不受影响。

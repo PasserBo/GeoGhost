@@ -652,3 +652,26 @@ private final class LockedCounter: @unchecked Sendable {
     var value: Int { lock.withLock { n } }
     func increment() { lock.withLock { n += 1 } }
 }
+
+@MainActor
+final class ExploreReportingTests: XCTestCase {
+    func testReportedPostLeavesTheMapAndTheAreaIsFetchedAgain() async throws {
+        func post() -> ExplorePost {
+            ExplorePost(id: UUID(), authorId: UUID(), authorNickname: nil, kind: "sticker", lat: 35.66, lng: 139.7, locality: nil,
+                        countryCode: nil, capturedOn: nil, width: 1, height: 1, imageKey: nil, thumbKey: nil, likeCount: 0,
+                        publishedAt: nil, cellCount: 1)
+        }
+        let rows = [post(), post()]
+        let calls = LockedCounter()
+        let model = ExploreModel(fetch: { _, _ in calls.increment(); return rows }, debounce: .zero)
+        model.regionChanged(MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.66, longitude: 139.7),
+                                               span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)))
+        for _ in 0..<100 where model.posts.count < 2 { try await Task.sleep(for: .milliseconds(20)) }
+        XCTAssertEqual(model.posts.count, 2)
+
+        model.postReported(rows[0].id)
+        XCTAssertEqual(model.posts.map(\.id), [rows[1].id], "gone at once, before the refetch")
+        for _ in 0..<100 where calls.value < 2 { try await Task.sleep(for: .milliseconds(20)) }
+        XCTAssertEqual(calls.value, 2, "the cached area is fetched again")
+    }
+}

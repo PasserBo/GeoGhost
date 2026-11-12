@@ -106,4 +106,6 @@ extension OnlineServices {
 /// refetches that person's posts).
 extension Notification.Name {
     static let onlineBlocksChanged = Notification.Name("GeoGhost.onlineBlocksChanged")
+    /// Object: the reported post's id. The world map drops it.
+    static let onlinePostReported = Notification.Name("GeoGhost.onlinePostReported")
 }

@@ -1,63 +1,81 @@
 import SwiftUI
 
 /// Report someone's public post (spec: content-safety › 举报贴纸). Stays open with the choice and
-/// note kept when submitting fails.
+/// note kept when submitting fails; after it was sent, says the user won't see the piece again.
 struct ReportSheet: View {
     let post: ExplorePost
     let state: OnlineState
-    /// Called after the server accepted the report; the sheet then closes.
+    /// Called after the server accepted the report; the sheet then shows the confirmation.
     var onReported: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ReportDraft()
     @State private var isSending = false
     @State private var errorText: String?
+    @State private var sent = false
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Picker("Reason", selection: $draft.reason) {
-                        ForEach(ReportReason.allCases) { reason in
-                            Text(reason.title).tag(Optional(reason))
-                        }
+            if sent { confirmation } else { form }
+        }
+        .interactiveDismissDisabled(isSending)
+    }
+
+    private var confirmation: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 52)).foregroundStyle(Theme.accent)
+            Text("Thanks for reporting").font(.title2.weight(.semibold))
+            Text("You won't see this piece again. We review every report within 24 hours.")
+                .multilineTextAlignment(.center).foregroundStyle(Theme.inkSecondary)
+            Button("Done") { dismiss() }.buttonStyle(.borderedProminent).padding(.top, 8)
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(PaperBackground())
+    }
+
+    private var form: some View {
+        Form {
+            Section {
+                Picker("Reason", selection: $draft.reason) {
+                    ForEach(ReportReason.allCases) { reason in
+                        Text(reason.title).tag(Optional(reason))
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } header: {
-                    Text("Why are you reporting this piece?")
                 }
-                Section {
-                    TextField("Add details (optional)", text: $draft.note, axis: .vertical)
-                        .lineLimit(3...8)
-                } header: {
-                    Text("Details")
-                } footer: {
-                    if (draft.trimmedNote?.count ?? 0) > ReportDraft.noteLimit {
-                        Text("Use at most 500 characters.").foregroundStyle(.red)
-                    } else if draft.reason?.requiresNote == true, draft.trimmedNote == nil {
-                        Text("Tell us what's wrong with this piece.")
-                    } else {
-                        Text("Reports are anonymous. We review every report within 24 hours.")
-                    }
-                }
-                if let errorText {
-                    Section { Text(errorText).font(.footnote).foregroundStyle(.red) }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } header: {
+                Text("Why are you reporting this piece?")
+            }
+            Section {
+                TextField("Add details (optional)", text: $draft.note, axis: .vertical)
+                    .lineLimit(3...8)
+            } header: {
+                Text("Details")
+            } footer: {
+                if (draft.trimmedNote?.count ?? 0) > ReportDraft.noteLimit {
+                    Text("Use at most 500 characters.").foregroundStyle(.red)
+                } else if draft.reason?.requiresNote == true, draft.trimmedNote == nil {
+                    Text("Tell us what's wrong with this piece.")
+                } else {
+                    Text("Reports are anonymous. We review every report within 24 hours.")
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(PaperBackground())
-            .navigationTitle("Report")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    if isSending { ProgressView() } else {
-                        Button("Send") { send() }.disabled(!draft.canSubmit)
-                    }
+            if let errorText {
+                Section { Text(errorText).font(.footnote).foregroundStyle(.red) }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .background(PaperBackground())
+        .navigationTitle("Report")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                if isSending { ProgressView() } else {
+                    Button("Send") { send() }.disabled(!draft.canSubmit)
                 }
             }
-            .interactiveDismissDisabled(isSending)
         }
     }
 
@@ -70,7 +88,7 @@ struct ReportSheet: View {
             do {
                 try await state.services.safety.report(postID: post.id, reason: reason, note: draft.trimmedNote)
                 onReported()
-                dismiss()
+                sent = true
             } catch {
                 if let shown = state.handle(error) { errorText = OnlineMessage.text(for: shown) } else { dismiss() }
             }

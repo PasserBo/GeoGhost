@@ -141,18 +141,19 @@ struct RemotePostSheet: View {
                 guard let state else { return }
                 isOthers = await state.services.identity.userID != post.authorId
             }
-            .sheet(isPresented: $showReport) {
+            .sheet(isPresented: $showReport, onDismiss: {
+                // Reported: the post leaves this user's map and the detail closes
+                // (spec: content-safety › 举报后自己不再看到).
+                guard reported else { return }
+                NotificationCenter.default.post(name: .onlinePostReported, object: post.id)
+                dismiss()
+            }) {
                 if let state { ReportSheet(post: post, state: state) { reported = true } }
             }
             .confirmationDialog("Block \(authorName)?", isPresented: $confirmBlock, titleVisibility: .visible) {
                 Button("Block", role: .destructive) { block() }
             } message: {
                 Text("You won't see their pieces on the world map anymore. They won't be told. You can unblock them in Settings.")
-            }
-            .alert("Thanks for reporting", isPresented: $reported) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("We review every report within 24 hours.")
             }
         }
     }
