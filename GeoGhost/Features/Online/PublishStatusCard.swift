@@ -57,7 +57,7 @@ struct PublishStatusCard: View {
                 retractButton
             }
             .disabled(isWorking)
-        case .pending, .published, .rejected:
+        case .pending, .reReview, .published, .rejected:
             retractButton.disabled(isWorking)
         }
     }
@@ -72,6 +72,7 @@ struct PublishStatusCard: View {
         case .unpublished: "lock.fill"
         case .uploading: "exclamationmark.arrow.triangle.2.circlepath"
         case .pending: "hourglass"
+        case .reReview: "exclamationmark.shield.fill"
         case .published: "globe.asia.australia.fill"
         case .rejected: "eye.slash.fill"
         }
@@ -81,6 +82,7 @@ struct PublishStatusCard: View {
         switch artwork.publishState {
         case .published: Theme.accent
         case .uploading, .rejected: .red
+        case .reReview: .orange
         default: Theme.inkSecondary
         }
     }
@@ -90,6 +92,7 @@ struct PublishStatusCard: View {
         case .unpublished: "Private"
         case .uploading: "Not finished"
         case .pending: "In review"
+        case .reReview: "Being checked again"
         case .published: "On the world map"
         case .rejected: "Not approved"
         }
@@ -104,9 +107,9 @@ struct PublishStatusCard: View {
         case .uploading:
             String(localized: "Publishing was interrupted. Trying again won't use another post.")
         case .pending:
-            artwork.isInReReview
-                ? String(localized: "It was hidden for now after several reports and is being checked again. Only you can see it until then.")
-                : String(localized: "Only you can see it until it has been checked.")
+            String(localized: "Only you can see it until it has been checked.")
+        case .reReview:
+            String(localized: "Several people reported it, so it's hidden from others until it has been checked again.")
         case .published:
             artwork.publishedAt.map { String(localized: "Public since \($0.formatted(date: .abbreviated, time: .omitted))") }
                 ?? String(localized: "Everyone can see this piece.")

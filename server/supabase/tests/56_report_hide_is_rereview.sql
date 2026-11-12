@@ -24,6 +24,8 @@ select tests.eq((select count(*) from public.posts where id = tests.id('p'))::in
 reset role;
 set role authenticated; select tests.claims('00000000-0000-0000-0000-00000000000a');
 select tests.eq((select status from public.posts where id = tests.id('p')), 'pending', 'the author sees it as in review');
+select tests.ok((select published_at is not null from public.posts where id = tests.id('p')),
+                'the author can tell it is a re-review (published_at readable on their own post)');
 reset role;
 
 -- Console: in both queues; waiting time of a re-review starts at its first report, not at creation.

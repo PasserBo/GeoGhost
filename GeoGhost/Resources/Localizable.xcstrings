@@ -549,6 +549,22 @@
         }
       }
     },
+    "Being checked again" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复审中"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再審査中"
+          }
+        }
+      }
+    },
     "Belongs to" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2393,22 +2409,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "すべての人のワールドマップから消え、非公開に戻ります。今月使った公開回数は戻りません。"
-          }
-        }
-      }
-    },
-    "It was hidden for now after several reports and is being checked again. Only you can see it until then." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "因被多人举报暂时隐藏，正在重新审核。在此之前只有你能看到。"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "複数の報告により一時的に非表示になり、再審査中です。それまではあなただけが見られます。"
           }
         }
       }
@@ -4462,6 +4462,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定"
+          }
+        }
+      }
+    },
+    "Several people reported it, so it's hidden from others until it has been checked again." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "因被多人举报，复审完成前其他人看不到它。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複数の人から報告されたため、再審査が終わるまでほかの人には表示されません。"
           }
         }
       }

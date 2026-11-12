@@ -39,6 +39,7 @@ protocol PublishBackend: Sendable {
     func uploadImages(postID: UUID, images: PublishImageEncoder.Output) async throws -> String
     func retract(postID: UUID) async throws
     /// Current status of each post the user still has on the server; missing ids are gone.
+    /// A post back in review after reports is `PublishState.reReviewStatus`.
     func statuses(of postIDs: [UUID]) async throws -> [UUID: String]
 }
 
@@ -81,23 +82,29 @@ struct PublishClient: PublishBackend {
 
     func statuses(of postIDs: [UUID]) async throws -> [UUID: String] {
         guard !postIDs.isEmpty else { return [:] }
-        struct Row: Decodable { let id: UUID; let status: String }
+        struct Row: Decodable { let id: UUID; let status: String; let publishedAt: Date? }
         let ids = postIDs.map { $0.uuidString.lowercased() }.joined(separator: ",")
         let rows: [Row] = try await services.database.select("posts", query: [
-            URLQueryItem(name: "select", value: "id,status"), URLQueryItem(name: "id", value: "in.(\(ids))"),
+            URLQueryItem(name: "select", value: "id,status,published_at"), URLQueryItem(name: "id", value: "in.(\(ids))"),
         ], identity: .required)
-        return Dictionary(rows.map { ($0.id, $0.status) }, uniquingKeysWith: { a, _ in a })
+        // In review but published before: back in review after reports (migration 20261112030000).
+        return Dictionary(rows.map { ($0.id, $0.status == "pending" && $0.publishedAt != nil ? PublishState.reReviewStatus : $0.status) },
+                          uniquingKeysWith: { a, _ in a })
     }
 
     private struct NoParams: Encodable, Sendable {}
 }
 
 extension PublishState {
+    /// Not a database value: `pending` with `published_at` set, as `statuses(of:)` reports it.
+    static let reReviewStatus = "pending_re_review"
+
     /// The local state for a server status (design.md §4). Removed posts are private again.
     init(serverStatus: String?) {
         switch serverStatus {
         case "uploading": self = .uploading
         case "pending": self = .pending
+        case Self.reReviewStatus: self = .reReview
         case "public": self = .published
         case "hidden": self = .rejected
         default: self = .unpublished

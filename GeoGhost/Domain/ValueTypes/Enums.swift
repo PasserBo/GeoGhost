@@ -67,11 +67,14 @@ enum PublishState: String, Codable, Sendable {
     case unpublished
     /// Publishing started but did not finish; can be retried without using quota again.
     case uploading
-    /// Waiting for review; only the author sees it.
+    /// Waiting for its first review; only the author sees it.
     case pending
+    /// Was public, then reported by several people: hidden from others until it has been
+    /// checked again (spec: content-safety › 多人举报后暂时隐藏并重新审核).
+    case reReview
     /// Public on the world map.
     case published
-    /// Did not pass review, or hidden after reports; only the author sees it.
+    /// Did not pass review; only the author sees it.
     case rejected
 
     /// Has a copy on the server that has to be retracted when the piece is deleted.

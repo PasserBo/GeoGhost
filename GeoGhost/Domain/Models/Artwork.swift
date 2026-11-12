@@ -96,10 +96,6 @@ extension Artwork {
         }
     }
 
-    /// Was public, then hidden after reports and waiting to be checked again (spec: content-safety ›
-    /// 多人举报后暂时隐藏并重新审核): in review, but published before.
-    var isInReReview: Bool { publishState == .pending && publishedAt != nil }
-
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }
         let c = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)

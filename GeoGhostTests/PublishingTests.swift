@@ -234,22 +234,21 @@ final class ArtworkPublisherTests: XCTestCase {
         let artwork = makeArtwork()
         try await publisher().publish(artwork)
         let postID = try XCTUnwrap(artwork.remotePostID)
-        XCTAssertFalse(artwork.isInReReview, "first review is not a re-review")
+        XCTAssertEqual(artwork.publishState, .pending, "first review")
         await backend.setStatus("public", for: postID)
         try await publisher().refreshStates([artwork])
-        XCTAssertFalse(artwork.isInReReview)
+        XCTAssertEqual(artwork.publishState, .published)
 
-        await backend.setStatus("pending", for: postID)
+        await backend.setStatus(PublishState.reReviewStatus, for: postID)
         try await publisher().refreshStates([artwork])
-        XCTAssertEqual(artwork.publishState, .pending)
+        XCTAssertEqual(artwork.publishState, .reReview, "kept apart from a first review")
+        XCTAssertEqual(artwork.visibility, .publicShared, "still has a copy on the server to retract")
         XCTAssertNotNil(artwork.publishedAt, "keeps when it was first published")
-        XCTAssertTrue(artwork.isInReReview)
         XCTAssertEqual(artwork.remotePostID, postID)
 
         await backend.setStatus("public", for: postID)
         try await publisher().refreshStates([artwork])
         XCTAssertEqual(artwork.publishState, .published)
-        XCTAssertFalse(artwork.isInReReview)
     }
 }
 
@@ -327,8 +326,25 @@ final class PublishClientTests: XCTestCase {
         let url = try XCTUnwrap(OnlineStubProtocol.recorded.first?.request.url)
         let query = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
         XCTAssertEqual(query.first { $0.name == "id" }?.value, "in.(\(a.uuidString.lowercased()),\(b.uuidString.lowercased()))")
+        XCTAssertEqual(query.first { $0.name == "select" }?.value, "id,status,published_at")
         XCTAssertEqual(PublishState(serverStatus: statuses[b]), .unpublished)
         XCTAssertEqual(PublishState(serverStatus: "hidden"), .rejected)
+    }
+
+    func testPostBackInReviewAfterReportsIsReReview() async throws {
+        let first = UUID(), again = UUID(), live = UUID()
+        OnlineStubProtocol.handler = { _, _ in
+            (200, Data("""
+            [{"id":"\(first.uuidString.lowercased())","status":"pending","published_at":null},
+             {"id":"\(again.uuidString.lowercased())","status":"pending","published_at":"2026-11-01T00:00:00+00:00"},
+             {"id":"\(live.uuidString.lowercased())","status":"public","published_at":"2026-11-01T00:00:00+00:00"}]
+            """.utf8))
+        }
+        let statuses = try await makeClient().statuses(of: [first, again, live])
+        XCTAssertEqual(PublishState(serverStatus: statuses[first]), .pending)
+        XCTAssertEqual(PublishState(serverStatus: statuses[again]), .reReview)
+        XCTAssertEqual(PublishState(serverStatus: statuses[live]), .published)
+        XCTAssertTrue(PublishState.reReview.hasRemoteCopy)
     }
 }
 

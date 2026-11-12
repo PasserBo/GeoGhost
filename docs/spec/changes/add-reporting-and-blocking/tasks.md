@@ -12,7 +12,7 @@
 - [ ] T7 举报后对举报人立即隐藏（审核指南 1.2）— owner: agent（代码）· me（在 SQL Editor 执行迁移）· verify: SQL 测试 + 单元测试 + 迁移已在线上执行
   - 2026-11-12 agent 部分完成：delta「举报后自己不再看到」；迁移 `server/supabase/migrations/20261112020000_hide_reported_from_reporter.sql`；SQL 测试 `55_reported_hidden_from_reporter.sql` 10 条通过（全套 204 条通过）；客户端举报成功后显示「不会再看到」确认，关闭详情并从地图移除（`ExploreReportingTests`）。Worker 33/33、admin 16/16 测试通过。待用户执行迁移。
 - [ ] T8 多人举报后暂时隐藏并重新审核 — owner: agent（代码）· me（在 SQL Editor 执行迁移）· verify: SQL / admin / 单元测试 + 迁移已在线上执行
-  - 2026-11-12 agent 部分完成：迁移 `server/supabase/migrations/20261112030000_report_hide_is_rereview.sql`（自动隐藏 → `pending` 并保留 `published_at`；重新审核通过不重复计入 `approved_count`；`admin_stats` 等待时间从第一条举报算起；「保留」公开帖会关闭举报——修复此前不会关闭的问题；旧的自动隐藏帖移回审核）。SQL `56_report_hide_is_rereview.sql` 18 条通过，全套 222 条通过；审核台标「重新审核」（admin 17/17）；App 显示「审核中」+ 重新审核说明（`ArtworkPublisherTests.testPostPutBackIntoReviewAfterReportsIsInReReview`，单元测试全部通过）；Worker 33/33。待用户执行迁移。
+  - 2026-11-12 agent 部分完成：迁移 `server/supabase/migrations/20261112030000_report_hide_is_rereview.sql`（自动隐藏 → `pending` 并保留 `published_at`；重新审核通过不重复计入 `approved_count`；`admin_stats` 等待时间从第一条举报算起；「保留」公开帖会关闭举报——修复此前不会关闭的问题；旧的自动隐藏帖移回审核）。SQL `56_report_hide_is_rereview.sql` 19 条通过，全套 223 条通过；审核台标「重新审核」（admin 17/17）；App 显示「复审中」+ 一句原因，与首次「审核中」分开（新状态 `PublishState.reReview`，按作者自己帖子的 `published_at` 判定；`PublishClientTests.testPostBackInReviewAfterReportsIsReReview`、`ArtworkPublisherTests.testPostPutBackIntoReviewAfterReportsIsInReReview`，单元测试全部通过）；Worker 33/33。待用户执行迁移。
 - [ ] T4 审核手册：待审核与被举报内容的查询、通过 / 隐藏 / 封禁的 SQL — owner: agent · verify: 本地 SQL 测试
 - [ ] T5 通知 — owner: me + agent · verify: 讨论后定
   - 2026-11-12 **先不做**：用户希望打开 App 时弹窗、并能查看过去的通知，但要先讨论是否合适。
