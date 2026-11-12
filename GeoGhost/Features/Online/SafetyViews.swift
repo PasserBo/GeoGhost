@@ -45,6 +45,8 @@ struct ReportSheet: View {
                     Section { Text(errorText).font(.footnote).foregroundStyle(.red) }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(PaperBackground())
             .navigationTitle("Report")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -123,6 +125,8 @@ struct BlockedUsersView: View {
                 ProgressView()
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(PaperBackground())
         .navigationTitle("Blocked users")
         .task { await load() }
         .refreshable { await load() }
