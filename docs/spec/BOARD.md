@@ -11,7 +11,7 @@
 | 5 | [add-likes-and-saves](changes/add-likes-and-saves/proposal.md) | accepted | 等 4 | agent |
 | 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | in-progress | 在 SQL Editor 依次执行迁移 20261112020000、20261112030000；需要一张别人的公开贴纸来走查举报/屏蔽，然后 T4 审核手册；通知待讨论（不先做） | me |
 | 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | in-progress | 已完成并验证，待归档 | agent |
-| 8 | [prepare-ugc-release](changes/prepare-ugc-release/proposal.md) | accepted | 等 2–6 | me + agent |
+| 8 | [prepare-ugc-release](changes/prepare-ugc-release/proposal.md) | in-progress | 文案已起草，等 me 确认并合并 main（页面才上线） | me |
 | 9 | [add-apple-account-linking](changes/add-apple-account-linking/proposal.md) | accepted | 阶段 1 上线后开始 | agent |
 
 阶段 1 上线 = 1–8 完成。9 是阶段 1.5，在阶段 2（关注、徽章）之前完成。

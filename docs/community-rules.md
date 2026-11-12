@@ -31,8 +31,10 @@ When street art itself contains any of the above, don't publish it.
 ## Reporting and review
 
 - New publishers' first posts are checked before others can see them.
-- Anyone can report a post or block its author from the post's page. A post reported by several people is hidden until it has been checked.
-- Every report is looked at within 24 hours. Posts that break the rules are removed; authors who break them can be blocked from publishing.
+- Anyone can report a post from its page (**··· → Report**), choosing a reason: sexual or violent content, hate or harassment, someone's private information (faces, licence plates, house numbers…), ads or spam, or something else with a short explanation. A post you report disappears for you right away.
+- A post reported by three different people is hidden from everyone and goes back into review; its author sees it as *in re-review*. If it is fine, it comes back; if not, it is removed.
+- You can block a publisher from any of their posts (**··· → Block**). Their posts disappear for you at once; they are not told. Unblock them in **Settings → Online**.
+- Every report is looked at within 24 hours. Posts that break the rules are removed, and authors who break them can be blocked from publishing.
 
 ## Your control
 
