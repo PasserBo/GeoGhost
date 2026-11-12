@@ -21,6 +21,7 @@ struct OnlineSettingsSection: View {
             }
             .foregroundStyle(Theme.ink)
             LabeledContent("Published pieces", value: "\(shared.count)")
+            NavigationLink("Blocked users") { BlockedUsersView(state: state) }
             Button("Retract all published pieces", role: .destructive) { confirmRetractAll = true }
                 .disabled(shared.isEmpty || isWorking)
             Button("Delete my online data", role: .destructive) { confirmDelete = true }

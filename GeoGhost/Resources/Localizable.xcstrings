@@ -341,6 +341,22 @@
         }
       }
     },
+    "Add details (optional)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "补充说明（可选）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "詳細を追加（任意）"
+          }
+        }
+      }
+    },
     "Add to collection" : {
       "localizations" : {
         "zh-Hans" : {
@@ -353,6 +369,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "図鑑に追加"
+          }
+        }
+      }
+    },
+    "Advertising or spam" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "广告或垃圾内容"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "広告・スパム"
           }
         }
       }
@@ -529,6 +561,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所属"
+          }
+        }
+      }
+    },
+    "Block" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏蔽"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック"
+          }
+        }
+      }
+    },
+    "Block %@" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏蔽 %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ をブロック"
+          }
+        }
+      }
+    },
+    "Block %@?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要屏蔽 %@ 吗？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ をブロックしますか？"
+          }
+        }
+      }
+    },
+    "Blocked users" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已屏蔽的用户"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック中のユーザー"
           }
         }
       }
@@ -1061,6 +1157,22 @@
         }
       }
     },
+    "Couldn't load blocked users" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法加载已屏蔽的用户"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック中のユーザーを読み込めませんでした"
+          }
+        }
+      }
+    },
     "Couldn't load this piece" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1233,6 +1345,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "オンラインデータを削除しますか？"
+          }
+        }
+      }
+    },
+    "Details" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "说明"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "詳細"
           }
         }
       }
@@ -1639,6 +1767,22 @@
         }
       }
     },
+    "Exposes someone's privacy (faces, plates, addresses)" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暴露他人隐私（人脸、车牌、门牌等）"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "他人のプライバシーを含む（顔・ナンバープレート・住所など）"
+          }
+        }
+      }
+    },
     "Facing" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1929,6 +2073,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手動切り抜き"
+          }
+        }
+      }
+    },
+    "Hate or harassment" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仇恨或骚扰"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ヘイト・嫌がらせ"
           }
         }
       }
@@ -2477,6 +2637,22 @@
         }
       }
     },
+    "More" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更多"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他"
+          }
+        }
+      }
+    },
     "Move around while zoomed in." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2601,6 +2777,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "広告やスパムは禁止です。"
+          }
+        }
+      }
+    },
+    "No blocked users" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有屏蔽任何人"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック中のユーザーはいません"
           }
         }
       }
@@ -3600,6 +3792,22 @@
         }
       }
     },
+    "Reason" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原因"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "理由"
+          }
+        }
+      }
+    },
     "Rebuild all series" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3740,6 +3948,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "置き換える"
+          }
+        }
+      }
+    },
+    "Report" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "举报"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "報告"
+          }
+        }
+      }
+    },
+    "Report this piece" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "举报这张贴纸"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を報告"
+          }
+        }
+      }
+    },
+    "Reports are anonymous. We review every report within 24 hours." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "举报是匿名的。每条举报都会在 24 小时内处理。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "報告は匿名です。すべての報告を 24 時間以内に確認します。"
           }
         }
       }
@@ -4194,6 +4450,22 @@
         }
       }
     },
+    "Sexual or violent content" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色情或暴力"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "性的・暴力的な内容"
+          }
+        }
+      }
+    },
     "Share card" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4302,6 +4574,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選択される範囲が表示されます。指を離すと追加されます。"
+          }
+        }
+      }
+    },
+    "Something else" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他の理由"
           }
         }
       }
@@ -4594,6 +4882,22 @@
         }
       }
     },
+    "Tell us what's wrong with this piece." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请说明这张贴纸有什么问题。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品の問題点を入力してください。"
+          }
+        }
+      }
+    },
     "Thank you!" : {
       "localizations" : {
         "ja" : {
@@ -4606,6 +4910,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "谢谢！"
+          }
+        }
+      }
+    },
+    "Thanks for reporting" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已收到举报"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "報告を受け付けました"
           }
         }
       }
@@ -4962,6 +5282,22 @@
         }
       }
     },
+    "To block someone, open one of their pieces on the world map." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在世界地图上打开某人的贴纸，即可屏蔽对方。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロックするには、世界マップでその人の作品を開いてください。"
+          }
+        }
+      }
+    },
     "Try again" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5058,6 +5394,22 @@
         }
       }
     },
+    "Unblock" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解除屏蔽"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブロック解除"
+          }
+        }
+      }
+    },
     "Undo" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5138,6 +5490,22 @@
         }
       }
     },
+    "Unknown user" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未知用户"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明なユーザー"
+          }
+        }
+      }
+    },
     "Unlock Pro" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5202,6 +5570,22 @@
         }
       }
     },
+    "Use at most 500 characters." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最多 500 个字符。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "500 文字以内で入力してください。"
+          }
+        }
+      }
+    },
     "Use this crop" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5250,6 +5634,22 @@
         }
       }
     },
+    "We review every report within 24 hours." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每条举报都会在 24 小时内处理。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべての報告を 24 時間以内に確認します。"
+          }
+        }
+      }
+    },
     "What others will see" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5278,6 +5678,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同じステッカーを 2 か所で集めると、GeoGhost が自動でここにまとめます。"
+          }
+        }
+      }
+    },
+    "Why are you reporting this piece?" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "为什么要举报这张贴纸？"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品を報告する理由は？"
           }
         }
       }
@@ -5374,6 +5790,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "アカウントなしでゲストとして参加しています。ゲストの情報はこの iPhone に保存され、GeoGhost を再インストールしても残ります。"
+          }
+        }
+      }
+    },
+    "You won't see their pieces on the world map anymore. They won't be told. You can unblock them in Settings." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你将不再在世界地图上看到对方的贴纸，对方不会收到通知。可以在设置中解除屏蔽。"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "世界マップに相手の作品が表示されなくなります。相手には通知されません。設定でブロックを解除できます。"
           }
         }
       }

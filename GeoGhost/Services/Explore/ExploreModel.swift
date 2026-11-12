@@ -47,6 +47,19 @@ final class ExploreModel {
         load(lastRegion, delay: .zero, useCache: false)
     }
 
+    /// The user blocked this author: their posts leave the map at once, and the area is fetched
+    /// again so grid cells they stood in for are recounted (spec: content-safety › 屏蔽发布者).
+    func authorBlocked(_ authorID: UUID) {
+        posts.removeAll { $0.authorId == authorID }
+        blocksChanged()
+    }
+
+    /// Blocks changed (blocked or unblocked elsewhere): cached areas are stale.
+    func blocksChanged() {
+        cache.removeAll()
+        reload()
+    }
+
     private func load(_ region: MKCoordinateRegion, delay: Duration, useCache: Bool) {
         let raw = ExploreBounds(region: region)
         let cell = ExploreGrid.cellDegrees(forLatitudeSpan: raw.latitudeSpan)

@@ -86,6 +86,17 @@ struct ExploreClusterPin: View {
 struct RemotePostSheet: View {
     let post: ExplorePost
     let config: OnlineConfig
+    /// Reporting and blocking (spec: content-safety); nil hides them.
+    var state: OnlineState?
+
+    @Environment(\.dismiss) private var dismiss
+    /// Someone else's post: known once the identity was checked, so one's own post never offers these.
+    @State private var isOthers = false
+    @State private var showReport = false
+    @State private var confirmBlock = false
+    @State private var reported = false
+    @State private var isBlocking = false
+    @State private var blockError: String?
 
     var body: some View {
         NavigationStack {
@@ -106,11 +117,62 @@ struct RemotePostSheet: View {
                     .padding(14)
                     .background(Theme.paperElevated, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                     Text("The location is shown only to within about 100 m.").font(.caption).foregroundStyle(Theme.inkSecondary)
+                    if let blockError { Text(blockError).font(.footnote).foregroundStyle(.red) }
                 }
                 .padding(16)
             }
             .background(PaperBackground())
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if state != nil, isOthers {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if isBlocking { ProgressView() } else {
+                            Menu {
+                                Button("Report this piece", systemImage: "flag") { showReport = true }
+                                Button("Block \(authorName)", systemImage: "hand.raised", role: .destructive) { confirmBlock = true }
+                            } label: {
+                                Label("More", systemImage: "ellipsis.circle")
+                            }
+                        }
+                    }
+                }
+            }
+            .task {
+                guard let state else { return }
+                isOthers = await state.services.identity.userID != post.authorId
+            }
+            .sheet(isPresented: $showReport) {
+                if let state { ReportSheet(post: post, state: state) { reported = true } }
+            }
+            .confirmationDialog("Block \(authorName)?", isPresented: $confirmBlock, titleVisibility: .visible) {
+                Button("Block", role: .destructive) { block() }
+            } message: {
+                Text("You won't see their pieces on the world map anymore. They won't be told. You can unblock them in Settings.")
+            }
+            .alert("Thanks for reporting", isPresented: $reported) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("We review every report within 24 hours.")
+            }
+        }
+    }
+
+    private var authorName: String { post.authorNickname ?? String(localized: "Unknown user") }
+
+    private func block() {
+        guard let state else { return }
+        isBlocking = true
+        blockError = nil
+        Task {
+            defer { isBlocking = false }
+            do {
+                try await state.services.safety.block(userID: post.authorId)
+                // The world map drops the author's posts (spec: content-safety › 屏蔽发布者).
+                NotificationCenter.default.post(name: .onlineBlocksChanged, object: post.authorId)
+                dismiss()
+            } catch {
+                if let shown = state.handle(error) { blockError = OnlineMessage.text(for: shown) }
+            }
         }
     }
 

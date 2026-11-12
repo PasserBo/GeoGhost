@@ -9,7 +9,7 @@
 | 3 | [add-publishing](changes/add-publishing/proposal.md) | in-progress | T11 真机发布并审核（端到端已在模拟器验证） | me |
 | 4 | [add-explore-map](changes/add-explore-map/proposal.md) | in-progress | 界面完成并验证；剩 T7 种子内容、T8 真机 | me |
 | 5 | [add-likes-and-saves](changes/add-likes-and-saves/proposal.md) | accepted | 等 4 | agent |
-| 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | accepted | 原因列表已定；通知方式待讨论（不先做） | agent |
+| 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | in-progress | 确认 T1 原因列表与入口；然后模拟器走查举报/屏蔽，T4 审核手册；通知待讨论（不先做） | me |
 | 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | in-progress | 已完成并验证，待归档 | agent |
 | 8 | [prepare-ugc-release](changes/prepare-ugc-release/proposal.md) | accepted | 等 2–6 | me + agent |
 | 9 | [add-apple-account-linking](changes/add-apple-account-linking/proposal.md) | accepted | 阶段 1 上线后开始 | agent |

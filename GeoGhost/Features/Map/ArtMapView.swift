@@ -78,7 +78,8 @@ struct ArtMapView: View {
             }
             .sheet(item: $selectedPost) { post in
                 if let config = services.online?.config {
-                    RemotePostSheet(post: post, config: config).presentationDetents([.medium, .large])
+                    RemotePostSheet(post: post, config: config, state: services.onlineState)
+                        .presentationDetents([.medium, .large])
                 }
             }
             .navigationTitle("Map")
@@ -96,6 +97,9 @@ struct ArtMapView: View {
                 }
             }
             .onChange(of: modeRaw) { startWorldIfNeeded() }
+            .onReceive(NotificationCenter.default.publisher(for: .onlineBlocksChanged)) { note in
+                if let author = note.object as? UUID { explore?.authorBlocked(author) } else { explore?.blocksChanged() }
+            }
             .task { startWorldIfNeeded() }
             .toolbarBackground(.visible, for: .navigationBar)
             .onAppear { showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse }

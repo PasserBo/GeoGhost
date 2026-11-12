@@ -1,5 +1,6 @@
 import CoreLocation
 import ImageIO
+import MapKit
 import XCTest
 @testable import GeoGhost
 
@@ -515,4 +516,139 @@ final class ArtworkPublishStateTests: XCTestCase {
         XCTAssertNil(artwork.remotePostID)
         XCTAssertNil(artwork.publishedAt)
     }
+}
+
+// MARK: - Reporting and blocking
+
+final class ReportDraftTests: XCTestCase {
+    func testReasonIsRequiredAndOtherNeedsANote() {
+        var draft = ReportDraft()
+        XCTAssertFalse(draft.canSubmit, "no reason chosen")
+        draft.reason = .spam
+        XCTAssertTrue(draft.canSubmit, "a basic reason needs no note")
+        draft.reason = .other
+        draft.note = "   \n"
+        XCTAssertFalse(draft.canSubmit, "other needs a note; whitespace is not one")
+        draft.note = "  copies someone's art  "
+        XCTAssertTrue(draft.canSubmit)
+        XCTAssertEqual(draft.trimmedNote, "copies someone's art")
+        draft.note = String(repeating: "あ", count: ReportDraft.noteLimit + 1)
+        XCTAssertFalse(draft.canSubmit, "note longer than 500 characters")
+    }
+
+    func testReasonsFitTheServerColumn() {
+        XCTAssertEqual(ReportReason.allCases.last, .other)
+        for reason in ReportReason.allCases { XCTAssertTrue((1...32).contains(reason.rawValue.count)) }
+    }
+}
+
+final class SafetyClientTests: XCTestCase {
+    private let user = UUID(uuidString: "11111111-2222-3333-4444-555555555555")!
+    private let other = UUID(uuidString: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")!
+
+    override func setUp() {
+        OnlineStubProtocol.recorded = []
+    }
+
+    private func makeClient(signedIn: Bool = true) -> SafetyClient {
+        let session = signedIn ? AuthSession(accessToken: "user-token", refreshToken: "r", expiresAt: .distantFuture, userID: user, isAnonymous: true) : nil
+        let identity = OnlineSession(auth: FakeAuth(expiresAt: .distantFuture), store: MemoryStore(session))
+        let database = PostgrestClient(config: testConfig, identity: identity, session: OnlineStubProtocol.session())
+        return SafetyClient(services: OnlineServices(config: testConfig, identity: identity, database: database))
+    }
+
+    func testReportSendsReasonAndNote() async throws {
+        OnlineStubProtocol.handler = { _, _ in (200, Data(#"{"ok":true}"#.utf8)) }
+        let post = UUID()
+        try await makeClient().report(postID: post, reason: .other, note: "copies someone's art")
+        let sent = try XCTUnwrap(OnlineStubProtocol.recorded.first)
+        XCTAssertEqual(sent.request.url?.absoluteString, "https://project.supabase.test/rest/v1/rpc/report_post")
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: sent.body) as? [String: String])
+        XCTAssertEqual(body, ["post_id": post.uuidString, "reason": "other", "note": "copies someone's art"])
+    }
+
+    func testDailyReportLimitIsARefusal() async {
+        OnlineStubProtocol.handler = { _, _ in (400, Data(#"{"code":"P0001","message":"limit","hint":"reports_day"}"#.utf8)) }
+        do {
+            try await makeClient().report(postID: UUID(), reason: .spam, note: nil)
+            XCTFail("expected a refusal")
+        } catch {
+            XCTAssertEqual(error as? OnlineError, .refused(.reportsDay))
+            XCTAssertEqual(OnlineMessage.text(for: .refused(.reportsDay)), String(localized: "You've reached today's limit. Please try again later."))
+        }
+    }
+
+    func testBlockInsertsOwnRowIgnoringDuplicates() async throws {
+        OnlineStubProtocol.handler = { _, _ in (201, Data()) }
+        try await makeClient().block(userID: other)
+        let sent = try XCTUnwrap(OnlineStubProtocol.recorded.first)
+        XCTAssertEqual(sent.request.httpMethod, "POST")
+        XCTAssertEqual(sent.request.url?.path, "/rest/v1/blocks")
+        XCTAssertEqual(sent.request.value(forHTTPHeaderField: "Prefer"), "return=minimal,resolution=ignore-duplicates")
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: sent.body) as? [String: String])
+        XCTAssertEqual(body, ["blocked_id": other.uuidString], "blocker is the signed-in user, set by the server")
+    }
+
+    func testUnblockDeletesThatRow() async throws {
+        OnlineStubProtocol.handler = { _, _ in (204, Data()) }
+        try await makeClient().unblock(userID: other)
+        let sent = try XCTUnwrap(OnlineStubProtocol.recorded.first)
+        XCTAssertEqual(sent.request.httpMethod, "DELETE")
+        XCTAssertEqual(sent.request.url?.query, "blocked_id=eq.\(other.uuidString.lowercased())")
+    }
+
+    func testBlockedUsersNewestFirstWithNicknames() async throws {
+        let third = UUID()
+        OnlineStubProtocol.handler = { request, _ in
+            if request.url?.path == "/rest/v1/blocks" {
+                return (200, Data("""
+                [{"blocked_id":"\(self.other.uuidString.lowercased())","created_at":"2026-11-12T03:00:00+00:00"},
+                 {"blocked_id":"\(third.uuidString.lowercased())","created_at":"2026-11-11T03:00:00+00:00"}]
+                """.utf8))
+            }
+            // The second user has no profile any more.
+            return (200, Data(#"[{"id":"\#(self.other.uuidString.lowercased())","nickname":"kobayashi"}]"#.utf8))
+        }
+        let users = try await makeClient().blockedUsers()
+        XCTAssertEqual(users.map(\.id), [other, third])
+        XCTAssertEqual(users.map(\.nickname), ["kobayashi", nil])
+        XCTAssertEqual(OnlineStubProtocol.recorded.first?.request.url?.query?.contains("order=created_at.desc"), true)
+    }
+
+    func testBlockedUsersWithoutIdentityCreatesNone() async throws {
+        let users = try await makeClient(signedIn: false).blockedUsers()
+        XCTAssertTrue(users.isEmpty)
+        XCTAssertTrue(OnlineStubProtocol.recorded.isEmpty, "opening the list must not create a guest")
+    }
+}
+
+@MainActor
+final class ExploreBlockingTests: XCTestCase {
+    func testBlockedAuthorLeavesTheMapAndTheAreaIsFetchedAgain() async throws {
+        let blocked = UUID(), kept = UUID()
+        func post(_ author: UUID) -> ExplorePost {
+            ExplorePost(id: UUID(), authorId: author, authorNickname: nil, kind: "sticker", lat: 35.66, lng: 139.7, locality: nil,
+                        countryCode: nil, capturedOn: nil, width: 1, height: 1, imageKey: nil, thumbKey: nil, likeCount: 0,
+                        publishedAt: nil, cellCount: 1)
+        }
+        let rows = [post(blocked), post(kept)]
+        let calls = LockedCounter()
+        let model = ExploreModel(fetch: { _, _ in calls.increment(); return rows }, debounce: .zero)
+        model.regionChanged(MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.66, longitude: 139.7),
+                                               span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)))
+        for _ in 0..<100 where model.posts.count < 2 { try await Task.sleep(for: .milliseconds(20)) }
+        XCTAssertEqual(model.posts.count, 2)
+
+        model.authorBlocked(blocked)
+        XCTAssertEqual(model.posts.map(\.authorId), [kept], "gone at once, before the refetch")
+        for _ in 0..<100 where calls.value < 2 { try await Task.sleep(for: .milliseconds(20)) }
+        XCTAssertEqual(calls.value, 2, "the cached area is fetched again")
+    }
+}
+
+private final class LockedCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var n = 0
+    var value: Int { lock.withLock { n } }
+    func increment() { lock.withLock { n += 1 } }
 }
