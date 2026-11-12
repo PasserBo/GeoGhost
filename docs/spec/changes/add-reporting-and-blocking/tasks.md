@@ -1,10 +1,10 @@
 # Tasks: add-reporting-and-blocking
 
 ## Now
-2026-11-12：T1 delta 已起草（待用户确认原因列表与入口位置，见 proposal Decisions）；T2、T3 已实现并有单元测试，待模拟器走查（需要一张别人的公开贴纸）。下一步：用户确认 T1 → 用第二个访客发布一张贴纸并在审核台通过，然后在模拟器走查举报、屏蔽、解除屏蔽（T2/T3）→ T4 审核手册。T5 通知**不要做**，等讨论。
+2026-11-12：T1 已确认；T2、T3 已实现并有单元测试，待模拟器走查（需要一张别人的公开贴纸）。下一步：用第二个访客发布一张贴纸并在审核台通过，然后在模拟器走查举报、屏蔽、解除屏蔽（T2/T3）→ T4 审核手册。T5 通知**不要做**，等讨论。
 
-- [ ] T1 delta `content-safety` + 举报原因列表 — owner: agent 起草 · me 确认 · verify: check-delta 无错误 + 用户确认
-  - 2026-11-12 agent 部分：`specs/content-safety/spec.md` 已写，`spec_tool.py check-delta` 无错误；等待用户确认。
+- [x] T1 delta `content-safety` + 举报原因列表 — owner: agent 起草 · me 确认 · verify: check-delta 无错误 + 用户确认 · done 2026-11-12
+  - evidence: `specs/content-safety/spec.md` check-delta 无错误；用户 2026-11-12 确认原因列表与入口（proposal Decisions）
 - [ ] T2 举报界面 — owner: agent · after: T1 · verify: 模拟器
   - 2026-11-12 已实现：`Features/Online/SafetyViews.swift` `ReportSheet`，入口在 `RemotePostSheet` 的「更多」菜单；`Services/Safety/SafetyClient.swift`。单元测试通过：`ReportDraftTests`、`SafetyClientTests.testReportSendsReasonAndNote`、`testDailyReportLimitIsARefusal`。模拟器走查未做：后端目前没有别人的公开贴纸（需要第二个访客发布一张并审核通过）。
 - [ ] T3 屏蔽 / 解除屏蔽；设置中的屏蔽列表 — owner: agent · after: T1 · verify: 模拟器
