@@ -128,3 +128,7 @@ server/scripts/smoke.sh   # 读取 Config/Online.xcconfig
 ## 举报后对举报人隐藏（add-reporting-and-blocking）
 
 在 SQL Editor 执行 `supabase/migrations/20261112020000_hide_reported_from_reporter.sql`（在前两个迁移之后，只执行一次）。它替换 `posts_select_public` 策略：举报过的帖子对举报人不再可读（`explore` 随之不返回），其他人不受影响。
+
+## 被多人举报后重新审核（add-reporting-and-blocking）
+
+在 SQL Editor 执行 `supabase/migrations/20261112030000_report_hide_is_rereview.sql`（在上一个迁移之后，只执行一次）。3 人举报后帖子回到 `pending`（`published_at` 保留，审核台标为「重新审核」）而不是 `hidden`；通过时不再重复计入作者的信任次数；「保留」仍公开的被举报帖子会关闭它的举报。迁移同时把以前被自动隐藏、仍有未处理举报的帖子移回审核。

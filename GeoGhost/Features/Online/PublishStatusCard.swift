@@ -104,7 +104,9 @@ struct PublishStatusCard: View {
         case .uploading:
             String(localized: "Publishing was interrupted. Trying again won't use another post.")
         case .pending:
-            String(localized: "Only you can see it until it has been checked.")
+            artwork.isInReReview
+                ? String(localized: "It was hidden for now after several reports and is being checked again. Only you can see it until then.")
+                : String(localized: "Only you can see it until it has been checked.")
         case .published:
             artwork.publishedAt.map { String(localized: "Public since \($0.formatted(date: .abbreviated, time: .omitted))") }
                 ?? String(localized: "Everyone can see this piece.")

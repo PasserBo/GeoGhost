@@ -56,9 +56,9 @@ App ──(GET 图片)───────────▶ 图片地址（MVP：
 | 值 | 含义 | 谁能看到 |
 |---|---|---|
 | `uploading` | 已占位，图片未传完 | 作者 |
-| `pending` | 等人工审核 | 作者 |
+| `pending` | 等人工审核；`published_at` 不为空时是被多人举报后的重新审核（2026-11-12，迁移 `20261112030000`） | 作者（显示「审核中」） |
 | `public` | 公开 | 所有人（屏蔽关系除外） |
-| `hidden` | 被举报自动隐藏或审核拒绝 | 作者（显示「未通过」） |
+| `hidden` | 审核拒绝（2026-11-12 起被举报不再直接进入此状态） | 作者（显示「未通过」） |
 | `removed` | 作者撤回 / 删除；图片已删 | 无人；行保留 30 天后清理 |
 
 坐标：客户端上传前先吸附到网格，服务端在 `create_post` 里**再吸附一次**（不信任客户端）：
@@ -81,7 +81,7 @@ App ──(GET 图片)───────────▶ 图片地址（MVP：
 | `upsert_profile` | `nickname`, `terms_version` | 首次调用创建资料并记录同意条款；改昵称 7 天 1 次；被封禁拒绝 | profile |
 | `create_post` | `client_artwork_id`, `kind`, `lat`, `lng`, `locality`, `country_code`, `captured_on`, `width`, `height` | 需已有 profile 且同意当前条款；未封禁；检查日 / 月额度（按窗口内**创建**的帖子数计，任何状态都算，撤回不返还额度）；同一 `client_artwork_id` 再次调用返回已有帖子 | `{post_id, status, image_key, thumb_key}` |
 | `explore` | `min_lat`, `min_lng`, `max_lat`, `max_lng`, `cell_deg` | 视口内公开帖子；`cell_deg > 0` 时按网格聚合，每格返回数量 + 最新一张；否则返回最多 200 张 | 列表 |
-| `report_post` | `post_id`, `reason`, `note` | 每日额度；同一人同一帖只算一次；不同举报人达到阈值时自动 `hidden` | `{ok}` |
+| `report_post` | `post_id`, `reason`, `note` | 每日额度；同一人同一帖只算一次；不同举报人达到阈值时回到 `pending` 重新审核（2026-11-12 前为 `hidden`） | `{ok}` |
 | `my_quota` | — | 本月 / 今日已用与上限 | `{month_used, month_limit, day_used, day_limit, resets_at}` |
 
 **直接写表（RLS）**：`likes`、`saves`、`blocks` 只能插入 / 删除 `user_id = auth.uid()` 的行；`saves` 插入时由触发器检查上限；`likes` 由触发器维护 `posts.like_count` 并检查每日上限。

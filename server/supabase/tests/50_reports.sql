@@ -32,13 +32,13 @@ set role authenticated; select tests.claims('00000000-0000-0000-0000-00000000000
 insert into public.blocks (blocked_id) values ('00000000-0000-0000-0000-00000000000a');
 select public.report_post(tests.id('p'), 'harassment');
 reset role;
-select tests.eq((select status from public.posts where id = tests.id('p')), 'hidden', 'third distinct reporter hides the post');
+select tests.eq((select status from public.posts where id = tests.id('p')), 'pending', 'third distinct reporter hides the post (back into review, 20261112030000)');
 
 set role anon; select tests.claims(null);
-select tests.eq((select count(*) from public.posts where id = tests.id('p'))::int, 0, 'hidden post invisible to others');
+select tests.eq((select count(*) from public.posts where id = tests.id('p'))::int, 0, 'post in re-review invisible to others');
 reset role;
 set role authenticated; select tests.claims('00000000-0000-0000-0000-00000000000a');
-select tests.eq((select status from public.posts where id = tests.id('p')), 'hidden', 'author still sees the hidden post');
+select tests.eq((select status from public.posts where id = tests.id('p')), 'pending', 'author still sees it, in review');
 reset role;
 
 -- moderator approves: open reports are resolved, a fresh set is needed to hide again

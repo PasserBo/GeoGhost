@@ -69,7 +69,9 @@ function actionButton(tab: Tab, action: string, label: string, cls: string, fiel
 export function queue(tab: 'pending' | 'reported', rows: QueueRow[], reports: Map<string, ReportRow[]>, now = Date.now()): string {
   if (rows.length === 0) return `<p class="empty">${tab === 'pending' ? '没有待审核的帖子' : '没有未处理的举报'}</p>`;
   return rows.map((row) => {
-    const w = waited(tab === 'pending' ? row.created_at : row.first_report_at, now);
+    // Re-review: published before, put back into review by reports; it waits since the first report.
+    const reReview = row.status === 'pending' && row.published_at !== null;
+    const w = waited(tab === 'pending' && !reReview ? row.created_at : row.first_report_at ?? row.created_at, now);
     const place = [row.locality, row.country_code].filter(Boolean).join(', ') || '未知区域';
     const list = (reports.get(row.id) ?? []).filter((r) => !r.resolved_at)
       .map((r) => `<li>${esc(r.reason)}${r.note ? ` — ${esc(r.note)}` : ''} <span class="muted">${esc(waited(r.created_at, now).text)}前</span></li>`).join('');
@@ -80,7 +82,7 @@ export function queue(tab: 'pending' | 'reported', rows: QueueRow[], reports: Ma
 <div><b>${esc(row.author_nickname ?? '（无昵称）')}</b>${row.author_banned ? ' <span class="late">已封禁</span>' : ''}
  <span class="muted">通过 ${row.author_approved} · 被隐藏 ${row.author_hidden}</span></div>
 <div>${esc(KIND[row.post_kind] ?? row.post_kind)} · ${esc(place)} · ${esc(row.captured_on ?? '')}</div>
-<div class="muted">${esc(STATUS[row.status] ?? row.status)} · 已等待 <span class="${w.late ? 'late' : ''}">${esc(w.text)}</span></div>
+<div class="muted">${reReview ? '<span class="late">重新审核（被举报后暂时隐藏）</span>' : esc(STATUS[row.status] ?? row.status)} · 已等待 <span class="${w.late ? 'late' : ''}">${esc(w.text)}</span></div>
 ${tab === 'reported' ? `<div>${row.open_reports} 人举报</div><ul class="reports">${list}</ul>` : ''}
 <div class="actions">
 ${row.status !== 'public' ? actionButton(tab, 'approve', '通过', 'ok', post) : actionButton(tab, 'approve', '保留（关闭举报）', 'ok', post)}

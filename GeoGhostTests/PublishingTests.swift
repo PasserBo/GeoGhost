@@ -228,6 +228,29 @@ final class ArtworkPublisherTests: XCTestCase {
         XCTAssertEqual(gone.publishState, .unpublished)
         XCTAssertNil(gone.remotePostID)
     }
+
+    /// Hidden after reports means back in review, not rejected: the author sees "In review".
+    func testPostPutBackIntoReviewAfterReportsIsInReReview() async throws {
+        let artwork = makeArtwork()
+        try await publisher().publish(artwork)
+        let postID = try XCTUnwrap(artwork.remotePostID)
+        XCTAssertFalse(artwork.isInReReview, "first review is not a re-review")
+        await backend.setStatus("public", for: postID)
+        try await publisher().refreshStates([artwork])
+        XCTAssertFalse(artwork.isInReReview)
+
+        await backend.setStatus("pending", for: postID)
+        try await publisher().refreshStates([artwork])
+        XCTAssertEqual(artwork.publishState, .pending)
+        XCTAssertNotNil(artwork.publishedAt, "keeps when it was first published")
+        XCTAssertTrue(artwork.isInReReview)
+        XCTAssertEqual(artwork.remotePostID, postID)
+
+        await backend.setStatus("public", for: postID)
+        try await publisher().refreshStates([artwork])
+        XCTAssertEqual(artwork.publishState, .published)
+        XCTAssertFalse(artwork.isInReReview)
+    }
 }
 
 private extension FakePublishBackend {

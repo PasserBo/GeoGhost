@@ -104,6 +104,22 @@ describe('html', () => {
     expect(out).toContain('data-confirm=');
   });
 
+  it('marks a re-review and counts its wait from the first report', () => {
+    const row: QueueRow = {
+      id: '11111111-1111-1111-1111-111111111111', author_id: '22222222-2222-2222-2222-222222222222', status: 'pending',
+      post_kind: 'sticker', locality: null, country_code: null, captured_on: null,
+      image_key: 'posts/11111111-1111-1111-1111-111111111111/full.heic', thumb_key: 'posts/11111111-1111-1111-1111-111111111111/thumb.heic',
+      created_at: new Date(Date.now() - 30 * 24 * 3600_000).toISOString(),
+      published_at: new Date(Date.now() - 29 * 24 * 3600_000).toISOString(),
+      author_nickname: 'a', author_approved: 3, author_hidden: 0, author_banned: false,
+      open_reports: 3, report_reasons: ['spam'], first_report_at: new Date(Date.now() - 2 * 3600_000).toISOString(),
+    };
+    const out = queue('pending', [row], new Map());
+    expect(out).toContain('重新审核');
+    expect(out).toContain(waited(row.first_report_at).text);
+    expect(out).not.toContain(waited(row.created_at).text);
+  });
+
   it('marks waits over 24 hours', () => {
     const now = Date.parse('2026-11-12T12:00:00Z');
     expect(waited('2026-11-11T10:00:00Z', now)).toEqual({ text: '26 小时', late: true });
