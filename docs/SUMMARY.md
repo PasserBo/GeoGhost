@@ -17,6 +17,7 @@
 * [Store listing copy](07-store-listing.md)
 * [Submission sheet](08-app-store-submission.md)
 * [Online identity & guest access](09-online-identity.md)
+* [UI gallery & screen inventory](10-ui.md)
 
 ## Spec
 

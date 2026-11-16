@@ -2,7 +2,7 @@
 
 用户页面：[隐私政策](privacy.md) · [支持](support.md)
 
-界面：[UI 图库](https://passerbo.github.io/GeoGhost/ui/)（每个屏幕和状态的当前样子，由 `ui/` 生成，见 [ui/README.md](https://github.com/PasserBo/GeoGhost/blob/main/ui/README.md)）
+界面：[UI 图库](https://passerbo.github.io/GeoGhost/ui/) · [说明与屏幕清单](10-ui.md)
 
 | 文档 | 内容 |
 |---|---|
