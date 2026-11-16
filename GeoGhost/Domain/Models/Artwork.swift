@@ -110,7 +110,8 @@ extension Artwork {
     /// Best available timestamp for display and sorting.
     var displayDate: Date { capturedAt ?? createdAt }
 
-    var tagList: [Tag] { tags ?? [] }
+    /// By name: the store keeps tags in no particular order, and the UI should not reshuffle them.
+    var tagList: [Tag] { (tags ?? []).sorted { $0.name < $1.name } }
 
     /// The capture metadata this artwork was saved with (for re-editing its photo).
     var captureMetadata: CaptureMetadata {
