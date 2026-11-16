@@ -172,50 +172,6 @@ enum UIFixtures {
     static func id(post index: Int) -> UUID { UUID(uuidString: String(format: "B0000000-0000-4000-8000-%012d", index))! }
 }
 
-// MARK: - Online
-
-/// An online backend that never leaves the process: every call fails as "offline" at once, so
-/// screens show what the fixture put on the piece and nothing depends on the network.
-@MainActor
-enum UIOnlineFixture {
-    private struct NoAuth: OnlineAuthenticating {
-        func signInAnonymously() async throws -> AuthSession { throw OnlineError.offline }
-        func refresh(_ refreshToken: String) async throws -> AuthSession { throw OnlineError.offline }
-    }
-
-    private struct NoStore: SessionStoring {
-        func load() -> AuthSession? { nil }
-        func save(_ session: AuthSession?) {}
-        func loadExpired() -> Bool { false }
-        func saveExpired(_ expired: Bool) {}
-    }
-
-    private final class OfflineProtocol: URLProtocol {
-        override class func canInit(with request: URLRequest) -> Bool { true }
-        override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
-        override func startLoading() { client?.urlProtocol(self, didFailWithError: URLError(.notConnectedToInternet)) }
-        override func stopLoading() {}
-    }
-
-    static let config = OnlineConfig(supabaseURL: URL(string: "https://fixture.invalid")!, anonKey: "fixture",
-                                     apiURL: URL(string: "https://api.fixture.invalid")!,
-                                     imageBaseURL: URL(string: "https://images.fixture.invalid")!)
-
-    static func makeState() -> OnlineState {
-        let sessionConfiguration = URLSessionConfiguration.ephemeral
-        sessionConfiguration.protocolClasses = [OfflineProtocol.self]
-        let identity = OnlineSession(auth: NoAuth(), store: NoStore())
-        let database = PostgrestClient(config: config, identity: identity, session: URLSession(configuration: sessionConfiguration))
-        return OnlineState(services: OnlineServices(config: config, identity: identity, database: database))
-    }
-
-    /// Someone else's public piece, as the world map returns it.
-    static let post = ExplorePost(id: UIFixtures.id(post: 1), authorId: UIFixtures.id(post: 99), authorNickname: "sticker_hunter",
-                                  kind: "sticker", lat: 35.70, lng: 139.65, locality: "杉並区", countryCode: "JP",
-                                  capturedOn: "2026-06-21", width: 800, height: 800, imageKey: nil, thumbKey: nil,
-                                  likeCount: 12, publishedAt: nil, cellCount: 1)
-}
-
 // MARK: - Pictures
 
 /// Simple sticker-like drawings: a coloured shape with a white die-cut border on a transparent
@@ -272,6 +228,36 @@ enum FixturePicture {
         context.addArc(center: CGPoint(x: size * 0.5, y: size * 0.58), radius: 34, startAngle: 0.25 * .pi, endAngle: 0.75 * .pi, clockwise: false)
         context.strokePath()
         return context.makeImage()!
+    }
+
+    /// A photo for the capture flow: two stickers on a tiled wall.
+    static func photo() -> CGImage {
+        let width = 1200, height = 1600
+        let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(UIColor(red: 0.62, green: 0.63, blue: 0.64, alpha: 1).cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.setStrokeColor(UIColor(red: 0.50, green: 0.51, blue: 0.52, alpha: 1).cgColor)
+        context.setLineWidth(6)
+        for y in stride(from: 0, through: height, by: 200) {
+            context.move(to: CGPoint(x: 0, y: y)); context.addLine(to: CGPoint(x: width, y: y))
+        }
+        for x in stride(from: 0, through: width, by: 300) {
+            context.move(to: CGPoint(x: x, y: 0)); context.addLine(to: CGPoint(x: x, y: height))
+        }
+        context.strokePath()
+        context.draw(draw(.cat, hex: "#FF6B2C"), in: CGRect(x: 250, y: 620, width: 700, height: 700))
+        context.draw(draw(.star, hex: "#8C5CF5"), in: CGRect(x: 760, y: 180, width: 320, height: 320))
+        return context.makeImage()!
+    }
+
+    static func photoData() -> Data {
+        UIImage(cgImage: photo()).jpegData(compressionQuality: 0.9)!
+    }
+
+    static func pngData(_ shape: Shape, hex: String) -> Data {
+        UIImage(cgImage: draw(shape, hex: hex)).pngData()!
     }
 
     private static func path(_ shape: Shape, in rect: CGRect) -> CGPath {
