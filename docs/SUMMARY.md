@@ -15,3 +15,4 @@
 * [Monetization & online roadmap](06-product-roadmap.md)
 * [Store listing copy](07-store-listing.md)
 * [Submission sheet](08-app-store-submission.md)
+* [UI gallery & screen inventory](10-ui.md)

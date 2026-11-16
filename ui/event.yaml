@@ -1,0 +1,119 @@
+# 事件清单：值得统计的用户行为。
+#
+# 现状：只是定义，app 里还没有任何上报代码。接入分析工具时以这份文件为准；
+# 真正开始上报前要更新隐私政策（docs/privacy.md）和 App Store 的隐私标签。
+#
+# 规则（测试会检查）：
+#   - 事件名用 snake_case。
+#   - screen 必须是 screen.yaml 里存在的屏幕；不属于某个屏幕的事件不写 screen。
+#   - 属性类型只用 string / int / bool。
+#   - 属性里不放照片、精确位置、备注等用户内容。
+version: 1
+status: planned
+
+events:
+  screen_view:
+    title: 看到某个屏幕
+    properties:
+      screen: string   # screen.yaml 的屏幕名
+      state: string    # screen.yaml 的状态名
+
+  capture_started:
+    title: 打开拍摄
+    screen: capture
+    properties:
+      source: string   # tab | empty_state | detail
+
+  artwork_saved:
+    title: 保存一张贴纸
+    screen: save_artwork
+    properties:
+      kind: string
+      segmentation_mode: string   # auto | autoAdjusted | manualCrop
+      has_location: bool
+
+  artwork_edited:
+    title: 修改贴纸的类型、备注或标签
+    screen: edit_artwork
+    properties:
+      kind_changed: bool
+
+  artwork_deleted:
+    title: 删除一张贴纸
+    screen: artwork_detail
+    properties:
+      had_remote_copy: bool
+
+  collection_filtered:
+    title: 在收藏里筛选或排序
+    screen: collection
+    properties:
+      sort: string
+      kind: string
+      favorites_only: bool
+
+  series_opened:
+    title: 打开一个系列
+    screen: series_list
+    properties:
+      encounter_count: int
+
+  share_card_exported:
+    title: 导出分享卡片
+    screen: share_card
+    properties:
+      style: string   # screen.yaml 里 share_card 的状态名
+
+  publish_started:
+    title: 点了发布
+    screen: publish_status
+    properties:
+      kind: string
+
+  publish_finished:
+    title: 发布结束
+    screen: publish
+    properties:
+      result: string   # pending | published | failed | refused
+      refusal: string
+
+  publish_retracted:
+    title: 撤回已发布的贴纸
+    screen: publish_status
+    properties:
+      from_state: string   # screen.yaml 里 publish_status 的状态名
+
+  profile_saved:
+    title: 保存昵称并同意社区规则
+    screen: profile_setup
+    properties:
+      first_time: bool
+
+  map_mode_changed:
+    title: 切换地图模式
+    screen: map
+    properties:
+      mode: string   # mine | world
+
+  remote_post_opened:
+    title: 查看他人的贴纸
+    screen: map
+    properties:
+      kind: string
+
+  post_reported:
+    title: 举报一张贴纸
+    screen: report
+    properties:
+      reason: string
+
+  user_blocked:
+    title: 屏蔽一位用户
+    screen: remote_post
+
+  feedback_sent:
+    title: 发送反馈
+    screen: feedback
+    properties:
+      has_screenshot: bool
+      has_email: bool

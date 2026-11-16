@@ -2,6 +2,8 @@
 
 用户页面：[隐私政策](privacy.md) · [支持](support.md)
 
+界面：[UI 图库](https://passerbo.github.io/GeoGhost/ui/) · [说明与屏幕清单](10-ui.md)
+
 | 文档 | 内容 |
 |---|---|
 | [00-product-spec.md](00-product-spec.md) | 产品定位、用户、功能范围、商业模式 |
