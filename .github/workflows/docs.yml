@@ -1,11 +1,11 @@
-# Builds docs/ into a static site with GitSpec and publishes it to GitHub Pages.
+# Builds docs/ into a static site with GitSpec, adds the UI gallery, and publishes both to GitHub Pages.
 # Needs no secret; enable Pages once (Settings → Pages → Source: GitHub Actions).
 name: Docs
 
 on:
   push:
     branches: [main]
-    paths: ["docs/**", "gitspec.yaml", ".github/workflows/docs.yml"]
+    paths: ["docs/**", "ui/**", "scripts/build-ui-gallery.rb", "gitspec.yaml", ".github/workflows/docs.yml"]
   workflow_dispatch:
 
 permissions:
@@ -22,6 +22,8 @@ jobs:
         with:
           output: _site
           base: /${{ github.event.repository.name }}
+      # The UI gallery (ui/screen.yaml + ui/snapshots) is served next to the docs, at /ui/.
+      - run: ruby scripts/build-ui-gallery.rb _site/ui
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

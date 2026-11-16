@@ -1,0 +1,198 @@
+# 屏幕清单：GeoGhost 里每一个屏幕、弹层和关键组件，以及它们各自的状态。
+#
+# 这份文件同时是三件事的依据：
+#   1. 数据分析 —— event.yaml 里的事件只能引用这里的屏幕和状态。
+#   2. 快照测试 —— GeoGhostTests/UISnapshots 按这里的组合渲染基准图，存到 ui/snapshots/。
+#   3. 网页图库 —— scripts/build-ui-gallery.rb 按这里的结构生成给设计师看的页面。
+#
+# 状态的划分标准：用户看到的内容有实质区别，而且分析时值得单独统计。
+# 改了这里，要同步改 GeoGhostTests/UISnapshots/ScreenCatalog.swift（测试会检查两边是否一致）。
+#
+# 字段：
+#   title      给人看的名字
+#   kind       screen（整屏）| sheet（弹层）| component（屏幕里的一块）
+#   spec       对应的行为规格（docs/spec 里的能力名），没有就不写
+#   default    代表这个屏幕的状态；非主语言只截这一个
+#   unstable   比对时跳过的区域（单位是点，原点在左上角），必须写 reason。
+#              只用于系统自己画、每次不一定相同的部分；图库里的图不受影响。
+#   states     状态名 → { title, fixture, snapshot, reason }
+#     fixture    用哪一份固定数据（GeoGhostTests/UISnapshots/UIFixtures.swift）
+#     snapshot   false 表示暂时不截图，必须写 reason
+version: 1
+
+matrix:
+  # 基准图只在这台模拟器上录制和比对；换 Xcode 大版本后要整体重录。
+  device: { name: iPhone 17 Pro, width: 402, height: 874, scale: 3 }
+  # 主语言截全部状态 × 全部外观；其余语言只截 default 状态的浅色。
+  primary_locale: zh-Hans
+  locales: [zh-Hans, en, ja]
+  # 每种语言录制时用的地区（决定日期和数字的写法）。
+  regions: { zh-Hans: CN, en: US, ja: JP }
+  appearances: [light, dark]
+
+screens:
+  collection:
+    title: 收藏
+    kind: screen
+    default: typical
+    unstable:
+      - { x: 28, y: 796, width: 346, height: 52, reason: 系统搜索栏的占位文字时粗时细，无法从外部固定 }
+    states:
+      empty: { title: 还没有任何收藏, fixture: empty }
+      typical: { title: 有收藏, fixture: typical }
+      filtered_empty: { title: 筛选后没有结果, snapshot: false, reason: 需要先能从外部设定筛选条件 }
+      search_no_results: { title: 搜索没有结果, snapshot: false, reason: 需要先能从外部设定搜索词 }
+
+  artwork_detail:
+    title: 贴纸详情
+    kind: screen
+    default: no_location
+    states:
+      no_location: { title: 没有位置的贴纸, fixture: typical }
+      with_location: { title: 有位置的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+
+  edit_artwork:
+    title: 编辑贴纸
+    kind: sheet
+    default: in_series
+    states:
+      in_series: { title: 属于某个系列, fixture: typical }
+
+  series_list:
+    title: 系列
+    kind: screen
+    default: typical
+    states:
+      empty: { title: 还没有系列, fixture: empty }
+      typical: { title: 有系列, fixture: typical }
+
+  series_detail:
+    title: 系列详情
+    kind: screen
+    default: no_location
+    states:
+      no_location: { title: 成员都没有位置, fixture: typical }
+      with_route: { title: 有路线地图, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+
+  map:
+    title: 地图
+    kind: screen
+    spec: explore-map
+    default: mine
+    states:
+      mine: { title: 我的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+      world: { title: 世界地图, snapshot: false, reason: 含地图，并且依赖线上数据 }
+      empty: { title: 没有带位置的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+
+  remote_post:
+    title: 他人的贴纸
+    kind: sheet
+    spec: explore-map
+    default: typical
+    states:
+      typical: { title: 查看他人发布的贴纸, snapshot: false, reason: 图片来自网络，需要先能注入固定图片 }
+
+  capture:
+    title: 拍摄
+    kind: screen
+    default: camera
+    states:
+      camera: { title: 取景, snapshot: false, reason: 依赖相机 }
+      permission_denied: { title: 没有相机权限, snapshot: false, reason: 依赖系统权限状态 }
+
+  segmentation_editor:
+    title: 抠图编辑
+    kind: screen
+    default: auto
+    states:
+      auto: { title: 自动识别出主体, snapshot: false, reason: 依赖 Vision 的识别结果，需要先能注入固定结果 }
+      nothing_found: { title: 没有识别出主体, snapshot: false, reason: 同上 }
+
+  save_artwork:
+    title: 保存贴纸
+    kind: sheet
+    default: typical
+    states:
+      typical: { title: 填写类型和备注, snapshot: false, reason: 依赖拍摄流程的中间状态 }
+
+  share_card:
+    title: 分享卡片
+    kind: component
+    default: field_note
+    states:
+      field_note: { title: 田野笔记, fixture: typical }
+      polaroid: { title: 拍立得, fixture: typical }
+      poster: { title: 海报, fixture: typical }
+      minimal: { title: 极简, fixture: typical }
+
+  publish_status:
+    title: 发布状态卡片
+    kind: component
+    spec: publishing
+    default: unpublished
+    states:
+      unpublished: { title: 未发布, fixture: typical }
+      uploading: { title: 上传未完成, fixture: typical }
+      pending: { title: 审核中, fixture: typical }
+      published: { title: 已发布, fixture: typical }
+      re_review: { title: 复审中, fixture: typical }
+      rejected: { title: 未通过审核, fixture: typical }
+
+  publish:
+    title: 发布到世界地图
+    kind: sheet
+    spec: publishing
+    default: ready
+    states:
+      ready: { title: 可以发布, snapshot: false, reason: 打开时要向服务器查询额度，需要先能注入固定结果 }
+      quota_reached: { title: 额度用完, snapshot: false, reason: 同上 }
+
+  profile_setup:
+    title: 昵称与社区规则
+    kind: sheet
+    spec: online-identity
+    default: first_time
+    states:
+      first_time: { title: 第一次发布前, fixture: empty }
+
+  report:
+    title: 举报贴纸
+    kind: sheet
+    spec: content-safety
+    default: form
+    states:
+      form: { title: 选择原因, fixture: empty }
+      sent: { title: 已提交, snapshot: false, reason: 需要先能从外部设定为已提交 }
+
+  blocked_users:
+    title: 已屏蔽的用户
+    kind: screen
+    spec: content-safety
+    default: typical
+    states:
+      typical: { title: 有屏蔽的用户, snapshot: false, reason: 列表来自服务器，需要先能注入固定结果 }
+      empty: { title: 没有屏蔽任何人, snapshot: false, reason: 同上 }
+
+  settings:
+    title: 设置
+    kind: screen
+    default: typical
+    states:
+      typical: { title: 默认, snapshot: false, reason: 显示版本号和占用空间，每次构建都不同 }
+
+  feedback:
+    title: 发送反馈
+    kind: sheet
+    default: empty
+    unstable:
+      - { x: 16, y: 560, width: 370, height: 120, reason: 「附带信息」里有构建号，每次提交都会变 }
+    states:
+      empty: { title: 空白表单, fixture: empty }
+      sent: { title: 已发送, snapshot: false, reason: 需要先能从外部设定为已发送 }
+
+  paywall:
+    title: GeoGhost Pro
+    kind: sheet
+    default: locked
+    states:
+      locked: { title: 未购买, snapshot: false, reason: 内购尚未开放，界面对用户不可见 }

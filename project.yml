@@ -7,6 +7,14 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
   developmentLanguage: en
+packages:
+  # Test-only: renders screens to images and compares them with ui/snapshots/ (see ui/README.md).
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    exactVersion: 1.19.7
+  Yams:
+    url: https://github.com/jpsim/Yams
+    exactVersion: 5.4.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -72,6 +80,8 @@ targets:
       - path: GeoGhostTests
     dependencies:
       - target: GeoGhost
+      - package: SnapshotTesting
+      - package: Yams
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.passerbo.geoghost.tests

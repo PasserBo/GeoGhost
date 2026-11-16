@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ui-gallery",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "ruby scripts/build-ui-gallery.rb build/ui-gallery && python3 -m http.server 4173 --directory build/ui-gallery"],
+      "port": 4173
+    }
+  ]
+}
