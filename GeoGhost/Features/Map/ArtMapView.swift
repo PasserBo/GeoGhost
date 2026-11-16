@@ -12,12 +12,18 @@ struct ArtMapView: View {
     @AppStorage("mapMode") private var modeRaw = Mode.mine.rawValue
     @State private var explore: ExploreModel?
     @State private var selectedPost: ExplorePost?
-    @State private var position: MapCameraPosition = .automatic
+    @State private var position: MapCameraPosition
     @State private var visibleRegion: MKCoordinateRegion?
+    @State private var hasFramed = false
     @State private var selected: Artwork?
     @State private var selectedCluster: Cluster?
     @State private var showUserLocation = false
     @Environment(\.openCapture) private var openCapture
+
+    /// `position` is where the map opens; UI snapshots use it to open the world map on a known area.
+    init(position: MapCameraPosition = .automatic) {
+        _position = State(initialValue: position)
+    }
 
     var body: some View {
         NavigationStack {
@@ -51,6 +57,13 @@ struct ArtMapView: View {
             .mapControls { MapCompass(); MapUserLocationButton() }
             .onMapCameraChange(frequency: .onEnd) { ctx in
                 visibleRegion = ctx.region
+                // Automatic framing is for opening the map only. Left on, it follows the pins: grouping
+                // them for the new zoom moves them, the map frames them again, and that regroups them
+                // once more — with pieces far apart it never settles.
+                if !hasFramed {
+                    hasFramed = true
+                    position = .region(ctx.region)
+                }
                 if isWorld { explore?.regionChanged(ctx.region) }
             }
             .overlay(alignment: .bottom) { if isWorld, let explore { WorldStatusBanner(model: explore) } }
@@ -105,7 +118,10 @@ struct ArtMapView: View {
             }
             .task { startWorldIfNeeded() }
             .toolbarBackground(.visible, for: .navigationBar)
-            .onAppear { showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse }
+            .onAppear {
+                showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse
+                frameOwnPieces()
+            }
         }
     }
 
@@ -115,6 +131,24 @@ struct ArtMapView: View {
         guard isWorld, let online = services.online else { return }
         if explore == nil { explore = ExploreModel(client: ExploreClient(services: online)) }
         if let visibleRegion { explore?.regionChanged(visibleRegion) }
+    }
+
+    /// Opens on all of one's own pieces. Framed from the pieces themselves, not from the pins: before
+    /// the first camera event every piece is in one pin, and framing that single point would zoom
+    /// in on the middle of nowhere between them.
+    private func frameOwnPieces() {
+        guard !hasFramed, !isWorld else { return }
+        let coordinates = artworks.compactMap(\.coordinate)
+        guard let first = coordinates.first else { return }
+        var minLat = first.latitude, maxLat = first.latitude, minLon = first.longitude, maxLon = first.longitude
+        for c in coordinates {
+            minLat = min(minLat, c.latitude); maxLat = max(maxLat, c.latitude)
+            minLon = min(minLon, c.longitude); maxLon = max(maxLon, c.longitude)
+        }
+        let center = CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2)
+        let span = MKCoordinateSpan(latitudeDelta: min(170, max(0.01, (maxLat - minLat) * 1.6)),
+                                    longitudeDelta: min(350, max(0.01, (maxLon - minLon) * 1.6)))
+        position = .region(MKCoordinateRegion(center: center, span: span))
     }
 
     /// Tapping a cluster zooms into its cell.
