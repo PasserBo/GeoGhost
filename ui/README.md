@@ -7,8 +7,9 @@
 | `screen.yaml` | 屏幕清单：每个屏幕、弹层、关键组件，以及各自的状态 |
 | `event.yaml` | 事件清单：值得统计的用户行为，只能引用 `screen.yaml` 里的屏幕（目前只是定义，尚未上报） |
 | `snapshots/` | 基准图：每个状态渲染出来的图片，由测试生成，提交进仓库 |
+| `translations.yaml` | 图库说明文字的英语和日语翻译；截图不受影响 |
 
-网页图库：<https://passerbo.github.io/GeoGhost/ui/>（合并到 main 后自动更新）。
+网页图库：<https://passerbo.github.io/GeoGhost/ui/>（合并到 main 后自动更新）。页面有简体中文、[English](https://passerbo.github.io/GeoGhost/ui/en.html)、[日本語](https://passerbo.github.io/GeoGhost/ui/ja.html) 三个版本，第一次打开会按浏览器语言跳转。
 
 ## 它怎么防止界面走样
 
@@ -21,6 +22,7 @@
 ```sh
 scripts/ui-snapshots.sh verify   # 比对；有差异就失败
 scripts/ui-snapshots.sh record   # 界面是有意改的：重新录制全部基准图，然后比对一次
+scripts/ui-snapshots.sh record map.   # 只重录名字以 map. 开头的状态
 ruby scripts/build-ui-gallery.rb build/ui-gallery && open build/ui-gallery/index.html   # 本地看图库
 ```
 
@@ -28,19 +30,31 @@ ruby scripts/build-ui-gallery.rb build/ui-gallery && open build/ui-gallery/index
 
 ## 加一个屏幕或状态
 
-1. 在 `screen.yaml` 里加上屏幕或状态，写明用哪份 fixture。
+1. 在 `screen.yaml` 里加上屏幕或状态，写明用哪份 fixture；在 `translations.yaml` 里补上英语和日语的名字。
 2. 在 `GeoGhostTests/UISnapshots/ScreenCatalog.swift` 里加一条，说明怎么用 fixture 把它摆出来。
 3. 需要新的数据场景时，在 `UIFixtures.swift` 里加一份 fixture。
 4. 运行 `scripts/ui-snapshots.sh record`，看一眼新图，提交。
 
-测试会检查：`screen.yaml` 和 `ScreenCatalog` 两边一致；`event.yaml` 引用的屏幕都存在；`snapshots/` 里没有多余或缺少的图。
+测试会检查：`screen.yaml` 和 `ScreenCatalog` 两边一致；`event.yaml` 引用的屏幕都存在；`translations.yaml` 没有漏项或多余项；`snapshots/` 里没有多余或缺少的图。
 
 ## 截图的组合
 
 主语言（`matrix.primary_locale`）：全部状态 × 浅色和深色。其余语言：每个屏幕的默认状态 × 浅色，用来发现文字放不下的问题。
 
-## 暂时截不了的状态
+## 线上内容和拍摄流程怎么固定
 
-`screen.yaml` 里 `snapshot: false` 的状态都写了原因，主要是三类：含地图（瓦片每次不同）、依赖相机或系统权限、内容来自服务器或要先点几下才能到达。它们仍然列在清单里，图库里会显示原因。要补上，需要先让对应的屏幕能从外部注入固定内容。
+- **线上数据**：`UIOnlineFixture.swift` 里有一个只在测试进程内的假服务器。app 自己的网络代码照常运行，请求由它用固定数据回答（发布额度、屏蔽名单、世界地图上的贴纸、他人贴纸的图片）。条目里改 `UIOnlineFixture.scenario` 就能换一种服务器状态，例如额度用完。
+- **拍摄流程**：用一张程序画的固定照片走真实的分析和抠图代码。套索抠图在 debug 构建里要二十秒左右，所以这一屏录得慢。
+- **屏幕的起始状态**：少数屏幕加了起始参数（收藏页的搜索词和筛选、举报和反馈的「已提交」、地图打开的位置），默认值就是 app 原来的行为。
 
-系统自己画、每次不一定相同的小区域（收藏页的搜索栏文字、反馈页里的构建号）用 `unstable` 声明，比对时跳过，图库里的图不受影响。
+## 比对时跳过的区域
+
+`screen.yaml` 里用 `unstable` 声明，都写了原因。图库里的图不受影响，只是这些区域变了测试不会报错：
+
+- **地图**：瓦片由系统从网络加载，每次不一定相同。详情页、系列页、发布页只跳过地图那一块；地图页整屏都是地图，所以整屏跳过，只进图库、不参与比对。
+- **收藏页搜索栏的文字**：系统随机用两种粗细。
+- **反馈页的构建号**：每次提交都变。
+
+## 没有图的状态
+
+只剩拍摄页的两种：取景画面（模拟器没有相机）和相机权限被拒绝（要先在系统里改权限）。它们仍然列在清单里，图库里会显示原因。
