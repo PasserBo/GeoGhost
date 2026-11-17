@@ -61,6 +61,19 @@ struct UIEventSpec: Decodable {
     let events: [String: Event]
 }
 
+/// ui/translations.yaml: the gallery's words in one other language.
+struct UITranslation: Decodable {
+    struct Screen: Decodable {
+        let title: String
+        let states: [String: String]
+    }
+
+    let screens: [String: Screen]
+    let events: [String: String]
+    /// Keyed by the original Chinese text.
+    let reasons: [String: String]
+}
+
 /// One image: a state of a screen in one appearance and language.
 struct UISnapshotCase: Hashable {
     let screen: String
@@ -82,6 +95,10 @@ extension UISpec {
 
     static func load() throws -> UISpec {
         try YAMLDecoder().decode(UISpec.self, from: Data(contentsOf: directory.appending(path: "screen.yaml")))
+    }
+
+    static func loadTranslations() throws -> [String: UITranslation] {
+        try YAMLDecoder().decode([String: UITranslation].self, from: Data(contentsOf: directory.appending(path: "translations.yaml")))
     }
 
     static func loadEvents() throws -> UIEventSpec {

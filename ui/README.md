@@ -7,8 +7,9 @@
 | `screen.yaml` | 屏幕清单：每个屏幕、弹层、关键组件，以及各自的状态 |
 | `event.yaml` | 事件清单：值得统计的用户行为，只能引用 `screen.yaml` 里的屏幕（目前只是定义，尚未上报） |
 | `snapshots/` | 基准图：每个状态渲染出来的图片，由测试生成，提交进仓库 |
+| `translations.yaml` | 图库说明文字的英语和日语翻译；截图不受影响 |
 
-网页图库：<https://passerbo.github.io/GeoGhost/ui/>（合并到 main 后自动更新）。
+网页图库：<https://passerbo.github.io/GeoGhost/ui/>（合并到 main 后自动更新）。页面有简体中文、[English](https://passerbo.github.io/GeoGhost/ui/en.html)、[日本語](https://passerbo.github.io/GeoGhost/ui/ja.html) 三个版本，第一次打开会按浏览器语言跳转。
 
 ## 它怎么防止界面走样
 
@@ -29,12 +30,12 @@ ruby scripts/build-ui-gallery.rb build/ui-gallery && open build/ui-gallery/index
 
 ## 加一个屏幕或状态
 
-1. 在 `screen.yaml` 里加上屏幕或状态，写明用哪份 fixture。
+1. 在 `screen.yaml` 里加上屏幕或状态，写明用哪份 fixture；在 `translations.yaml` 里补上英语和日语的名字。
 2. 在 `GeoGhostTests/UISnapshots/ScreenCatalog.swift` 里加一条，说明怎么用 fixture 把它摆出来。
 3. 需要新的数据场景时，在 `UIFixtures.swift` 里加一份 fixture。
 4. 运行 `scripts/ui-snapshots.sh record`，看一眼新图，提交。
 
-测试会检查：`screen.yaml` 和 `ScreenCatalog` 两边一致；`event.yaml` 引用的屏幕都存在；`snapshots/` 里没有多余或缺少的图。
+测试会检查：`screen.yaml` 和 `ScreenCatalog` 两边一致；`event.yaml` 引用的屏幕都存在；`translations.yaml` 没有漏项或多余项；`snapshots/` 里没有多余或缺少的图。
 
 ## 截图的组合
 

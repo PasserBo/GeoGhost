@@ -66,6 +66,30 @@ final class UISnapshotTests: XCTestCase {
         }
     }
 
+    /// The gallery's English and Japanese pages have a word for everything the lists name, and
+    /// nothing left over from a screen, state, event or reason that is gone.
+    func testTranslationsCoverTheLists() throws {
+        let events = try UISpec.loadEvents()
+        let translations = try UISpec.loadTranslations()
+        var reasons = Set<String>()
+        for screen in spec.screens.values {
+            reasons.formUnion((screen.unstable ?? []).map(\.reason))
+            reasons.formUnion(screen.states.values.filter { !$0.isSnapshotted }.compactMap(\.reason))
+        }
+        for language in spec.matrix.locales where language != spec.matrix.primaryLocale {
+            guard let translation = translations[language] else {
+                XCTFail("ui/translations.yaml has no \(language)")
+                continue
+            }
+            XCTAssertEqual(Set(translation.screens.keys), Set(spec.screens.keys), "\(language): screens")
+            for (id, screen) in spec.screens {
+                XCTAssertEqual(Set(translation.screens[id]?.states.keys ?? [:].keys), Set(screen.states.keys), "\(language): states of \(id)")
+            }
+            XCTAssertEqual(Set(translation.events.keys), Set(events.events.keys), "\(language): events")
+            XCTAssertEqual(Set(translation.reasons.keys), reasons, "\(language): reasons")
+        }
+    }
+
     /// ui/snapshots/ holds exactly the images screen.yaml asks for: none missing, none left over
     /// from a state that was renamed or removed.
     func testSnapshotFolderMatchesTheSpec() throws {

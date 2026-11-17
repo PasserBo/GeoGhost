@@ -1,0 +1,272 @@
+# 图库的英语和日语文案。screen.yaml 和 event.yaml 里的中文是原文，这里是对应的翻译；
+# 只影响图库页面上的说明文字，截图本身不变。
+#
+# 在 screen.yaml 或 event.yaml 里加了屏幕、状态、事件或原因，要在这里补上两种语言
+# （测试会检查有没有漏）。用词跟 app 自己的英语、日语界面保持一致：
+# piece / 作品，Collection / 図鑑，world map / ワールドマップ。
+#
+# 结构：
+#   screens.<屏幕>.title / states.<状态>   屏幕名和状态名
+#   events.<事件>                           事件说明
+#   reasons.<中文原文>                      「没有图」和「比对时跳过」的原因，按原文查找
+en:
+  screens:
+    collection:
+      title: Collection
+      states:
+        empty: Nothing collected yet
+        typical: With pieces
+        filtered_empty: Filters match nothing
+        search_no_results: Search finds nothing
+    artwork_detail:
+      title: Piece detail
+      states:
+        no_location: Piece without a location
+        with_location: Piece with a location
+    edit_artwork:
+      title: Edit piece
+      states:
+        in_series: Belongs to a series
+    series_list:
+      title: Series
+      states:
+        empty: No series yet
+        typical: With series
+    series_detail:
+      title: Series detail
+      states:
+        no_location: No member has a location
+        with_route: With a route map
+    map:
+      title: Map
+      states:
+        mine: My pieces
+        world: World map
+        empty: Nothing collected yet
+    remote_post:
+      title: Someone else's piece
+      states:
+        typical: Viewing a published piece
+    capture:
+      title: Capture
+      states:
+        camera: Viewfinder
+        unavailable: Camera unavailable
+        permission_denied: Camera access denied
+    segmentation_editor:
+      title: Cutout editor
+      states:
+        nothing_selected: Nothing selected yet
+        selected: With a selection
+    manual_crop:
+      title: Manual crop
+      states:
+        typical: Dragging the crop frame
+    save_artwork:
+      title: Save piece
+      states:
+        typical: Choosing a type and adding a note
+    share_card:
+      title: Share card
+      states:
+        field_note: Field note
+        polaroid: Polaroid
+        poster: Poster
+        minimal: Minimal
+    publish_status:
+      title: Publish status card
+      states:
+        unpublished: Not published
+        uploading: Upload not finished
+        pending: In review
+        published: Published
+        re_review: Back in review
+        rejected: Did not pass review
+    publish:
+      title: Publish to the world map
+      states:
+        ready: Ready to publish
+        quota_reached: Today's limit reached
+    profile_setup:
+      title: Nickname and community rules
+      states:
+        first_time: Before the first post
+    report:
+      title: Report a piece
+      states:
+        form: Choosing a reason
+        sent: Submitted
+    blocked_users:
+      title: Blocked users
+      states:
+        typical: With blocked users
+        empty: Nobody blocked
+    settings:
+      title: Settings
+      states:
+        typical: Default
+    feedback:
+      title: Send feedback
+      states:
+        empty: Empty form
+        sent: Sent
+    paywall:
+      title: GeoGhost Pro
+      states:
+        locked: Not purchased (in-app purchase is not open yet, so users can't see this screen)
+  events:
+    screen_view: A screen is shown
+    capture_started: Capture opened
+    artwork_saved: A piece is saved
+    artwork_edited: A piece's type, note or tags are changed
+    artwork_deleted: A piece is deleted
+    collection_filtered: The collection is filtered or sorted
+    series_opened: A series is opened
+    share_card_exported: A share card is exported
+    publish_started: Publish is tapped
+    publish_finished: Publishing ends
+    publish_retracted: A published piece is retracted
+    profile_saved: Nickname saved and community rules agreed to
+    map_mode_changed: The map mode is switched
+    remote_post_opened: Someone else's piece is opened
+    post_reported: A piece is reported
+    user_blocked: A user is blocked
+    feedback_sent: Feedback is sent
+  reasons:
+    系统搜索栏的占位文字时粗时细，无法从外部固定: The system search bar draws its placeholder text in one of two weights, and that can't be fixed from outside
+    地图由系统绘制，瓦片从网络加载，每次不一定相同: The map is drawn by the system and its tiles are loaded over the network, so it isn't the same every time
+    整屏都是地图：地图由系统绘制，瓦片从网络加载，每次不一定相同。这个屏幕只进图库，不参与比对: "The whole screen is a map: it is drawn by the system and its tiles are loaded over the network, so it isn't the same every time. This screen is shown in the gallery but not compared"
+    模拟器没有相机，取景画面只能在真机上看到: The simulator has no camera; the viewfinder can only be seen on a real iPhone
+    要先在系统里拒绝相机权限，测试运行中改不了: Camera access has to be denied in the system first, which a test run can't do
+    「附带信息」里有构建号，每次提交都会变: The "Sent with" row contains the build number, which changes with every commit
+
+ja:
+  screens:
+    collection:
+      title: 図鑑
+      states:
+        empty: まだ何も集めていない
+        typical: 作品がある
+        filtered_empty: 絞り込みに一致する作品がない
+        search_no_results: 検索結果がない
+    artwork_detail:
+      title: 作品の詳細
+      states:
+        no_location: 位置情報のない作品
+        with_location: 位置情報のある作品
+    edit_artwork:
+      title: 作品を編集
+      states:
+        in_series: シリーズに属している
+    series_list:
+      title: シリーズ
+      states:
+        empty: まだシリーズがない
+        typical: シリーズがある
+    series_detail:
+      title: シリーズの詳細
+      states:
+        no_location: どの作品にも位置情報がない
+        with_route: ルートマップあり
+    map:
+      title: マップ
+      states:
+        mine: 自分の作品
+        world: ワールドマップ
+        empty: まだ何も集めていない
+    remote_post:
+      title: 他の人の作品
+      states:
+        typical: 公開された作品を見ている
+    capture:
+      title: 撮影
+      states:
+        camera: ファインダー
+        unavailable: カメラを使用できない
+        permission_denied: カメラへのアクセスが拒否されている
+    segmentation_editor:
+      title: 切り抜き編集
+      states:
+        nothing_selected: まだ何も選択していない
+        selected: 選択済み
+    manual_crop:
+      title: 手動切り抜き
+      states:
+        typical: 切り抜き枠をドラッグ
+    save_artwork:
+      title: 作品を保存
+      states:
+        typical: 種類とメモを入力
+    share_card:
+      title: シェアカード
+      states:
+        field_note: フィールドノート
+        polaroid: ポラロイド
+        poster: ポスター
+        minimal: ミニマル
+    publish_status:
+      title: 公開ステータスカード
+      states:
+        unpublished: 未公開
+        uploading: アップロード未完了
+        pending: 審査中
+        published: 公開済み
+        re_review: 再審査中
+        rejected: 審査を通過しなかった
+    publish:
+      title: ワールドマップに公開
+      states:
+        ready: 公開できる
+        quota_reached: 今日の上限に達した
+    profile_setup:
+      title: ニックネームとコミュニティルール
+      states:
+        first_time: 初めて公開する前
+    report:
+      title: 作品を報告
+      states:
+        form: 理由を選択
+        sent: 送信済み
+    blocked_users:
+      title: ブロック中のユーザー
+      states:
+        typical: ブロック中のユーザーがいる
+        empty: 誰もブロックしていない
+    settings:
+      title: 設定
+      states:
+        typical: デフォルト
+    feedback:
+      title: フィードバックを送信
+      states:
+        empty: 空のフォーム
+        sent: 送信済み
+    paywall:
+      title: GeoGhost Pro
+      states:
+        locked: 未購入（アプリ内課金は未公開のため、ユーザーにはまだ表示されない画面）
+  events:
+    screen_view: 画面が表示された
+    capture_started: 撮影を開いた
+    artwork_saved: 作品を保存した
+    artwork_edited: 作品の種類・メモ・タグを変更した
+    artwork_deleted: 作品を削除した
+    collection_filtered: 図鑑を絞り込み・並べ替えした
+    series_opened: シリーズを開いた
+    share_card_exported: シェアカードを書き出した
+    publish_started: 公開をタップした
+    publish_finished: 公開処理が終わった
+    publish_retracted: 公開した作品を取り下げた
+    profile_saved: ニックネームを保存し、コミュニティルールに同意した
+    map_mode_changed: マップのモードを切り替えた
+    remote_post_opened: 他の人の作品を開いた
+    post_reported: 作品を報告した
+    user_blocked: ユーザーをブロックした
+    feedback_sent: フィードバックを送信した
+  reasons:
+    系统搜索栏的占位文字时粗时细，无法从外部固定: システムの検索バーはプレースホルダーの文字を 2 種類の太さのどちらかで描画し、外部から固定できない
+    地图由系统绘制，瓦片从网络加载，每次不一定相同: マップはシステムが描画し、タイルをネットワークから読み込むため、毎回同じになるとは限らない
+    整屏都是地图：地图由系统绘制，瓦片从网络加载，每次不一定相同。这个屏幕只进图库，不参与比对: 画面全体がマップ。マップはシステムが描画し、タイルをネットワークから読み込むため、毎回同じになるとは限らない。この画面はギャラリーには載せるが、比較の対象にはしない
+    模拟器没有相机，取景画面只能在真机上看到: シミュレータにはカメラがなく、ファインダーは実機でしか見られない
+    要先在系统里拒绝相机权限，测试运行中改不了: 先にシステム側でカメラへのアクセスを拒否する必要があり、テスト実行中には変更できない
+    「附带信息」里有构建号，每次提交都会变: 「送信される情報」にビルド番号が含まれ、コミットのたびに変わる
