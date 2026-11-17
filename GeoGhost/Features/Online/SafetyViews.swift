@@ -12,7 +12,15 @@ struct ReportSheet: View {
     @State private var draft = ReportDraft()
     @State private var isSending = false
     @State private var errorText: String?
-    @State private var sent = false
+    @State private var sent: Bool
+
+    /// `startsSent` opens on the confirmation, for UI snapshots.
+    init(post: ExplorePost, state: OnlineState, startsSent: Bool = false, onReported: @escaping () -> Void = {}) {
+        self.post = post
+        self.state = state
+        self.onReported = onReported
+        _sent = State(initialValue: startsSent)
+    }
 
     var body: some View {
         NavigationStack {

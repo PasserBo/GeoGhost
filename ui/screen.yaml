@@ -22,7 +22,8 @@ version: 1
 
 matrix:
   # 基准图只在这台模拟器上录制和比对；换 Xcode 大版本后要整体重录。
-  device: { name: iPhone 17 Pro, width: 402, height: 874, scale: 3 }
+  # scale 是保存图片的倍率：2 倍足够看清细节，体积不到 3 倍的一半。
+  device: { name: iPhone 17 Pro, width: 402, height: 874, scale: 2 }
   # 主语言截全部状态 × 全部外观；其余语言只截 default 状态的浅色。
   primary_locale: zh-Hans
   locales: [zh-Hans, en, ja]
@@ -40,16 +41,18 @@ screens:
     states:
       empty: { title: 还没有任何收藏, fixture: empty }
       typical: { title: 有收藏, fixture: typical }
-      filtered_empty: { title: 筛选后没有结果, snapshot: false, reason: 需要先能从外部设定筛选条件 }
-      search_no_results: { title: 搜索没有结果, snapshot: false, reason: 需要先能从外部设定搜索词 }
+      filtered_empty: { title: 筛选后没有结果, fixture: typical }
+      search_no_results: { title: 搜索没有结果, fixture: typical }
 
   artwork_detail:
     title: 贴纸详情
     kind: screen
     default: no_location
+    unstable:
+      - { x: 16, y: 830, width: 370, height: 44, reason: 地图由系统绘制，瓦片从网络加载，每次不一定相同 }
     states:
       no_location: { title: 没有位置的贴纸, fixture: typical }
-      with_location: { title: 有位置的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+      with_location: { title: 有位置的贴纸, fixture: typical }
 
   edit_artwork:
     title: 编辑贴纸
@@ -70,19 +73,23 @@ screens:
     title: 系列详情
     kind: screen
     default: no_location
+    unstable:
+      - { x: 16, y: 160, width: 370, height: 275, reason: 地图由系统绘制，瓦片从网络加载，每次不一定相同 }
     states:
       no_location: { title: 成员都没有位置, fixture: typical }
-      with_route: { title: 有路线地图, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+      with_route: { title: 有路线地图, fixture: typical }
 
   map:
     title: 地图
     kind: screen
     spec: explore-map
     default: mine
+    unstable:
+      - { x: 0, y: 0, width: 402, height: 874, reason: 整屏都是地图：地图由系统绘制，瓦片从网络加载，每次不一定相同。这个屏幕只进图库，不参与比对 }
     states:
-      mine: { title: 我的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
-      world: { title: 世界地图, snapshot: false, reason: 含地图，并且依赖线上数据 }
-      empty: { title: 没有带位置的贴纸, snapshot: false, reason: 含地图，地图瓦片每次渲染不同 }
+      mine: { title: 我的贴纸, fixture: typical }
+      world: { title: 世界地图, fixture: typical }
+      empty: { title: 还没有任何贴纸, fixture: empty }
 
   remote_post:
     title: 他人的贴纸
@@ -90,30 +97,38 @@ screens:
     spec: explore-map
     default: typical
     states:
-      typical: { title: 查看他人发布的贴纸, snapshot: false, reason: 图片来自网络，需要先能注入固定图片 }
+      typical: { title: 查看他人发布的贴纸, fixture: empty }
 
   capture:
     title: 拍摄
     kind: screen
-    default: camera
+    default: unavailable
     states:
-      camera: { title: 取景, snapshot: false, reason: 依赖相机 }
-      permission_denied: { title: 没有相机权限, snapshot: false, reason: 依赖系统权限状态 }
+      camera: { title: 取景, snapshot: false, reason: 模拟器没有相机，取景画面只能在真机上看到 }
+      unavailable: { title: 相机不可用, fixture: empty }
+      permission_denied: { title: 没有相机权限, snapshot: false, reason: 要先在系统里拒绝相机权限，测试运行中改不了 }
 
   segmentation_editor:
     title: 抠图编辑
     kind: screen
-    default: auto
+    default: nothing_selected
     states:
-      auto: { title: 自动识别出主体, snapshot: false, reason: 依赖 Vision 的识别结果，需要先能注入固定结果 }
-      nothing_found: { title: 没有识别出主体, snapshot: false, reason: 同上 }
+      nothing_selected: { title: 还没有选中任何部分, fixture: empty }
+      selected: { title: 已选中, fixture: empty }
+
+  manual_crop:
+    title: 手动裁剪
+    kind: screen
+    default: typical
+    states:
+      typical: { title: 拖动裁剪框, fixture: empty }
 
   save_artwork:
     title: 保存贴纸
     kind: sheet
     default: typical
     states:
-      typical: { title: 填写类型和备注, snapshot: false, reason: 依赖拍摄流程的中间状态 }
+      typical: { title: 填写类型和备注, fixture: empty }
 
   share_card:
     title: 分享卡片
@@ -143,9 +158,11 @@ screens:
     kind: sheet
     spec: publishing
     default: ready
+    unstable:
+      - { x: 16, y: 520, width: 370, height: 220, reason: 地图由系统绘制，瓦片从网络加载，每次不一定相同 }
     states:
-      ready: { title: 可以发布, snapshot: false, reason: 打开时要向服务器查询额度，需要先能注入固定结果 }
-      quota_reached: { title: 额度用完, snapshot: false, reason: 同上 }
+      ready: { title: 可以发布, fixture: typical }
+      quota_reached: { title: 今天的额度用完, fixture: typical }
 
   profile_setup:
     title: 昵称与社区规则
@@ -162,7 +179,7 @@ screens:
     default: form
     states:
       form: { title: 选择原因, fixture: empty }
-      sent: { title: 已提交, snapshot: false, reason: 需要先能从外部设定为已提交 }
+      sent: { title: 已提交, fixture: empty }
 
   blocked_users:
     title: 已屏蔽的用户
@@ -170,15 +187,15 @@ screens:
     spec: content-safety
     default: typical
     states:
-      typical: { title: 有屏蔽的用户, snapshot: false, reason: 列表来自服务器，需要先能注入固定结果 }
-      empty: { title: 没有屏蔽任何人, snapshot: false, reason: 同上 }
+      typical: { title: 有屏蔽的用户, fixture: empty }
+      empty: { title: 没有屏蔽任何人, fixture: empty }
 
   settings:
     title: 设置
     kind: screen
     default: typical
     states:
-      typical: { title: 默认, snapshot: false, reason: 显示版本号和占用空间，每次构建都不同 }
+      typical: { title: 默认, fixture: typical }
 
   feedback:
     title: 发送反馈
@@ -188,11 +205,11 @@ screens:
       - { x: 16, y: 560, width: 370, height: 120, reason: 「附带信息」里有构建号，每次提交都会变 }
     states:
       empty: { title: 空白表单, fixture: empty }
-      sent: { title: 已发送, snapshot: false, reason: 需要先能从外部设定为已发送 }
+      sent: { title: 已发送, fixture: empty }
 
   paywall:
     title: GeoGhost Pro
     kind: sheet
     default: locked
     states:
-      locked: { title: 未购买, snapshot: false, reason: 内购尚未开放，界面对用户不可见 }
+      locked: { title: 未购买（内购尚未开放，用户目前看不到这个界面）, fixture: empty }

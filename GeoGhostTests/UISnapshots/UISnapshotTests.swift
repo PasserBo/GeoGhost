@@ -15,12 +15,13 @@ final class UISnapshotTests: XCTestCase {
         // Dates are formatted in the process time zone; pin it so they read the same anywhere.
         previousTimeZone = NSTimeZone.default
         NSTimeZone.default = UIFixtures.timeZone
-        UIView.setAnimationsEnabled(false)
+        UIOnlineFixture.install()
     }
 
     override func tearDown() async throws {
         NSTimeZone.default = previousTimeZone
-        UIView.setAnimationsEnabled(true)
+        UIOnlineFixture.uninstall()
+        ScreenCatalog.reset()
     }
 
     // MARK: - screen.yaml, event.yaml and the catalog agree
@@ -86,14 +87,21 @@ final class UISnapshotTests: XCTestCase {
         let region = Locale.current.region?.identifier ?? ""
         try XCTSkipUnless(region == spec.matrix.regions[locale], "UI snapshots in \(locale) are recorded in region \(spec.matrix.regions[locale] ?? "?"); this is \(region). Use scripts/ui-snapshots.sh")
 
-        for snapshot in spec.cases(locale: locale) {
+        var fixtures: [UIFixture] = []
+        defer { withExtendedLifetime(fixtures) {} }
+        // UI_SNAPSHOT_FILTER=map. limits a run to the screens whose `screen.state` starts with it.
+        let filter = ProcessInfo.processInfo.environment["UI_SNAPSHOT_FILTER"] ?? ""
+        for snapshot in spec.cases(locale: locale) where snapshot.key.hasPrefix(filter) {
             guard let state = spec.screens[snapshot.screen]?.states[snapshot.state], let fixtureName = state.fixture else { continue }
             let fixture = try UIFixtures.make(fixtureName)
-            guard let view = ScreenCatalog.host(snapshot.key, fixture: fixture) else {
+            // A screen's tasks can outlive its window; their data has to as well.
+            fixtures.append(fixture)
+            guard let view = await ScreenCatalog.host(snapshot.key, fixture: fixture) else {
                 XCTFail("\(snapshot.key) has no entry in ScreenCatalog")
                 continue
             }
-            let image = await render(view, dark: snapshot.appearance == "dark", size: CGSize(width: device.width, height: device.height))
+            let image = await render(view, dark: snapshot.appearance == "dark",
+                                     size: CGSize(width: device.width, height: device.height), scale: device.scale)
             let reference = UISpec.snapshotDirectory.appending(path: snapshot.fileName)
             let ignored = (spec.screens[snapshot.screen]?.unstable ?? []).map { $0.pixels(scale: device.scale) }
             if !isRecording, let expected = UIImage(contentsOfFile: reference.path),
@@ -107,7 +115,7 @@ final class UISnapshotTests: XCTestCase {
 
     /// Puts the screen in a window of its own, as the root, the way the app shows it; rendering
     /// off screen leaves out system bars and materials.
-    private func render(_ view: AnyView, dark: Bool, size: CGSize) async -> UIImage {
+    private func render(_ view: AnyView, dark: Bool, size: CGSize, scale: Double) async -> UIImage {
         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
             XCTFail("The test host has no window scene")
             return UIImage()
@@ -118,10 +126,15 @@ final class UISnapshotTests: XCTestCase {
         window.rootViewController = UIHostingController(rootView: view)
         // Key, like the app's window: system bars draw themselves differently in a window that isn't.
         window.makeKeyAndVisible()
+        // Images are kept at the scale ui/screen.yaml asks for, not the simulator's, to keep them small.
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        // Plain sRGB, 8 bits a channel: the default follows the display and writes files several times the size.
+        format.preferredRange = .standard
         func draw() -> UIImage {
             // No blinking text cursor in the image.
             window.endEditing(true)
-            return UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            return UIGraphicsImageRenderer(bounds: window.bounds, format: format).image { _ in
                 window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
             }
         }

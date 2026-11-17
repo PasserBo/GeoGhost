@@ -17,10 +17,17 @@ struct CollectionView: View {
     }
 
     @Query(sort: \Artwork.createdAt, order: .reverse) private var artworks: [Artwork]
-    @State private var searchText = ""
+    @State private var searchText: String
     @State private var sort: Sort = .newest
     @State private var kindFilter: ArtworkKind?
-    @State private var favoritesOnly = false
+    @State private var favoritesOnly: Bool
+
+    /// The arguments are where the screen starts; UI snapshots use them to show a search or a filter.
+    init(searchText: String = "", kindFilter: ArtworkKind? = nil, favoritesOnly: Bool = false) {
+        _searchText = State(initialValue: searchText)
+        _kindFilter = State(initialValue: kindFilter)
+        _favoritesOnly = State(initialValue: favoritesOnly)
+    }
     @Environment(\.openCapture) private var openCapture
 
     private let columns = [GridItem(.adaptive(minimum: 104, maximum: 160), spacing: 10)]
