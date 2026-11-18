@@ -5,7 +5,7 @@ import os
 @main
 struct GeoGhostApp: App {
     private let container: ModelContainer
-    @State private var services = AppServices()
+    private let services = AppServices.live
 
     init() {
         do {
@@ -16,9 +16,7 @@ struct GeoGhostApp: App {
             Logger(subsystem: "com.passerbo.geoghost", category: "App").error("Store failed to open: \(error.localizedDescription, privacy: .public)")
             Diagnostics.record(error, context: "GeoGhostApp.openStore")
             container = try! GeoGhostSchema.makeContainer(inMemory: true)
-            let services = AppServices()
             services.isRunningWithoutStorage = true
-            _services = State(initialValue: services)
         }
     }
 

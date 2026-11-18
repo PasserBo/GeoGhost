@@ -15,7 +15,7 @@ struct CaptureView: View {
     var stored: StoredPhoto?
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @State private var model = CaptureFlowModel()
     @State private var pickerItem: PhotosPickerItem?
     @State private var isCapturing = false
