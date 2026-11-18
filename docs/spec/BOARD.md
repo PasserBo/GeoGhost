@@ -16,3 +16,14 @@
 | 9 | [add-apple-account-linking](changes/add-apple-account-linking/proposal.md) | accepted | 阶段 1 上线后开始 | agent |
 
 阶段 1 上线 = 1–8（含 7b）完成。9 是阶段 1.5，在阶段 2（关注、徽章）之前完成。
+
+### 阶段 1 之后：新用户上手（2026-11-19 调研，均为 idea，等 me 回答各提案的开放问题）
+
+> 依据 [research/onboarding-and-cutout.md](../research/onboarding-and-cutout.md)。建议顺序 10 → 11；12 可与 10 并行；13 在 10 之后。
+
+| # | 变更 | 状态 | 下一步 | 负责 |
+|---|---|---|---|---|
+| 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | idea | 回答开放问题（尤其是否推翻「不预选」）；同时在真机建一套 30–50 张抠图基准照片 | me |
+| 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | idea | 等 10；me 提供 2–3 张示例贴纸照片 | me |
+| 12 | [improve-first-run](changes/improve-first-run/proposal.md) | idea | 回答开放问题（地图默认、诊断同意时机） | me |
+| 13 | [add-library-scan-import](changes/add-library-scan-import/proposal.md) | idea | 决定先做真机准确率验证还是直接做最小版 | me |
