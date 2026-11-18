@@ -1,7 +1,9 @@
 # Tasks: add-update-gate-and-switches
 
 ## Now
-提案、设计已写好。agent 从 T1 开始。
+提案、设计已写好。T1–T10 都未开始。
+- 2026-11-19：实现会话启动时周用量已 88%（停止线 85%），没有写任何规格或代码就停下了。周额度重置后从 T1 开始。
+- 提交分支（2026-11-19 定）：直接提交在 `fix/services-environment-crash`，不移动或快进任何分支；分支怎么合并由 me 决定。
 
 ## M1 · 规格
 - [ ] T1 delta `online-availability`（版本过低、轻提示、暂停发布、暂停新用户、公告、删除数据不受限） — owner: agent · verify: check-delta 无错误

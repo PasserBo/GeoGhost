@@ -1,6 +1,6 @@
 # Board
 
-> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-12
+> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-19
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
@@ -11,7 +11,7 @@
 | 5 | [add-likes-and-saves](changes/add-likes-and-saves/proposal.md) | accepted | 等 4 | agent |
 | 6 | [add-reporting-and-blocking](changes/add-reporting-and-blocking/proposal.md) | in-progress | 迁移已执行；需要一张别人的公开贴纸来走查举报 / 屏蔽 / 复审，然后 T4 审核手册；通知待讨论（不先做） | me |
 | 7 | [add-moderation-console](changes/add-moderation-console/proposal.md) | in-progress | 已完成并验证，待归档 | agent |
-| 7b | [add-update-gate-and-switches](changes/add-update-gate-and-switches/proposal.md) | accepted | 新会话实现 T1–T7 | agent |
+| 7b | [add-update-gate-and-switches](changes/add-update-gate-and-switches/proposal.md) | accepted | 未开始：2026-11-19 实现会话启动时周用量已 88%（停止线 85%），未动代码；周额度重置后从 T1 开始，提交在 `fix/services-environment-crash` | agent |
 | 8 | [prepare-ugc-release](changes/prepare-ugc-release/proposal.md) | in-progress | 文案已起草，等 me 确认并合并 main（页面才上线） | me |
 | 9 | [add-apple-account-linking](changes/add-apple-account-linking/proposal.md) | accepted | 阶段 1 上线后开始 | agent |
 
