@@ -869,6 +869,22 @@
         }
       }
     },
+    "Choose from your photos" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真から選ぶ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从相册选一张"
+          }
+        }
+      }
+    },
     "Clear filters" : {
       "localizations" : {
         "zh-Hans" : {
@@ -3424,6 +3440,22 @@
         }
       }
     },
+    "Photograph a sticker, graffiti or mural you spot on the street — or start with one already in your photos." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "街で見つけたステッカー、グラフィティ、壁画を撮影しましょう。写真ライブラリにある写真から始めることもできます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍下你在街头看到的贴纸、涂鸦或壁画——也可以先从相册里已有的照片开始。"
+          }
+        }
+      }
+    },
     "Photos, cutouts and locations stay on this device unless you publish a piece; then only its cutout, rough area and date are shared. Subject detection, matching and classification run entirely on-device." : {
       "localizations" : {
         "zh-Hans" : {
@@ -4914,6 +4946,22 @@
         }
       }
     },
+    "Take a photo" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真を撮る"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍一张"
+          }
+        }
+      }
+    },
     "Take photo" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4942,22 +4990,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選択済みの作品をタップ"
-          }
-        }
-      }
-    },
-    "Tap the camera to collect the first sticker, graffiti or mural you spot on the street." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点相机，收集你在街头发现的第一张贴纸、涂鸦或壁画。"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カメラをタップして、街で見つけたステッカー・グラフィティ・壁画を集めましょう。"
           }
         }
       }
@@ -5198,6 +5230,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "写真を読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "The place is saved when you take the photo" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撮影時に場所が記録されます"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍照时会记录地点"
           }
         }
       }
@@ -5726,6 +5774,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "500 文字以内で入力してください。"
+          }
+        }
+      }
+    },
+    "Use my current location" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在地を使う"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用我当前的位置"
           }
         }
       }

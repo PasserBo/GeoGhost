@@ -13,6 +13,8 @@ struct CaptureView: View {
         var replacing: Artwork? = nil
     }
     var stored: StoredPhoto?
+    /// A library photo picked before the capture flow opened (empty collection): goes straight to the editor.
+    var imported: Data?
 
     @Environment(\.dismiss) private var dismiss
     @Services private var services
@@ -69,19 +71,21 @@ struct CaptureView: View {
                 }
                 model.receiveStoredPhoto(stored.data, metadata: stored.metadata, alreadySaved: stored.savedRegions, existing: existing)
             } else {
+                // Never asks here: location is requested at the first shutter press.
                 services.location.start()
+                if let imported { model.receiveImportedPhoto(imported) }
             }
         }
         .onDisappear { services.location.stop(); services.camera.stop() }
         .onChange(of: model.stage) { _, new in
             if new == .camera {
-                // Reopened photos have no camera to go back to.
-                if stored != nil { dismiss() } else { Task { await services.camera.start() } }
+                // Reopened and pre-picked photos have no camera to go back to.
+                if stored != nil || imported != nil { dismiss() } else { Task { await services.camera.start() } }
             } else {
                 services.camera.stop()
             }
         }
-        .task { if stored == nil { await services.camera.start() } }
+        .task { if stored == nil && imported == nil { await services.camera.start() } }
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             Task {
@@ -151,6 +155,8 @@ struct CaptureView: View {
         return Group {
             if loc.isDenied {
                 Label("Location off — pieces will be saved without a place", systemImage: "location.slash")
+            } else if loc.authorization == .notDetermined {
+                Label("The place is saved when you take the photo", systemImage: "location")
             } else if let fix = loc.usableFix {
                 Label("±\(Int(fix.horizontalAccuracy)) m", systemImage: "location.fill")
             } else {
@@ -210,6 +216,8 @@ struct CaptureView: View {
         do {
             let data = try await services.camera.capturePhoto(metadata: sensor)
             model.receiveCameraPhoto(data, sensor: sensor)
+            // First shutter press: now the reason is obvious. This photo can still get the place on the save sheet.
+            services.location.requestIfNeeded()
         } catch {
             Diagnostics.record(error, context: "CaptureView")
             errorMessage = error.localizedDescription

@@ -135,7 +135,6 @@ enum ScreenCatalog {
     /// Puts back everything an entry may have changed outside its own view.
     static func reset() {
         UIOnlineFixture.scenario = UIOnlineFixture.Scenario()
-        UserDefaults.standard.removeObject(forKey: "mapMode")
     }
 
     // MARK: - Shared
@@ -166,13 +165,11 @@ enum ScreenCatalog {
         return component(PublishStatusCard(artwork: artwork, state: context.online))
     }
 
-    /// The map remembers its mode in the user's settings.
     private static func map(_ mode: ArtMapView.Mode) -> AnyView {
-        UserDefaults.standard.set(mode.rawValue, forKey: "mapMode")
         // Tokyo, where the fixture server's pieces are. One's own pieces frame themselves.
         let tokyo = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 35.672, longitude: 139.712),
                                        span: MKCoordinateSpan(latitudeDelta: 0.22, longitudeDelta: 0.22))
-        return AnyView(ArtMapView(position: .region(tokyo)))
+        return AnyView(ArtMapView(mode: mode, position: .region(tokyo)))
     }
 
     /// The capture flow after the fixture photo was taken and analysed, ready for the editor.

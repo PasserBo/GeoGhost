@@ -9,7 +9,8 @@ struct ArtMapView: View {
 
     @Query private var artworks: [Artwork]
     @Services private var services
-    @AppStorage("mapMode") private var modeRaw = Mode.mine.rawValue
+    /// Opens on the world map after every launch; a switch lasts until the app is relaunched (spec: first-run).
+    @State private var modeRaw: String
     @State private var explore: ExploreModel?
     @State private var selectedPost: ExplorePost?
     @State private var position: MapCameraPosition
@@ -21,7 +22,8 @@ struct ArtMapView: View {
     @Environment(\.openCapture) private var openCapture
 
     /// `position` is where the map opens; UI snapshots use it to open the world map on a known area.
-    init(position: MapCameraPosition = .automatic) {
+    init(mode: Mode = .world, position: MapCameraPosition = .automatic) {
+        _modeRaw = State(initialValue: mode.rawValue)
         _position = State(initialValue: position)
     }
 

@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreLocation
 import Foundation
 import Observation
 import os
@@ -206,6 +207,15 @@ final class CaptureFlowModel {
             guard !inter.isEmpty, rect.width * rect.height > 0 else { return false }
             return (inter.width * inter.height) / (rect.width * rect.height) > 0.7
         }
+    }
+
+    /// The photo has no place: attach where the phone is now, at the user's request.
+    func useCurrentLocation(_ fix: CLLocation) {
+        metadata.latitude = fix.coordinate.latitude
+        metadata.longitude = fix.coordinate.longitude
+        metadata.horizontalAccuracy = fix.horizontalAccuracy
+        metadata.altitude = fix.verticalAccuracy >= 0 ? fix.altitude : nil
+        metadata.locationSource = .manual
     }
 
     /// After a save that keeps the editor open: ghost what was saved and start a fresh selection.

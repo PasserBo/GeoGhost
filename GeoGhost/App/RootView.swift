@@ -6,7 +6,8 @@ struct RootView: View {
 
     @State private var tab: Tab = .collection
     @State private var lastContentTab: Tab = .collection
-    @State private var showCapture = false
+    /// The open capture flow; `photo` is a library photo picked from the empty collection, opened straight in the editor.
+    @State private var capture: CaptureRequest?
     @State private var storageWarningDismissed = false
     @State private var askDiagnosticsConsent = false
     @Services private var services
@@ -27,12 +28,12 @@ struct RootView: View {
             // The middle tab is a button in disguise: open the capture flow and stay on the previous tab.
             if new == .capture {
                 tab = lastContentTab
-                showCapture = true
+                capture = CaptureRequest(photo: nil)
             } else {
                 lastContentTab = new
             }
         }
-        .environment(\.openCapture, OpenCaptureAction { showCapture = true })
+        .environment(\.openCapture, OpenCaptureAction { photo in capture = CaptureRequest(photo: photo) })
         .modifier(IdentityExpiredAlert(state: services.onlineState))
         .task(id: scenePhase) {
             // Review results and hidden posts show up without opening each piece.
@@ -55,13 +56,12 @@ struct RootView: View {
         } message: {
             Text("GeoGhost is just getting started. When it crashes or something goes wrong, a short technical report helps us fix it and improve your experience. Reports contain the app version, device model, iOS version and where in the app the problem happened — never your photos, locations or notes. You can change this anytime in Settings.")
         }
-        .fullScreenCover(isPresented: $showCapture) {
-            CaptureView()
+        .fullScreenCover(item: $capture, onDismiss: askForDiagnosticsIfDue) { request in
+            CaptureView(imported: request.photo)
         }
         .task {
             await services.diagnostics.start()
-            // The storage alert matters more; ask another time.
-            if services.diagnostics.shouldAskForConsent && !services.isRunningWithoutStorage { askDiagnosticsConsent = true }
+            askForDiagnosticsIfDue()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await ReportQueue.shared.flush() } }
@@ -79,14 +79,27 @@ struct RootView: View {
             }
         }
     }
+
+    /// Asked once there is a piece in the collection (or a crash report waiting), never before (spec: first-run).
+    private func askForDiagnosticsIfDue() {
+        // The storage alert matters more; ask another time.
+        guard !services.isRunningWithoutStorage else { return }
+        if services.diagnostics.shouldAskForConsent(hasPieces: !artworks.isEmpty) { askDiagnosticsConsent = true }
+    }
+}
+
+struct CaptureRequest: Identifiable {
+    let id = UUID()
+    let photo: Data?
 }
 
 /// Lets screens deep in the tab hierarchy (e.g. empty states) start the capture flow.
 struct OpenCaptureAction {
-    let run: @MainActor () -> Void
-    @MainActor func callAsFunction() { run() }
+    /// `photo`: a library photo to open in the editor instead of the camera.
+    let run: @MainActor (_ photo: Data?) -> Void
+    @MainActor func callAsFunction(photo: Data? = nil) { run(photo) }
 }
 
 extension EnvironmentValues {
-    @Entry var openCapture = OpenCaptureAction(run: {})
+    @Entry var openCapture = OpenCaptureAction(run: { _ in })
 }

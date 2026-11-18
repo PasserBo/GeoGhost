@@ -36,9 +36,9 @@ final class DiagnosticsReporter {
     private var launches = UserDefaults.standard.integer(forKey: launchesKey)
     private let subscriber = MetricKitSubscriber()
 
-    /// Not on the very first launch, which is for trying the app; but right away if a report is
-    /// already waiting (something crashed), since that is when sharing it helps most.
-    var shouldAskForConsent: Bool { consent == .undecided && (launches >= 2 || hasPendingDiagnostics) }
+    /// Not before the first piece is saved, while the user is still finding out what the app is for; but right
+    /// away if a report is already waiting (something crashed), since that is when sharing it helps most.
+    func shouldAskForConsent(hasPieces: Bool) -> Bool { consent == .undecided && (hasPieces || hasPendingDiagnostics) }
 
     func start() async {
         launches += 1

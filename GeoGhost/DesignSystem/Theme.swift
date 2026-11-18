@@ -72,6 +72,8 @@ struct EmptyStateView: View {
     let title: LocalizedStringResource
     let message: LocalizedStringResource
     var action: (label: LocalizedStringResource, run: () -> Void)?
+    /// A second way forward, shown under the main action.
+    var secondary: AnyView?
 
     var body: some View {
         VStack(spacing: 14) {
@@ -85,6 +87,7 @@ struct EmptyStateView: View {
                     .buttonStyle(.borderedProminent).tint(Theme.accent)
                     .padding(.top, 6)
             }
+            if let secondary { secondary }
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
