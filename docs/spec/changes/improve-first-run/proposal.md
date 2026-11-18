@@ -20,7 +20,7 @@ Out of scope:
 - `first-run` (new)
 
 ## Decisions
-- （尚无）
+- 2026-11-19: 方向认可（me：「every single of these ideas looks great」）— 状态仍是 idea，开放问题回答后再转 accepted。
 
 ## Open questions
 1. 收藏为空时地图默认显示世界地图，是否要等种子内容上线后再开？（选项：a 种子内容上线后再开 / b 现在就开 / c 不改默认）

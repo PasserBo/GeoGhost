@@ -21,7 +21,7 @@ Out of scope:
 - `capture-editor` (modified)
 
 ## Decisions
-- （尚无）
+- 2026-11-19: 方向认可（me：「every single of these ideas looks great」）— 状态仍是 idea，开放问题回答后再转 accepted。
 
 ## Open questions
 1. 示例照片练习完的作品存不存进收藏？（选项：a 不存，只练习 / b 存，标为「示例」，可一键删除，不能发布 / c 问用户）

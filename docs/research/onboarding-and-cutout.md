@@ -141,7 +141,7 @@
 1. **抠图先保证「能存下来」**（工具，[improve-cutout-defaults](../spec/changes/improve-cutout-defaults/proposal.md)）：T1 建议选区、T2 单击即选、T3 失败自动换策略、T4 保底永远可达。目标：任何一张照片，新用户不看任何说明也能在 3 次触碰内保存一件作品（哪怕是矩形）。
 2. **再加薄薄一层引导**（[add-cutout-coaching](../spec/changes/add-cutout-coaching/proposal.md)）：G1 第一次演示、G2 按状态变化的一行提示、G3 示例照片练习、G4 精简说明、T5 取景框提示。依赖 1（教的是改完之后的操作，不要先教现在的十个手势）。
 3. **首次打开**（[improve-first-run](../spec/changes/improve-first-run/proposal.md)）：可行动的空状态（拍 / 相册 / 示例）、定位按需请求、诊断同意推迟、新用户地图默认。投入小，可以和 1 并行。
-4. **相册批量识别导入**（[add-library-scan-import](../spec/changes/add-library-scan-import/proposal.md)）：内容冷启动的根本解，也是路线图既定的下一步；先做真机准确率 / 耗时验证再定范围。依赖 1 的「建议选区」逻辑（批量识别本质是对每张照片自动给建议）。
+4. **相册批量识别导入**（2026-11-19 决定暂不做，只保留提案：工作量大）（[add-library-scan-import](../spec/changes/add-library-scan-import/proposal.md)）：内容冷启动的根本解，也是路线图既定的下一步；先做真机准确率 / 耗时验证再定范围。依赖 1 的「建议选区」逻辑（批量识别本质是对每张照片自动给建议）。
 5. T6 点提示分割模型放在 1 有数据之后再评估。
 
 不建议：开场多页轮播、示例收藏、只写一份更详细的教程。
