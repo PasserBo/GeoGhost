@@ -12,6 +12,10 @@ enum OnlineRefusal: String, Sendable, CaseIterable {
     case termsRequired = "terms_required"
     case profileRequired = "profile_required"
     case nicknameCooldown = "nickname_cooldown"
+    /// This app version is below the operator's minimum (spec: online-availability).
+    case updateRequired = "update_required"
+    case publishingPaused = "publishing_paused"
+    case signupsPaused = "signups_paused"
 }
 
 enum OnlineError: Error, Equatable {
@@ -35,7 +39,15 @@ enum OnlineError: Error, Equatable {
 
 /// URLSession calls with errors mapped to `OnlineError`.
 enum OnlineHTTP {
+    /// Every request says which app version sent it; the server refuses writes from versions
+    /// below the operator's minimum (spec: online-availability).
+    static let versionHeader = "X-GeoGhost-Version"
+
     static func send(_ request: URLRequest, session: URLSession) async throws -> (Data, HTTPURLResponse) {
+        var request = request
+        if request.value(forHTTPHeaderField: versionHeader) == nil {
+            request.setValue(AppVersion.currentString, forHTTPHeaderField: versionHeader)
+        }
         let data: Data, response: URLResponse
         do {
             (data, response) = try await session.data(for: request)

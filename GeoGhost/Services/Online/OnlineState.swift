@@ -12,12 +12,15 @@ final class OnlineState {
     static let nicknameCooldown: TimeInterval = 7 * 24 * 3600
 
     let services: OnlineServices
+    /// The operator's settings: minimum version, pauses, notice (spec: online-availability).
+    let appConfig: AppConfigService
     private(set) var profile: OnlineProfile?
     /// The previous guest identity stopped working; the user must confirm before a new one is made.
     var identityExpired = false
 
-    init(services: OnlineServices) {
+    init(services: OnlineServices, appConfig: AppConfigService? = nil) {
         self.services = services
+        self.appConfig = appConfig ?? AppConfigService(services: services)
     }
 
     var hasIdentity: Bool { get async { await services.identity.userID != nil } }
@@ -66,6 +69,7 @@ final class OnlineState {
 
     /// Routes an error: a lost identity raises the shared alert; anything else is returned for the caller to show.
     func handle(_ error: any Error) -> (any Error)? {
+        appConfig.noteRefusal(error)
         if error as? OnlineError == .identityExpired {
             identityExpired = true
             return nil
@@ -113,6 +117,12 @@ enum OnlineMessage {
             String(localized: "You changed your nickname recently. Please wait a few days before changing it again.")
         case .refused(.termsRequired), .refused(.profileRequired):
             String(localized: "Choose a nickname and agree to the community rules first.")
+        case .refused(.updateRequired):
+            String(localized: "This version of GeoGhost can no longer use online features. Update the app to continue.")
+        case .refused(.publishingPaused):
+            String(localized: "Publishing is paused for now. Your piece stays private; please try again later.")
+        case .refused(.signupsPaused):
+            String(localized: "New members can't join right now. Please try again later.")
         case .refused(.savesFull), .refused(.likesDay), .refused(.reportsDay):
             String(localized: "You've reached today's limit. Please try again later.")
         case .identityExpired:

@@ -261,6 +261,22 @@
         }
       }
     },
+    "A new version of GeoGhost is available" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost の新しいバージョンがあります"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GeoGhost 有新版本"
+          }
+        }
+      }
+    },
     "A nickname can't be only spaces." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2717,6 +2733,22 @@
         }
       }
     },
+    "New members can't join right now. Please try again later." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在、新しいメンバーは参加できません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂时不能加入新用户，请稍后再试。"
+          }
+        }
+      }
+    },
     "New publishers' first posts are checked before others can see them. Retracting a post doesn't give the post back." : {
       "localizations" : {
         "zh-Hans" : {
@@ -3740,6 +3772,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "公開中の作品"
+          }
+        }
+      }
+    },
+    "Publishing is paused for now. Your piece stays private; please try again later." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投稿は一時停止中です。この作品は非公開のままです。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发布暂时暂停。这张贴纸仍然只有你自己可见，请稍后再试。"
           }
         }
       }
@@ -5298,6 +5346,38 @@
         }
       }
     },
+    "This version can no longer use the world map, publishing, reporting or blocking. Your collection and your own map keep working." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンでは、ワールドマップ・投稿・報告・ブロックが使えなくなりました。コレクションと自分のマップはこれまでどおり使えます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个版本已不能使用世界地图、发布、举报和屏蔽。你的收藏和自己的地图照常可用。"
+          }
+        }
+      }
+    },
+    "This version of GeoGhost can no longer use online features. Update the app to continue." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンの GeoGhost ではオンライン機能を使えなくなりました。アプリをアップデートしてください。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个版本的 GeoGhost 已不能使用线上功能。请更新 App 后继续。"
+          }
+        }
+      }
+    },
     "Time" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5582,6 +5662,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無題のシリーズ"
+          }
+        }
+      }
+    },
+    "Update GeoGhost to use online features" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オンライン機能を使うには GeoGhost をアップデートしてください"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新 GeoGhost 才能使用线上功能"
+          }
+        }
+      }
+    },
+    "Update in the App Store" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Store でアップデート"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去 App Store 更新"
           }
         }
       }

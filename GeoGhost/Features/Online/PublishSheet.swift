@@ -19,12 +19,15 @@ struct PublishSheet: View {
 
     private var blurred: CLLocationCoordinate2D? { artwork.coordinate.map(LocationBlur.snap) }
     private var quotaUsedUp: Bool { quota.map { $0.monthRemaining == 0 || $0.dayRemaining == 0 } ?? false }
+    private var needsUpdate: Bool { state.appConfig.updateRequired }
+    /// A pause is never shown as a used-up quota (spec: online-availability).
+    private var paused: Bool { state.appConfig.publishingPaused }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    if let result { resultCard(result) } else { preview }
+                    if let result { resultCard(result) } else if needsUpdate { UpdateRequiredView().padding(.top, 40) } else { preview }
                 }
                 .padding(16)
                 .padding(.bottom, 24)
@@ -41,18 +44,18 @@ struct PublishSheet: View {
                 }
             }
             .safeAreaInset(edge: .bottom) {
-                if result == nil {
+                if result == nil, !needsUpdate {
                     Button { start() } label: {
                         HStack { if isPublishing { ProgressView().tint(.white) }; Text("Publish") }
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    .disabled(isPublishing || quotaUsedUp || artwork.coordinate == nil)
+                    .disabled(isPublishing || paused || quotaUsedUp || artwork.coordinate == nil)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
                 }
             }
-            .task { await load() }
+            .task { if !needsUpdate { await load() } }
             .sheet(isPresented: $showProfileSetup) {
                 ProfileSetupSheet(state: state) { Task { await publish() } }
             }
@@ -63,6 +66,7 @@ struct PublishSheet: View {
 
     private var preview: some View {
         VStack(spacing: 16) {
+            if let notice = state.appConfig.notice() { OnlineNoticeView(text: notice) }
             ArtworkImageView(artwork: artwork, variant: .cutout)
                 .padding(20)
                 .frame(maxWidth: .infinity)
@@ -93,7 +97,10 @@ struct PublishSheet: View {
             }
 
             card {
-                if let quota {
+                if paused {
+                    Text("Publishing is paused for now. Your piece stays private; please try again later.")
+                        .foregroundStyle(.red)
+                } else if let quota {
                     if quota.monthRemaining == 0 {
                         Text("You've used this month's \(quota.monthLimit) posts. You can publish again on \(quota.resetsAt.formatted(date: .abbreviated, time: .omitted)).")
                             .foregroundStyle(.red)

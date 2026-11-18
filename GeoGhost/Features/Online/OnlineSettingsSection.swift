@@ -14,16 +14,36 @@ struct OnlineSettingsSection: View {
     @State private var isWorking = false
     @State private var errorText: String?
 
+    private var needsUpdate: Bool { state.appConfig.updateRequired }
+
     var body: some View {
         Section {
+            switch state.appConfig.availability {
+            case .updateRequired:
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Update GeoGhost to use online features").font(.subheadline.weight(.semibold))
+                    Text("This version can no longer use the world map, publishing, reporting or blocking. Your collection and your own map keep working.")
+                        .font(.footnote).foregroundStyle(Theme.inkSecondary)
+                    Link("Update in the App Store", destination: AppStoreLink.url).font(.subheadline.weight(.semibold))
+                }
+            case .updateAvailable:
+                Link(destination: AppStoreLink.url) {
+                    Label("A new version of GeoGhost is available", systemImage: "arrow.down.circle")
+                }
+            case .ok:
+                EmptyView()
+            }
             Button { showNickname = true } label: {
                 LabeledContent("Nickname", value: state.profile?.nickname ?? String(localized: "Not set"))
             }
             .foregroundStyle(Theme.ink)
+            .disabled(needsUpdate)
             LabeledContent("Published pieces", value: "\(shared.count)")
             NavigationLink("Blocked users") { BlockedUsersView(state: state) }
+                .disabled(needsUpdate)
             Button("Retract all published pieces", role: .destructive) { confirmRetractAll = true }
-                .disabled(shared.isEmpty || isWorking)
+                .disabled(shared.isEmpty || isWorking || needsUpdate)
+            // Never blocked by version or switches: users can always delete their data.
             Button("Delete my online data", role: .destructive) { confirmDelete = true }
                 .disabled(isWorking)
             Link("Community rules", destination: OnlineState.rulesURL)

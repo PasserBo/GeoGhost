@@ -124,7 +124,7 @@ struct RemotePostSheet: View {
             .background(PaperBackground())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if state != nil, isOthers {
+                if let state, isOthers, !state.appConfig.updateRequired {
                     ToolbarItem(placement: .topBarTrailing) {
                         if isBlocking { ProgressView() } else {
                             Menu {

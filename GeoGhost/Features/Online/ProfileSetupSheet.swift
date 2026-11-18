@@ -24,7 +24,9 @@ struct ProfileSetupSheet: View {
     /// Agreement is asked for whenever the user has not agreed to the current rules.
     private var asksForRules: Bool { state.needsProfileSetup }
     private var lockedUntil: Date? { purpose == .changeNickname ? state.nicknameChangeAvailableAt : nil }
-    private var canSave: Bool { nicknameValid && (!asksForRules || agreed) && lockedUntil == nil && !isSaving }
+    /// New members are paused: only a first nickname is affected (spec: online-availability).
+    private var joinPaused: Bool { state.appConfig.signupsPaused && state.profile == nil }
+    private var canSave: Bool { nicknameValid && (!asksForRules || agreed) && lockedUntil == nil && !joinPaused && !isSaving }
 
     var body: some View {
         NavigationStack {
@@ -68,7 +70,9 @@ struct ProfileSetupSheet: View {
                     }
                 }
 
-                if let errorText {
+                if joinPaused {
+                    Section { Text("New members can't join right now. Please try again later.").foregroundStyle(.red) }
+                } else if let errorText {
                     Section { Text(errorText).foregroundStyle(.red) }
                 }
             }

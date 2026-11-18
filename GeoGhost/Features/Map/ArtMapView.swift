@@ -29,7 +29,7 @@ struct ArtMapView: View {
         NavigationStack {
             Map(position: $position, interactionModes: .all) {
                 if showUserLocation { UserAnnotation() }
-                if isWorld, let explore, let config = services.online?.config {
+                if isWorldLive, let explore, let config = services.online?.config {
                     ForEach(explore.posts) { post in
                         Annotation("", coordinate: post.coordinate) {
                             if post.cellCount > 1 {
@@ -64,12 +64,22 @@ struct ArtMapView: View {
                     hasFramed = true
                     position = .region(ctx.region)
                 }
-                if isWorld { explore?.regionChanged(ctx.region) }
+                if isWorldLive { explore?.regionChanged(ctx.region) }
             }
-            .overlay(alignment: .bottom) { if isWorld, let explore { WorldStatusBanner(model: explore) } }
+            .overlay(alignment: .bottom) {
+                if isWorldLive {
+                    VStack(spacing: 8) {
+                        if let notice = services.onlineState?.appConfig.notice() {
+                            OnlineNoticeView(text: notice).padding(.horizontal, 16)
+                        }
+                        if let explore { WorldStatusBanner(model: explore) }
+                    }
+                }
+            }
             .overlay {
                 if isWorld {
-                    EmptyView()
+                    // Too old for online features: say so instead of loading anything (spec: online-availability).
+                    if worldNeedsUpdate { UpdateRequiredView().frame(maxWidth: .infinity, maxHeight: .infinity).background(.ultraThinMaterial) }
                 } else if artworks.isEmpty {
                     EmptyStateView(systemImage: "map", title: "Nothing on the map yet", message: "Pieces with a location appear here as you collect them.",
                                    action: (label: "Collect a piece", run: { openCapture() }))
@@ -110,6 +120,7 @@ struct ArtMapView: View {
                 }
             }
             .onChange(of: modeRaw) { startWorldIfNeeded() }
+            .onChange(of: worldNeedsUpdate) { startWorldIfNeeded() }
             .onReceive(NotificationCenter.default.publisher(for: .onlineBlocksChanged)) { note in
                 if let author = note.object as? UUID { explore?.authorBlocked(author) } else { explore?.invalidate() }
             }
@@ -126,9 +137,12 @@ struct ArtMapView: View {
     }
 
     private var isWorld: Bool { modeRaw == Mode.world.rawValue && services.online != nil }
+    private var worldNeedsUpdate: Bool { services.onlineState?.appConfig.updateRequired ?? false }
+    /// The world map loads only when this version may use online features.
+    private var isWorldLive: Bool { isWorld && !worldNeedsUpdate }
 
     private func startWorldIfNeeded() {
-        guard isWorld, let online = services.online else { return }
+        guard isWorldLive, let online = services.online else { return }
         if explore == nil { explore = ExploreModel(client: ExploreClient(services: online)) }
         if let visibleRegion { explore?.regionChanged(visibleRegion) }
     }
