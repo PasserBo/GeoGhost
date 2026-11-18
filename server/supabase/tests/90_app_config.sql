@@ -13,6 +13,7 @@ select tests.ok(not private.version_lt('2.0.0', '1.99.99'), '2.0.0 is not below 
 select tests.ok(private.version_lt('garbage', '0.0.1'), 'garbage counts as 0.0.0');
 
 -- Everyone can read the config; nobody but the service role can write it.
+select tests.ok(has_table_privilege('service_role', 'public.app_config', 'select'), 'service role can read app_config (Worker, console)');
 set role anon; select tests.claims(null);
 select tests.eq((select min_online_version from public.app_config), '1.1.0', 'anon reads app_config');
 select tests.throws_state($$ update public.app_config set publishing_enabled = false $$, '42501', 'anon cannot update app_config');

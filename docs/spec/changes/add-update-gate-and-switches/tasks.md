@@ -1,7 +1,7 @@
 # Tasks: add-update-gate-and-switches
 
 ## Now
-2026-11-19：T1–T7 完成并提交（`fix/services-environment-crash`）。T8 迁移已就绪：`server/supabase/migrations/20261119000000_app_config.sql`，等 me 在 SQL Editor 执行；执行后 agent 做 T9（部署两个 Worker + `smoke.sh`）。
+2026-11-19：T1–T7 完成；T8 迁移已执行（`app_config` 可读，版本均为 1.1.0）。T9：两个 Worker 已部署（geoghost-api 478ee9cc、geoghost-admin f67d6df6），但冒烟测试在第一次上传时得到 502：service_role 读不到 `app_config`（Supabase 没给新表授权）。**线上 Worker 现在拒绝所有上传和撤回**，需要 me 在 SQL Editor 执行 `server/supabase/migrations/20261119010000_app_config_service_read.sql`（一行 grant），然后 agent 重跑 `smoke.sh` 并勾 T9。
 - 实现时的选择，需要 me 确认：点赞、收藏、屏蔽也按版本拒绝（设计写的是「视情况」）；公告每种语言最多 280 字；版本过低时设置里的改昵称、已屏蔽用户、全部撤回不可用，删除线上数据始终可用。
 - 已知小问题（改动之前就有）：主按钮停用时样式不变灰（`PrimaryButtonStyle` 不看 isEnabled），暂停发布时「公開」按钮看起来仍可点（实际点了没反应）。
 
