@@ -121,6 +121,8 @@ struct CaptureView: View {
                 cameraUnavailable(title: "Camera unavailable", message: LocalizedStringResource(stringLiteral: reason), showsSettings: false)
             }
 
+            if camera.state == .running { framingGuide.allowsHitTesting(false) }
+
             VStack {
                 topBar
                 Spacer()
@@ -148,6 +150,19 @@ struct CaptureView: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 12)
         .background(LinearGradient(colors: [.black.opacity(0.5), .clear], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+    }
+
+    /// The closer and straighter the piece, the better the cutout works (spec: capture-editor).
+    private var framingGuide: some View {
+        VStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(.white.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [8, 6]))
+                .aspectRatio(1, contentMode: .fit)
+                .padding(.horizontal, 56)
+            Text("Fill this box with the piece")
+                .font(.caption.weight(.medium)).foregroundStyle(.white.opacity(0.85))
+                .shadow(color: .black.opacity(0.6), radius: 2)
+        }
     }
 
     private var locationPill: some View {

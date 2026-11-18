@@ -19,6 +19,9 @@ struct SegmentationEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isFinishing = false
     @State private var showHint = true
+    /// How many editor sessions have shown the moving gesture demo; it stops after a few (spec: capture-editor).
+    @AppStorage("editorGestureDemoCount") private var demoCount = 0
+    @State private var showsDemo = false
 
     // Viewport transform (about the container centre).
     @State private var zoom: CGFloat = 1
@@ -106,6 +109,13 @@ struct SegmentationEditorView: View {
         .sensoryFeedback(.impact(weight: .medium), trigger: model.pieces.count)
         .sensoryFeedback(.error, trigger: model.lastPickFailed) { _, new in new }
         .sensoryFeedback(.selection, trigger: model.hold?.intent)
+        .onAppear {
+            if demoCount < 3 { showsDemo = true; demoCount += 1 }
+        }
+        .onChange(of: model.consecutiveFailures) { _, n in
+            // After a failed pick, bring the two basic gestures back once.
+            if n == 1 && !model.hasSelection { showsDemo = true; withAnimation { showHint = true } }
+        }
     }
 
     // MARK: Coordinate mapping
@@ -221,7 +231,7 @@ struct SegmentationEditorView: View {
 
     private var hintBubble: some View {
         VStack(spacing: 6) {
-            Image(systemName: "hand.tap.fill").font(.title2)
+            if showsDemo { GestureDemoView().frame(width: 72, height: 72) } else { Image(systemName: "hand.tap.fill").font(.title2) }
             Text("Tap the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
             Text("Pinch to zoom · two fingers to move").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
@@ -377,6 +387,11 @@ private struct ToleranceBar: View {
 struct GestureHelpView: View {
     var body: some View {
         List {
+            Section("The basics") {
+                row("hand.tap.fill", "Tap a piece", "Selects it. Tap it again to remove it.")
+                row("lasso", "Draw a loop around a piece", "Everything inside that doesn't match the background is selected — best for busy stickers with text.")
+                row("crop", "Crop by hand", "When nothing else works: frame the piece with a rectangle, or keep the whole photo.")
+            }
             Section("Selecting") {
                 row("hand.tap.fill", "Hold on a piece", "Shows what will be selected. Release to add it.")
                 row("lasso", "Draw a loop around a piece", "Everything inside that doesn't match the background is selected — best for busy stickers with text.")
@@ -544,6 +559,37 @@ private struct LiftedPieceView: View {
         }
         .onAppear { withAnimation(.spring(duration: 0.3)) { appeared = true } }
         .transition(.opacity)
+    }
+}
+
+/// A finger that taps, then draws a loop: the two gestures a first-time user needs.
+private struct GestureDemoView: View {
+    var body: some View {
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3.2)
+            let looping = t > 1.2
+            let progress = looping ? min(1, (t - 1.2) / 1.6) : 0
+            let angle = -Double.pi / 2 + progress * 2 * .pi
+            let r: CGFloat = 24
+            let pos = looping ? CGPoint(x: 36 + r * cos(angle), y: 36 + r * sin(angle)) : CGPoint(x: 36, y: 36)
+            ZStack {
+                if looping {
+                    Circle().trim(from: 0, to: progress)
+                        .stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 4]))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: r * 2, height: r * 2)
+                        .position(x: 36, y: 36)
+                } else {
+                    Circle().stroke(.white.opacity(t > 0.4 && t < 0.9 ? 0.8 : 0), lineWidth: 2)
+                        .frame(width: 26, height: 26).position(x: 36, y: 36)
+                }
+                Image(systemName: "hand.point.up.left.fill")
+                    .font(.title2)
+                    .scaleEffect(!looping && t > 0.4 && t < 0.9 ? 0.85 : 1)
+                    .position(x: pos.x + 8, y: pos.y + 12)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

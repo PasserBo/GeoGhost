@@ -1,6 +1,6 @@
 # Proposal: 第一次抠图时在编辑器里直接教，在家也能用示例照片练
 
-> State: accepted · Updated: 2026-11-19
+> State: in-progress · Updated: 2026-11-19
 
 ## Intent
 编辑器唯一的说明气泡在第一次触碰后就消失，「画圈」这个最稳的手势没人会自己发现，「Gesture guide」藏在菜单里且有 10 条。新用户第一次失败时已经看不到任何提示。引导应当出现在用户要做那件事的时刻、只教最少的操作，并且让不在街上的人也能先练一次。依赖 [improve-cutout-defaults](../improve-cutout-defaults/proposal.md)：教的是改进后的操作。衡量：5 人走查中，没有人需要打开手势说明就完成第一次抠图；示例照片练习 30 秒内完成。

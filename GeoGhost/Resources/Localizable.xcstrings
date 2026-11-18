@@ -1895,6 +1895,22 @@
         }
       }
     },
+    "Fill this box with the piece" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品をこの枠いっぱいに"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让作品占满这个框"
+          }
+        }
+      }
+    },
     "Finding the piece…" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4402,6 +4418,22 @@
         }
       }
     },
+    "Selects it. Tap it again to remove it." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択します。もう一度タップすると外れます。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选中它。再点一下就取消。"
+          }
+        }
+      }
+    },
     "Send" : {
       "localizations" : {
         "ja" : {
@@ -4978,6 +5010,22 @@
         }
       }
     },
+    "Tap a piece" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品をタップ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下作品"
+          }
+        }
+      }
+    },
     "Tap a selected piece" : {
       "localizations" : {
         "zh-Hans" : {
@@ -5150,6 +5198,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App Store でこの購入を確認できませんでした。「購入を復元」を試すか、サポートにお問い合わせください。"
+          }
+        }
+      }
+    },
+    "The basics" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基本"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基本操作"
           }
         }
       }
@@ -5918,6 +5982,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ほかの人に見える内容"
+          }
+        }
+      }
+    },
+    "When nothing else works: frame the piece with a rectangle, or keep the whole photo." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ほかの方法でうまくいかないとき：四角で囲むか、写真全体を残します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "都不行的时候：用矩形框住作品，或者保留整张照片。"
           }
         }
       }
