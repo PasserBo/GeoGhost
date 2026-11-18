@@ -1,6 +1,6 @@
 import { AccessError, verifyAccess, type AccessEnv } from './access';
-import { configured, DbError, rpc, type DbEnv, type LogRow, type QueueRow, type ReportRow, type Stats } from './db';
-import { log, message, page, queue, type Tab } from './html';
+import { configured, DbError, getAppConfig, rpc, type DbEnv, type LogRow, type QueueRow, type ReportRow, type Stats } from './db';
+import { configParams, log, message, page, queue, settings, type Tab } from './html';
 
 export interface Env extends AccessEnv, DbEnv {
   POSTS: R2Bucket;
@@ -18,7 +18,7 @@ function html(body: string, status = 200): Response {
   return new Response(body, { status, headers: { 'content-type': 'text/html; charset=utf-8', ...SECURITY_HEADERS } });
 }
 
-const FLASH: Record<string, string> = { approve: '已通过', reject: '已拒绝', remove: '已删除', ban: '已封禁', unban: '已解除封禁' };
+const FLASH: Record<string, string> = { approve: '已通过', reject: '已拒绝', remove: '已删除', ban: '已封禁', unban: '已解除封禁', config: '设置已保存' };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -38,6 +38,9 @@ export default {
       if (request.method === 'GET' && url.pathname === '/') return await dashboard(url, env, actor);
       return html(message(404, 'Not found.'), 404);
     } catch (e) {
+      if (e instanceof DbError && e.hint === 'invalid_argument') {
+        return html(message(400, `设置不正确：${e.message}`), 400);
+      }
       if (e instanceof DbError) {
         console.error(`db ${e.status} ${e.hint ?? ''} ${e.message}`);
         return html(message(502, `数据库返回错误：${e.hint ?? e.message}`), 502);
@@ -58,7 +61,7 @@ async function image(url: URL, env: Env): Promise<Response> {
 }
 
 function tabOf(value: string | null): Tab {
-  return value === 'reported' || value === 'log' ? value : 'pending';
+  return value === 'reported' || value === 'log' || value === 'settings' ? value : 'pending';
 }
 
 async function dashboard(url: URL, env: Env, actor: string): Promise<Response> {
@@ -67,6 +70,8 @@ async function dashboard(url: URL, env: Env, actor: string): Promise<Response> {
   let body: string;
   if (tab === 'log') {
     body = log(await rpc<LogRow[]>(env, 'admin_log', { max_rows: 100 }));
+  } else if (tab === 'settings') {
+    body = settings(await getAppConfig(env));
   } else {
     const rows = await rpc<QueueRow[]>(env, 'admin_queue', { kind: tab, max_rows: 50 });
     const reports = new Map<string, ReportRow[]>();
@@ -115,6 +120,9 @@ async function action(request: Request, url: URL, env: Env, actor: string): Prom
     case 'unban':
       if (!UUID.test(userID)) return html(message(400, 'Missing user.'), 400);
       await rpc(env, 'admin_set_ban', { user_id: userID, banned: kind === 'ban', actor });
+      break;
+    case 'config':
+      await rpc(env, 'admin_set_app_config', { ...configParams(form), actor });
       break;
     default:
       return html(message(400, 'Unknown action.'), 400);

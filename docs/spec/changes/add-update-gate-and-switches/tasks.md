@@ -11,7 +11,7 @@
 ## M2 · 服务端
 - [x] T2 迁移：`app_config`、版本比较函数、各写入 RPC 的检查、`admin_set_app_config` 与记录 — owner: agent · verify: SQL 测试（过低 / 缺头 / 暂停发布 / 暂停新用户 / 已有用户改昵称不受影响 / 删除数据不受影响） · 证据：`server/supabase/tests/run.sh` 全部 259 条通过，新增 `90_app_config.sql` 36 条（含配额也会拒绝时仍报 publishing_paused、过低优先于暂停）
 - [x] T3 Worker 版本检查（上传、撤回；删除我的数据除外） — owner: agent · verify: vitest · 证据：`server/worker` `npx vitest run` 39 条通过（新增 version gate 6 条：过低 / 缺头 426、新版本可上传、撤回 426、删除我的数据不查版本）；`smoke.sh` 改为带版本头并检查 426
-- [ ] T4 审核后台「设置」页 — owner: agent · verify: vitest（权限、转义、同源、记录）
+- [x] T4 审核后台「设置」页 — owner: agent · verify: vitest（权限、转义、同源、记录） · 证据：`server/admin` `npx vitest run` 22 条通过（新增：设置页显示与转义、保存时 actor 与暂停 / 空公告、跨站拒绝、非法设置显示 400、记录里显示「运营设置」）；`tsc --noEmit` 无错误
 
 ## M3 · 客户端
 - [ ] T5 所有请求带版本头；新的 `OnlineRefusal` 与文案 — owner: agent · verify: 单元测试

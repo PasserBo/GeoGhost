@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { _resetCertCache, AccessError, verifyAccess } from '../src/access';
-import { esc, queue, waited } from '../src/html';
+import { esc, log, queue, waited } from '../src/html';
 import worker, { type Env } from '../src/index';
 import type { QueueRow } from '../src/db';
 
@@ -83,6 +83,12 @@ describe('verifyAccess', () => {
 });
 
 describe('html', () => {
+  it('names config changes in the log', () => {
+    const text = log([{ at: '2026-11-19T00:00:00Z', actor: 'op@example.com', action: 'config', post_id: null, user_id: null, note: 'min 1.1.0, latest 1.1.0, publishing paused, signups on, notice none' }]);
+    expect(text).toContain('运营设置');
+    expect(text).toContain('publishing paused');
+  });
+
   it('escapes user content', () => {
     expect(esc(`<img src=x onerror="alert('x')">`)).toBe('&lt;img src=x onerror=&quot;alert(&#39;x&#39;)&quot;&gt;');
     const row: QueueRow = {
@@ -141,7 +147,7 @@ describe('worker', () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.endsWith('/cdn-cgi/access/certs')) return certsFetch();
-      const fn = url.split('/rpc/')[1] ?? '';
+      const fn = url.split('/rpc/')[1] ?? url.split('/rest/v1/')[1]?.split('?')[0] ?? '';
       calls.push({ fn, body: init?.body ? JSON.parse(String(init.body)) : null });
       return new Response(JSON.stringify(rpcs[fn] ?? {}), { status: 200 });
     }));
@@ -208,6 +214,55 @@ describe('worker', () => {
     expect(r.status).toBe(303);
     expect(calls[0]?.fn).toBe('admin_remove_post');
     expect(env.POSTS.delete).toHaveBeenCalledWith(['posts/a/full.heic', 'posts/a/thumb.heic']);
+  });
+
+  const CONFIG = { min_online_version: '1.1.0', latest_version: '1.2.0', publishing_enabled: false, signups_enabled: true,
+    notice: { en: '<b>Maintenance</b> tonight', ja: '今夜メンテナンス' }, updated_at: '2026-11-19T00:00:00Z' };
+  const STATS = { pending_count: 0, oldest_pending_at: null, reported_count: 0, oldest_report_at: null };
+
+  it('shows the settings page with the current values, escaped', async () => {
+    stubNetwork({ admin_stats: STATS, app_config: [CONFIG] });
+    const r = await worker.fetch(req(await sign(valid()), {}, '/?tab=settings'), env);
+    expect(r.status).toBe(200);
+    const text = await r.text();
+    expect(text).toContain('value="1.2.0"');
+    expect(text).toContain('&lt;b&gt;Maintenance&lt;/b&gt; tonight');
+    expect(text).not.toContain('<b>Maintenance</b>');
+    expect(text).toMatch(/name="publishing_enabled" value="on">/);
+    expect(text).toMatch(/name="signups_enabled" value="on" checked>/);
+    expect(text).toContain('data-confirm=');
+    expect(text).not.toMatch(/<script>(?!<)/);
+  });
+
+  it('saves settings with the operator as actor; unchecked boxes pause, blank notices are dropped', async () => {
+    const calls = stubNetwork({ admin_set_app_config: CONFIG });
+    const body = new URLSearchParams({ action: 'config', tab: 'settings', min_online_version: ' 1.1.0 ', latest_version: '1.2.0',
+      signups_enabled: 'on', notice_en: 'Hello', notice_ja: '  ', 'notice_zh-Hans': '' });
+    const r = await worker.fetch(req(await sign(valid()), { method: 'POST', body, headers: { origin: 'https://admin.test' } }, '/action'), env);
+    expect(r.status).toBe(303);
+    expect(r.headers.get('location')).toBe('/?tab=settings&done=config');
+    expect(calls.find((c) => c.fn === 'admin_set_app_config')?.body).toEqual({
+      min_online_version: '1.1.0', latest_version: '1.2.0', publishing_enabled: false, signups_enabled: true,
+      notice: { en: 'Hello' }, actor: 'op@example.com' });
+  });
+
+  it('refuses cross-site settings changes', async () => {
+    const calls = stubNetwork();
+    const body = new URLSearchParams({ action: 'config', min_online_version: '9.9.9', latest_version: '9.9.9' });
+    const r = await worker.fetch(req(await sign(valid()), { method: 'POST', body, headers: { origin: 'https://evil.example' } }, '/action'), env);
+    expect(r.status).toBe(403);
+    expect(calls.filter((c) => c.fn === 'admin_set_app_config')).toHaveLength(0);
+  });
+
+  it('shows a rejected setting as 400, not as a database outage', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/cdn-cgi/access/certs')) return certsFetch();
+      return new Response(JSON.stringify({ hint: 'invalid_argument', message: 'versions must look like 1.2.3' }), { status: 400 });
+    }));
+    const body = new URLSearchParams({ action: 'config', min_online_version: '1.1', latest_version: '1.1.0' });
+    const r = await worker.fetch(req(await sign(valid()), { method: 'POST', body, headers: { origin: 'https://admin.test' } }, '/action'), env);
+    expect(r.status).toBe(400);
+    expect(await r.text()).toContain('versions must look like 1.2.3');
   });
 
   it('serves only post images', async () => {

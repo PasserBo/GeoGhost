@@ -1,4 +1,4 @@
-import type { LogRow, QueueRow, ReportRow, Stats } from './db';
+import type { AppConfig, LogRow, NoticeLanguage, QueueRow, ReportRow, Stats } from './db';
 
 /** Everything user-written (nicknames, report notes, places) goes through this. */
 export function esc(value: unknown): string {
@@ -16,10 +16,10 @@ export function waited(since: string | null, now = Date.now()): { text: string; 
 }
 
 const KIND: Record<string, string> = { sticker: '贴纸', graffiti: '涂鸦', mural: '壁画', poster: '海报', tag: 'Tag', other: '其他' };
-const ACTION: Record<string, string> = { approve: '通过', reject: '拒绝', remove: '删除', ban: '封禁', unban: '解除封禁' };
+const ACTION: Record<string, string> = { approve: '通过', reject: '拒绝', remove: '删除', ban: '封禁', unban: '解除封禁', config: '运营设置' };
 const STATUS: Record<string, string> = { pending: '审核中', public: '已公开', hidden: '已隐藏', removed: '已删除', uploading: '上传中' };
 
-export type Tab = 'pending' | 'reported' | 'log';
+export type Tab = 'pending' | 'reported' | 'log' | 'settings';
 
 export function page(opts: { tab: Tab; stats: Stats; actor: string; body: string; flash?: string | null; now?: number }): string {
   const { tab, stats, actor, body, flash } = opts;
@@ -48,6 +48,7 @@ button{font:inherit;border:0;border-radius:10px;padding:8px 14px;cursor:pointer}
 .ok{background:#2e7d32;color:#fff}.no{background:#ef6c00;color:#fff}.del{background:#c62828;color:#fff}.plain{background:#e8e2d8}
 .flash{background:#e8f5e9;border-radius:10px;padding:8px 12px;margin-bottom:12px}
 .reports{margin:6px 0 0;padding-left:18px}.empty{text-align:center;color:#7a7066;padding:40px 0}
+fieldset{border:0;padding:0;margin:0 0 14px}label{display:block;margin:6px 0}input[type=text],textarea{font:inherit;width:100%;box-sizing:border-box;padding:6px 8px;border:1px solid #ddd5c8;border-radius:8px;background:#fff}
 table{width:100%;border-collapse:collapse;font-size:13px}td{padding:6px 4px;border-bottom:1px solid #e8e2d8;vertical-align:top}
 </style></head><body>
 <header><span class="who">${esc(actor)}</span><h1>GeoGhost 审核</h1>
@@ -55,7 +56,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td{padding:6px 4px;bord
 <div class="stat"><b>${stats.pending_count}</b>待审核 · 最久 <span class="${p.late ? 'late' : ''}">${esc(p.text)}</span></div>
 <div class="stat"><b>${stats.reported_count}</b>被举报 · 最久 <span class="${r.late ? 'late' : ''}">${esc(r.text)}</span></div>
 </div>
-${tabLink('pending', '待审核')}${tabLink('reported', '被举报')}${tabLink('log', '操作记录')}
+${tabLink('pending', '待审核')}${tabLink('reported', '被举报')}${tabLink('log', '操作记录')}${tabLink('settings', '设置')}
 </header><main>${flash ? `<div class="flash">${esc(flash)}</div>` : ''}${body}</main></body></html>`;
 }
 
@@ -103,4 +104,44 @@ export function log(rows: LogRow[]): string {
 export function message(status: number, text: string): string {
   return `<!doctype html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GeoGhost 审核</title></head><body style="font:16px system-ui;padding:40px;text-align:center"><h1>${status}</h1><p>${esc(text)}</p></body></html>`;
+}
+
+const NOTICE_LANGUAGES: [NoticeLanguage, string][] = [['en', '英文（没有对应语言时显示）'], ['ja', '日文'], ['zh-Hans', '中文']];
+
+export function settings(config: AppConfig): string {
+  const notice = config.notice ?? {};
+  const check = (name: string, on: boolean, label: string) =>
+    `<label><input type="checkbox" name="${name}" value="on"${on ? ' checked' : ''}> ${label}</label>`;
+  return `<form method="post" action="/action" data-confirm="保存运营设置？会立即对所有用户生效。">
+<input type="hidden" name="action" value="config"><input type="hidden" name="tab" value="settings">
+<fieldset><b>版本</b>
+<label>最低支持版本（低于它的 App 停用线上功能）<input type="text" name="min_online_version" value="${esc(config.min_online_version)}" pattern="\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}" required></label>
+<label>最新版本（更低的 App 在设置里看到更新提示）<input type="text" name="latest_version" value="${esc(config.latest_version)}" pattern="\\d{1,4}\\.\\d{1,4}\\.\\d{1,4}" required></label>
+</fieldset>
+<fieldset><b>开关</b>
+${check('publishing_enabled', config.publishing_enabled, '允许发布（取消 = 暂停发布）')}
+${check('signups_enabled', config.signups_enabled, '允许新用户加入（取消 = 暂停第一次设置昵称）')}
+</fieldset>
+<fieldset><b>公告</b> <span class="muted">每种语言最多 280 字；全部留空 = 没有公告</span>
+${NOTICE_LANGUAGES.map(([lang, label]) => `<label>${label}<textarea name="notice_${lang}" rows="2" maxlength="280">${esc(notice[lang] ?? '')}</textarea></label>`).join('\n')}
+</fieldset>
+<button class="ok">保存</button> <span class="muted">上次修改 ${esc(new Date(config.updated_at).toISOString().replace('T', ' ').slice(0, 16))} UTC</span>
+</form>`;
+}
+
+/** Turns the settings form into admin_set_app_config parameters (the database validates them again). */
+export function configParams(form: FormData): Record<string, unknown> {
+  const text = (name: string) => String(form.get(name) ?? '').trim();
+  const notice: Record<string, string> = {};
+  for (const [lang] of NOTICE_LANGUAGES) {
+    const value = text(`notice_${lang}`);
+    if (value) notice[lang] = value;
+  }
+  return {
+    min_online_version: text('min_online_version'),
+    latest_version: text('latest_version'),
+    publishing_enabled: form.get('publishing_enabled') === 'on',
+    signups_enabled: form.get('signups_enabled') === 'on',
+    notice: Object.keys(notice).length ? notice : null,
+  };
 }
