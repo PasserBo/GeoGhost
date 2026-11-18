@@ -23,7 +23,7 @@
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
-| 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | accepted | 写 delta / design / tasks（agent）；me 在真机建一套 30–50 张抠图基准照片 | agent |
+| 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | accepted | 未开始：2026-11-19 做完 12 后周用量 93%（停止线 95%），按 solo-spec 先写 delta / design / tasks；me 在真机建一套 30–50 张抠图基准照片 | agent |
 | 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | accepted | 等 10；me 提供 2–3 张示例贴纸照片 | me |
 | 12 | [improve-first-run](changes/improve-first-run/proposal.md) | in-progress | T1–T7 完成；剩 T8 真机走查，并重录 UI 快照基准图 | me |
 | 13 | [add-library-scan-import](changes/add-library-scan-import/proposal.md) | idea | 暂不做，只保留提案（工作量大）；重启时先回答开放问题 | me |
