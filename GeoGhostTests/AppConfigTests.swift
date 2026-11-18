@@ -28,10 +28,6 @@ private final class FetchStub: @unchecked Sendable {
     }
 }
 
-private final class Clock: @unchecked Sendable {
-    var now = Date(timeIntervalSince1970: 1_000_000)
-}
-
 @MainActor
 final class AppConfigServiceTests: XCTestCase {
     private var defaults: UserDefaults!
@@ -46,8 +42,8 @@ final class AppConfigServiceTests: XCTestCase {
         RemoteAppConfig(minOnlineVersion: min, latestVersion: latest, publishingEnabled: publishing, signupsEnabled: signups, notice: notice)
     }
 
-    private func service(_ stub: FetchStub, version: String = "1.1.0", clock: Clock = Clock()) -> AppConfigService {
-        AppConfigService(fetch: { try stub() }, defaults: defaults, appVersion: AppVersion(version), now: { clock.now })
+    private func service(_ stub: FetchStub, version: String = "1.1.0") -> AppConfigService {
+        AppConfigService(fetch: { try stub() }, defaults: defaults, appVersion: AppVersion(version))
     }
 
     func testNeverReadMeansEverythingAllowed() async {
@@ -67,12 +63,12 @@ final class AppConfigServiceTests: XCTestCase {
         XCTAssertEqual(s.availability, .updateAvailable)
 
         stub.set(.success(config(min: "1.2.0", latest: "1.2.0")))
-        await s.refresh(force: true)
+        await s.refresh()
         XCTAssertEqual(s.availability, .updateRequired)
         XCTAssertTrue(s.updateRequired)
 
         stub.set(.success(config(min: "1.0.0", latest: "1.1.0")))
-        await s.refresh(force: true)
+        await s.refresh()
         XCTAssertEqual(s.availability, .ok)
     }
 
@@ -85,16 +81,16 @@ final class AppConfigServiceTests: XCTestCase {
         XCTAssertEqual(s.availability, .ok)
     }
 
-    func testCachedForTenMinutes() async {
-        let clock = Clock()
+    func testReadsAgainEveryTime() async {
+        // Every return to the foreground reads again, so a new notice shows up right away.
         let stub = FetchStub(.success(config()))
-        let s = service(stub, clock: clock)
+        let s = service(stub)
         await s.refresh()
-        await s.refresh()
-        XCTAssertEqual(stub.calls, 1)
-        clock.now += AppConfigService.maxAge + 1
+        XCTAssertNil(s.notice(language: "en"))
+        stub.set(.success(config(notice: ["en": "Maintenance tonight"])))
         await s.refresh()
         XCTAssertEqual(stub.calls, 2)
+        XCTAssertEqual(s.notice(language: "en"), "Maintenance tonight")
     }
 
     func testFailureKeepsLastSettingsAcrossLaunches() async {

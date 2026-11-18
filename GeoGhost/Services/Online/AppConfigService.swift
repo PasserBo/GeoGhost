@@ -47,31 +47,26 @@ enum OnlineAvailability: Equatable {
     case updateRequired
 }
 
-/// Reads the operator's settings at launch and when the app comes back, at most every 10 minutes.
-/// A failed read keeps the last settings; with none ever read, everything is allowed (the server
-/// checks again).
+/// Reads the operator's settings at launch and every time the app comes back to the foreground, so
+/// a notice or a pause shows up right away. A failed read keeps the last settings; with none ever
+/// read, everything is allowed (the server checks again).
 @Observable
 @MainActor
 final class AppConfigService {
     typealias Fetch = @Sendable () async throws -> RemoteAppConfig
 
-    static let maxAge: TimeInterval = 10 * 60
     static let cacheKey = "onlineAppConfig"
 
     private(set) var config: RemoteAppConfig?
     let appVersion: AppVersion
-    @ObservationIgnored private var fetchedAt: Date?
     @ObservationIgnored private var isFetching = false
     @ObservationIgnored private let fetch: Fetch
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private let now: @Sendable () -> Date
 
-    init(fetch: @escaping Fetch, defaults: UserDefaults = .standard, appVersion: AppVersion = .current,
-         now: @escaping @Sendable () -> Date = { Date() }) {
+    init(fetch: @escaping Fetch, defaults: UserDefaults = .standard, appVersion: AppVersion = .current) {
         self.fetch = fetch
         self.defaults = defaults
         self.appVersion = appVersion
-        self.now = now
         if let data = defaults.data(forKey: Self.cacheKey) {
             config = try? JSONDecoder().decode(RemoteAppConfig.self, from: data)
         }
@@ -107,14 +102,13 @@ final class AppConfigService {
         return text?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
     }
 
-    func refresh(force: Bool = false) async {
-        if !force, let fetchedAt, now().timeIntervalSince(fetchedAt) < Self.maxAge { return }
+    /// One read at a time; a call while a read is running is skipped.
+    func refresh() async {
         guard !isFetching else { return }
         isFetching = true
         defer { isFetching = false }
         do {
             let fresh = try await fetch()
-            fetchedAt = now()
             if fresh != config { config = fresh }
             if let data = try? JSONEncoder().encode(fresh) { defaults.set(data, forKey: Self.cacheKey) }
         } catch {
@@ -127,7 +121,7 @@ final class AppConfigService {
     func noteRefusal(_ error: any Error) {
         guard case let .refused(refusal)? = error as? OnlineError,
               [.updateRequired, .publishingPaused, .signupsPaused].contains(refusal) else { return }
-        Task { await refresh(force: true) }
+        Task { await refresh() }
     }
 }
 

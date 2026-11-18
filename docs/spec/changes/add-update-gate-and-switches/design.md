@@ -26,7 +26,7 @@
 
 ## 客户端
 
-- `AppConfigService`：启动与回到前台时读取（缓存 10 分钟，上次结果存 UserDefaults）；失败沿用上次；从未成功则视为放行。
+- `AppConfigService`：启动与每次回到前台时读取（不缓存，同时只发一次；上次结果存 UserDefaults）；失败沿用上次；从未成功则视为放行。服务端拒绝 `update_required` / `publishing_paused` / `signups_paused` 时立即重新读取。
 - 状态：`ok` / `updateAvailable` / `updateRequired`；外加 `publishingPaused`、`signupsPaused`、`notice`。
 - `updateRequired`：世界地图切换、发布入口、举报 / 屏蔽、设置 → 线上都显示「需要更新才能使用线上功能」+ App Store 按钮（`https://apps.apple.com/app/id<appId>`），不发请求。
 - 服务端返回 `update_required` / `publishing_paused` / `signups_paused` 时映射为新的 `OnlineRefusal`，文案说明原因（不再落到「额度用完」）。

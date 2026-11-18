@@ -15,7 +15,7 @@
 
 ## M3 · 客户端
 - [x] T5 所有请求带版本头；新的 `OnlineRefusal` 与文案 — owner: agent · verify: 单元测试 · 证据：`VersionHeaderTests`（每个请求带 `X-GeoGhost-Version`；三个新提示与 Worker 426 映射为各自的拒绝；文案不含额度字样）；全部单元测试 112 条通过（CDB94C9B）
-- [x] T6 `AppConfigService`（缓存、失败沿用、从未成功放行）与版本比较 — owner: agent · verify: 单元测试 · 证据：`AppVersionTests`、`AppConfigServiceTests`（从未读到放行、版本→可用性、暂停、10 分钟缓存、失败沿用上次且跨启动保留、公告按语言回退英文、解析服务器行）
+- [x] T6 `AppConfigService`（每次回前台读取、失败沿用、从未成功放行）与版本比较 — owner: agent · verify: 单元测试 · 证据：`AppVersionTests`、`AppConfigServiceTests`（从未读到放行、版本→可用性、暂停、每次都重新读取、失败沿用上次且跨启动保留、公告按语言回退英文、解析服务器行）
 - [x] T7 界面：需要更新、新版本轻提示、暂停说明、公告；中 / 日翻译 — owner: agent · verify: 模拟器截图 · 证据：界面与中 / 日翻译完成，模拟器 4F71E5A0 截图（世界地图 / 发布 / 设置 需要更新；日文设置有新版本；日文发布预览公告 + 暂停）存在会话笔记 `update-gate-shots/`；App Store 链接 `https://apps.apple.com/app/id6816339825`（`AppStoreLink.appID`）
 
 ## M4 · 上线
