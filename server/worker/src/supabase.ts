@@ -144,3 +144,13 @@ export async function deleteAuthUser(env: Env, userId: string): Promise<void> {
   if (res.ok || res.status === 404) return;
   return upstream(res, 'user deletion');
 }
+
+/** The operator's minimum app version for online features (public.app_config). */
+export async function getMinOnlineVersion(env: Env): Promise<string> {
+  const url = baseUrl(env);
+  const res = await fetch(`${url}/rest/v1/app_config?select=min_online_version`, { headers: serviceHeaders(env) });
+  if (!res.ok) return upstream(res, 'app_config');
+  const rows = (await res.json()) as { min_online_version?: unknown }[];
+  const v = rows[0]?.min_online_version;
+  return typeof v === 'string' ? v : '0.0.0';
+}

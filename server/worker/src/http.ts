@@ -8,6 +8,7 @@ export type ErrorCode =
   | 'method_not_allowed' // 405
   | 'invalid_status' // 409 post is not in a state that allows the operation
   | 'too_large' // 413
+  | 'update_required' // 426 app version below min_online_version
   | 'unsupported_media_type' // 415 not multipart, or an image that is not HEIC
   | 'internal' // 500
   | 'upstream'; // 502 Supabase / R2 failed

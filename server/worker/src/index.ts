@@ -3,7 +3,7 @@
  *
  *   PUT    /v1/posts/{post_id}/images   upload full + thumb HEIC, complete the post
  *   DELETE /v1/posts/{post_id}          author retraction
- *   DELETE /v1/me                       delete all my online data
+ *   DELETE /v1/me                       delete all my online data (never version-gated)
  *   GET    /v1/images/{key}             read an image from R2 (MVP image host)
  */
 import { ApiError, errorResponse, json } from './http';
@@ -11,6 +11,7 @@ import {
   authenticate,
   completePostUpload,
   deleteAuthUser,
+  getMinOnlineVersion,
   getPost,
   listUserImageKeys,
   markRemoved,
@@ -18,6 +19,7 @@ import {
   type PostRow,
 } from './supabase';
 import { readImages } from './upload';
+import { VERSION_HEADER, versionLessThan } from './version';
 
 export type { Env } from './supabase';
 
@@ -66,6 +68,18 @@ function notAllowed(allow: string): Response {
   return res;
 }
 
+/**
+ * Refuses apps below the operator's minimum version with 426 update_required.
+ * A missing X-GeoGhost-Version header counts as too old (every app since 1.1 sends it).
+ */
+async function requireOnlineVersion(request: Request, env: Env): Promise<void> {
+  const version = request.headers.get(VERSION_HEADER)?.trim();
+  const min = await getMinOnlineVersion(env);
+  if (!version || versionLessThan(version, min)) {
+    throw new ApiError(426, 'update_required', 'This app version can no longer use online features. Please update.');
+  }
+}
+
 /** Loads the post and checks it belongs to the caller. */
 async function ownPost(env: Env, userId: string, postId: string): Promise<PostRow> {
   const post = await getPost(env, postId);
@@ -76,6 +90,7 @@ async function ownPost(env: Env, userId: string, postId: string): Promise<PostRo
 
 // PUT /v1/posts/{post_id}/images
 async function uploadImages(request: Request, env: Env, postId: string): Promise<Response> {
+  await requireOnlineVersion(request, env);
   const userId = await authenticate(request, env);
   const post = await ownPost(env, userId, postId);
   if (post.status === 'removed') {
@@ -108,6 +123,7 @@ async function uploadImages(request: Request, env: Env, postId: string): Promise
 
 // DELETE /v1/posts/{post_id}
 async function deletePost(request: Request, env: Env, postId: string): Promise<Response> {
+  await requireOnlineVersion(request, env);
   const userId = await authenticate(request, env);
   const post = await ownPost(env, userId, postId);
   if (post.status !== 'removed') {

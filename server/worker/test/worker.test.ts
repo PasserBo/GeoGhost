@@ -43,6 +43,7 @@ interface FakePost {
   thumb_key: string;
 }
 let posts: FakePost[];
+let minVersion: string;
 let banned: Set<string>;
 let deletedUsers: string[];
 let calls: string[];
@@ -70,6 +71,9 @@ async function fakeSupabase(input: RequestInfo | URL, init?: RequestInit): Promi
   expect(req.headers.get('apikey')).toBe('service-key');
   expect(req.headers.get('authorization')).toBe('Bearer service-key');
 
+  if (url.pathname === '/rest/v1/app_config' && req.method === 'GET') {
+    return json([{ min_online_version: minVersion }]);
+  }
   if (url.pathname === '/rest/v1/posts' && req.method === 'GET') {
     const id = url.searchParams.get('id')?.replace('eq.', '');
     const author = url.searchParams.get('author_id')?.replace('eq.', '');
@@ -100,6 +104,7 @@ async function fakeSupabase(input: RequestInfo | URL, init?: RequestInit): Promi
 
 beforeEach(() => {
   posts = [post(POST_ID, ALICE, 'uploading')];
+  minVersion = '1.1.0';
   banned = new Set();
   deletedUsers = [];
   calls = [];
@@ -132,7 +137,7 @@ function multipart(parts: Record<string, Uint8Array>, boundary = 'gg-boundary'):
 }
 
 async function call(method: string, path: string, opts: { token?: string; body?: Uint8Array; type?: string; headers?: Record<string, string> } = {}) {
-  const headers: Record<string, string> = { ...opts.headers };
+  const headers: Record<string, string> = { 'x-geoghost-version': '1.1.0', ...opts.headers };
   if (opts.token) headers.authorization = `Bearer ${opts.token}`;
   if (opts.type) headers['content-type'] = opts.type;
   const res = await worker.fetch(new Request(`${API}${path}`, { method, headers, body: opts.body }), env);
@@ -321,5 +326,54 @@ describe('GET /v1/images/{key}', () => {
     await bucket.put(key, new Uint8Array([1]));
     await call('GET', `/v1/images/${key}`);
     expect(calls).toEqual([]);
+  });
+});
+
+describe('version gate', () => {
+  it('versionLessThan compares numerically', async () => {
+    const { versionLessThan } = await import('../src/version');
+    expect(versionLessThan('1.0.9', '1.1.0')).toBe(true);
+    expect(versionLessThan('1.9.0', '1.10.0')).toBe(true);
+    expect(versionLessThan('1.1', '1.1.0')).toBe(false);
+    expect(versionLessThan('2.0.0', '1.99.99')).toBe(false);
+    expect(versionLessThan('garbage', '0.0.1')).toBe(true);
+  });
+
+  it('upload from an app below the minimum -> 426 update_required, nothing stored', async () => {
+    minVersion = '1.2.0';
+    const { body, type } = goodImages();
+    const res = await call('PUT', `/v1/posts/${POST_ID}/images`, { token: 'alice-token', body, type });
+    expect(res.status).toBe(426);
+    expect(res.body.error).toBe('update_required');
+    expect(bucket.objects.size).toBe(0);
+    expect(posts[0]!.status).toBe('uploading');
+  });
+
+  it('upload without the version header -> 426', async () => {
+    const { body, type } = goodImages();
+    const res = await call('PUT', `/v1/posts/${POST_ID}/images`, { token: 'alice-token', body, type, headers: { 'x-geoghost-version': '' } });
+    expect(res.status).toBe(426);
+  });
+
+  it('a newer app than the minimum can upload', async () => {
+    const { body, type } = goodImages();
+    const res = await call('PUT', `/v1/posts/${POST_ID}/images`, { token: 'alice-token', body, type, headers: { 'x-geoghost-version': '1.10.0' } });
+    expect(res.status).toBe(200);
+  });
+
+  it('retracting from an outdated app -> 426, post untouched', async () => {
+    posts = [post(POST_ID, ALICE, 'public')];
+    minVersion = '9.9.9';
+    const res = await call('DELETE', `/v1/posts/${POST_ID}`, { token: 'alice-token' });
+    expect(res.status).toBe(426);
+    expect(posts[0]!.status).toBe('public');
+  });
+
+  it('delete my online data works from any version, even without the header', async () => {
+    minVersion = '9.9.9';
+    const res = await call('DELETE', '/v1/me', { token: 'alice-token', headers: { 'x-geoghost-version': '' } });
+    expect(res.status).toBe(200);
+    expect(deletedUsers).toEqual([ALICE]);
+    expect(calls.some((c) => c.includes('app_config'))).toBe(false);
   });
 });
