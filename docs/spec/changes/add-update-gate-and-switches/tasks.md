@@ -6,10 +6,10 @@
 - 提交分支（2026-11-19 定）：直接提交在 `fix/services-environment-crash`，不移动或快进任何分支；分支怎么合并由 me 决定。
 
 ## M1 · 规格
-- [ ] T1 delta `online-availability`（版本过低、轻提示、暂停发布、暂停新用户、公告、删除数据不受限） — owner: agent · verify: check-delta 无错误
+- [x] T1 delta `online-availability`（版本过低、轻提示、暂停发布、暂停新用户、公告、删除数据不受限） — owner: agent · verify: check-delta 无错误 · 证据：check-delta 无输出（无错误）
 
 ## M2 · 服务端
-- [ ] T2 迁移：`app_config`、版本比较函数、各写入 RPC 的检查、`admin_set_app_config` 与记录 — owner: agent · verify: SQL 测试（过低 / 缺头 / 暂停发布 / 暂停新用户 / 已有用户改昵称不受影响 / 删除数据不受影响）
+- [x] T2 迁移：`app_config`、版本比较函数、各写入 RPC 的检查、`admin_set_app_config` 与记录 — owner: agent · verify: SQL 测试（过低 / 缺头 / 暂停发布 / 暂停新用户 / 已有用户改昵称不受影响 / 删除数据不受影响） · 证据：`server/supabase/tests/run.sh` 全部 259 条通过，新增 `90_app_config.sql` 36 条（含配额也会拒绝时仍报 publishing_paused、过低优先于暂停）
 - [ ] T3 Worker 版本检查（上传、撤回；删除我的数据除外） — owner: agent · verify: vitest
 - [ ] T4 审核后台「设置」页 — owner: agent · verify: vitest（权限、转义、同源、记录）
 

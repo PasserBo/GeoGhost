@@ -104,3 +104,14 @@ language sql as $$
     case when uid is null then '{"role":"anon"}'
          else json_build_object('sub', uid, 'role', 'authenticated')::text end, false);
 $$;
+
+-- Every app request carries X-GeoGhost-Version (add-update-gate-and-switches). Tests run as a
+-- current app unless they say otherwise with tests.version(); new sessions pick this up.
+alter database postgres set "request.headers" to '{"x-geoghost-version":"1.1.0"}';
+
+-- Pretend the request came from this app version (null = no header).
+create function tests.version(v text) returns void
+language sql as $$
+  select set_config('request.headers',
+    case when v is null then '{}' else json_build_object('x-geoghost-version', v)::text end, false);
+$$;
