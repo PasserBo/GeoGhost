@@ -23,7 +23,7 @@
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
-| 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | in-progress | T1–T4 完成（建议选区、点一下就选中、失败两次后框选 / 整张照片）；剩 T5 失败时自动套索、T6 文档；me 真机基准 T7 | agent |
-| 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | accepted | 等 10；me 提供 2–3 张示例贴纸照片 | me |
+| 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | in-progress | T1–T6 完成；剩 T7 真机基准照片（建议是否正确、点一下 / 自动画圈是否成功），并重录 UI 快照 | me |
+| 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | accepted | 10 已实现，可以开始；me 先提供 2–3 张示例贴纸照片 | me |
 | 12 | [improve-first-run](changes/improve-first-run/proposal.md) | in-progress | T1–T7 完成；剩 T8 真机走查，并重录 UI 快照基准图 | me |
 | 13 | [add-library-scan-import](changes/add-library-scan-import/proposal.md) | idea | 暂不做，只保留提案（工作量大）；重启时先回答开放问题 | me |

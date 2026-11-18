@@ -297,6 +297,18 @@ final class CaptureFlowModel {
         }
     }
 
+    /// A circle around a point, about a quarter of the photo's short side across, run as a lasso.
+    private func retryWithLoop(around p: CGPoint) {
+        guard let fullImage else { lastPickFailed = true; return }
+        let w = CGFloat(fullImage.width), h = CGFloat(fullImage.height)
+        let r = 0.12 * min(w, h)
+        let points = (0..<32).map { i -> CGPoint in
+            let a = CGFloat(i) / 32 * 2 * .pi
+            return CGPoint(x: min(1, max(0, p.x + cos(a) * r / w)), y: min(1, max(0, p.y + sin(a) * r / h)))
+        }
+        lassoEnded(points)
+    }
+
     // MARK: Hold gesture (press = try, release = commit, swipe down = throw away)
 
     func beginHold(at p: CGPoint) {
@@ -522,7 +534,14 @@ final class CaptureFlowModel {
                 } else if let pending = self.pendingCommit, pending.generation == gen {
                     // Finger already lifted: commit (or report) now.
                     self.pendingCommit = nil
-                    if let tentative { self.apply(pending.hold, tentative: tentative) } else { self.lastPickFailed = true }
+                    if let tentative {
+                        self.apply(pending.hold, tentative: tentative)
+                    } else if pending.hold.target == nil {
+                        // A quick tap that found nothing: try a loop around the finger before giving up (spec: capture-editor).
+                        self.retryWithLoop(around: pending.hold.origin)
+                    } else {
+                        self.lastPickFailed = true
+                    }
                     self.refreshPreview()
                 }
                 _ = fullImage
