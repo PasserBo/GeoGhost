@@ -9,7 +9,7 @@ struct RootView: View {
     @State private var showCapture = false
     @State private var storageWarningDismissed = false
     @State private var askDiagnosticsConsent = false
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var context

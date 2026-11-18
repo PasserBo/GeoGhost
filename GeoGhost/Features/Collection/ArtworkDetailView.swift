@@ -6,7 +6,7 @@ struct ArtworkDetailView: View {
     @Bindable var artwork: Artwork
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @State private var showOriginal = false
     @State private var isEditing = false
     @State private var confirmDelete = false

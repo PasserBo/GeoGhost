@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.modelContext) private var context
     @Query private var artworks: [Artwork]
     @State private var storageBytes: Int64 = 0

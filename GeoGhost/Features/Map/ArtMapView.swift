@@ -8,7 +8,7 @@ struct ArtMapView: View {
     enum Mode: String { case mine, world }
 
     @Query private var artworks: [Artwork]
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @AppStorage("mapMode") private var modeRaw = Mode.mine.rawValue
     @State private var explore: ExploreModel?
     @State private var selectedPost: ExplorePost?

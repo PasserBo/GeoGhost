@@ -4,7 +4,7 @@ import SwiftUI
 struct ShareCardSheet: View {
     let artwork: Artwork
 
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.dismiss) private var dismiss
     @State private var content: ShareCardContent?
     @State private var style: ShareCardStyle = .fieldNote
