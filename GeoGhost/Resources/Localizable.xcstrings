@@ -1253,6 +1253,22 @@
         }
       }
     },
+    "Crop by hand instead" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手動で切り抜く"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "改为框选"
+          }
+        }
+      }
+    },
     "Data" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2205,54 +2221,6 @@
         }
       }
     },
-    "Hold on the piece, or draw a loop around it" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "长按作品，或画圈圈住它"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "作品を長押しするか、ぐるっと囲んでください"
-          }
-        }
-      }
-    },
-    "Hold on the piece, or loop around it" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "长按作品，或画圈圈住它"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "作品を長押しするか、囲んでください"
-          }
-        }
-      }
-    },
-    "Hold or loop to add · tap a piece to remove" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "长按或画圈添加 · 点按已选部分移除"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "長押しか囲んで追加 · タップで選択解除"
-          }
-        }
-      }
-    },
     "Hold or loop to re-select this piece" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2409,6 +2377,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "審査中"
+          }
+        }
+      }
+    },
+    "Is this the piece? Use it, or tap another" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この作品ですか？そのまま使うか、別のものをタップ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是这一件吗？直接使用，或点另一件"
           }
         }
       }
@@ -4834,6 +4818,22 @@
         }
       }
     },
+    "Still not right? Crop it by hand below" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "うまくいかない場合は下の手動切り抜きへ"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还是不对？用下面的框选"
+          }
+        }
+      }
+    },
     "Storage used" : {
       "localizations" : {
         "zh-Hans" : {
@@ -4990,6 +4990,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選択済みの作品をタップ"
+          }
+        }
+      }
+    },
+    "Tap or loop to add · tap a piece to remove" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タップか丸で囲んで追加・選んだ部分をタップで削除"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下或画圈来添加 · 点已选的部分来删掉"
+          }
+        }
+      }
+    },
+    "Tap the piece, or draw a loop around it" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品をタップするか、まわりを丸で囲みます"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下作品，或在它周围画个圈"
+          }
+        }
+      }
+    },
+    "Tap the piece, or loop around it" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作品をタップするか、丸で囲みます"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点一下作品，或在它周围画圈"
           }
         }
       }
@@ -5790,6 +5838,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "用我当前的位置"
+          }
+        }
+      }
+    },
+    "Use the whole photo" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "写真全体を使う"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用整张照片"
           }
         }
       }

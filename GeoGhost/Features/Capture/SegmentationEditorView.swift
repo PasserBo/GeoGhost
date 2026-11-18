@@ -47,6 +47,9 @@ struct SegmentationEditorView: View {
                                 .frame(width: fitted.width, height: fitted.height)
                                 .position(x: fitted.midX, y: fitted.midY)
                         }
+                        if let sv = model.suggestionVisual, model.suggestion != nil, model.hold == nil, !model.hasSelection {
+                            SuggestedPieceView(visual: sv, fitted: fitted).allowsHitTesting(false)
+                        }
                         if let tv = model.tentativeVisual, model.hold != nil {
                             LiftedPieceView(visual: tv, fitted: fitted).allowsHitTesting(false)
                         }
@@ -85,7 +88,7 @@ struct SegmentationEditorView: View {
                             .padding(12)
                             .allowsHitTesting(false)
                     }
-                    if showHint && !model.hasSelection && model.hold == nil && !model.isPicking {
+                    if showHint && !model.canFinish && model.hold == nil && !model.isPicking {
                         hintBubble.allowsHitTesting(false)
                     }
                     if let hold = model.hold {
@@ -219,7 +222,7 @@ struct SegmentationEditorView: View {
     private var hintBubble: some View {
         VStack(spacing: 6) {
             Image(systemName: "hand.tap.fill").font(.title2)
-            Text("Hold on the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
+            Text("Tap the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
             Text("Pinch to zoom · two fingers to move").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
         .foregroundStyle(.white)
@@ -255,8 +258,10 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.isEditingExisting ? "Hold or loop to re-select this piece" : model.hasSelection ? "Hold or loop to add · tap a piece to remove" : "Hold on the piece, or loop around it").font(.subheadline.weight(.semibold))
-                if model.lastPickFailed {
+                Text(headline).font(.subheadline.weight(.semibold))
+                if model.consecutiveFailures >= 2 && !model.hasSelection {
+                    Text("Still not right? Crop it by hand below").font(.caption).foregroundStyle(.yellow)
+                } else if model.lastPickFailed {
                     Text("Couldn't isolate that — try drawing a loop around it").font(.caption).foregroundStyle(.yellow)
                 } else if model.isEditingExisting && model.pieces.first?.isStored == true {
                     Text("Showing the current cutout · a new selection replaces it").font(.caption).foregroundStyle(.white.opacity(0.7))
@@ -290,8 +295,20 @@ struct SegmentationEditorView: View {
         .padding(.top, 4)
     }
 
+    private var headline: LocalizedStringKey {
+        if model.isEditingExisting { return "Hold or loop to re-select this piece" }
+        if model.hasSelection { return "Tap or loop to add · tap a piece to remove" }
+        if model.suggestion != nil { return "Is this the piece? Use it, or tap another" }
+        return "Tap the piece, or loop around it"
+    }
+
     private var footer: some View {
         VStack(spacing: 10) {
+            if model.consecutiveFailures >= 2 && !model.hasSelection {
+                Button { model.switchToManualCrop() } label: { Label("Crop by hand instead", systemImage: "crop") }
+                    .font(.subheadline.weight(.semibold))
+                    .buttonStyle(.bordered).tint(.white)
+            }
             if model.selectedArea > 0 && model.selectedArea < 0.005 {
                 Label("Quite small — zoom in for a sharper cutout", systemImage: "plus.magnifyingglass")
                     .font(.caption).foregroundStyle(.yellow)
@@ -322,8 +339,8 @@ struct SegmentationEditorView: View {
                         }
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview || model.hold != nil)
-                    .opacity(model.hasSelection ? 1 : 0.5)
+                    .disabled(isFinishing || !model.canFinish || model.isRenderingPreview || model.hold != nil)
+                    .opacity(model.canFinish ? 1 : 0.5)
                 }
             }
         }
@@ -526,6 +543,28 @@ private struct LiftedPieceView: View {
             .position(x: frame.midX, y: frame.midY)
         }
         .onAppear { withAnimation(.spring(duration: 0.3)) { appeared = true } }
+        .transition(.opacity)
+    }
+}
+
+/// The suggested piece: its outline breathing on the dimmed-free photo, so it reads as "maybe", not "chosen".
+private struct SuggestedPieceView: View {
+    let visual: CaptureFlowModel.TentativeVisual
+    let fitted: CGRect
+
+    var body: some View {
+        let r = visual.rect
+        let frame = CGRect(x: fitted.minX + r.minX * fitted.width, y: fitted.minY + r.minY * fitted.height,
+                           width: r.width * fitted.width, height: r.height * fitted.height)
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            Image(decorative: visual.outline, scale: 1)
+                .resizable()
+                .opacity(0.45 + 0.4 * (0.5 + 0.5 * sin(t * 3)))
+                .shadow(color: .black.opacity(0.5), radius: 2)
+                .frame(width: frame.width, height: frame.height)
+                .position(x: frame.midX, y: frame.midY)
+        }
         .transition(.opacity)
     }
 }
