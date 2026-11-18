@@ -3,7 +3,7 @@ import SwiftUI
 /// Where the update buttons go (spec: online-availability).
 enum AppStoreLink {
     /// App Store Connect › App Information › Apple ID.
-    static let appID = "0000000000"
+    static let appID = "6816339825"
     static let url = URL(string: "https://apps.apple.com/app/id\(appID)")!
 }
 
