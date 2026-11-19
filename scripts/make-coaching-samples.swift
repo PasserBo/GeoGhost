@@ -654,14 +654,16 @@ let scenes: [Scene] = [
             Placement(design: orangeGhost, center: CGPoint(x: 470, y: 1000), width: 560, rotation: -5, keystone: 0.02, skew: 0, wear: 0.4, seed: 25),
           ],
           target: 4, exposure: 0.84, softness: 1),
-    // ③ Two stickers touching on a zinc pole: the ghost overlaps the round badge.
-    Scene(name: "3-two-touching", photoID: "8070", crop: CGRect(x: 626, y: 2855, width: 2392, height: 1177),
-          patches: [],
+    // ③ Two stickers next to each other on a dark pole (Shibuya at night): the badge above, the ghost below.
+    //    The single sticker that was on this pole is cloned out with plain pole from above it.
+    Scene(name: "3-two-touching", photoID: "FC60", crop: CGRect(x: 520, y: 0, width: 1990, height: 2650),
+          patches: [Patch(rect: CGRect(x: 320, y: 1080, width: 840, height: 810), dx: 0, dy: -820, feather: 50),
+                    Patch(rect: CGRect(x: 1170, y: 30, width: 260, height: 310), dx: 0, dy: 330, feather: 30)],
           stickers: [
-            Placement(design: orangeBadge, center: CGPoint(x: 800, y: 510), width: 620, rotation: -8, keystone: 0.02, skew: 0.02, wear: 0.6, seed: 31),
-            Placement(design: creamGhost, center: CGPoint(x: 1335, y: 500), width: 600, rotation: 7, keystone: 0.02, skew: 0.02, wear: 0.4, seed: 32),
+            Placement(design: orangeBadge, center: CGPoint(x: 770, y: 760), width: 560, rotation: -6, keystone: 0.02, skew: 0.01, wear: 0.6, seed: 31),
+            Placement(design: creamGhost, center: CGPoint(x: 790, y: 1240), width: 560, rotation: 5, keystone: 0.02, skew: 0.01, wear: 0.4, seed: 32),
           ],
-          target: 1, exposure: 0.8, softness: 0),
+          target: 1, exposure: 0.72, softness: 0),
 ]
 
 for d in designs { writePNG(render(d, scale: 1), stickerDir.appendingPathComponent("\(d.name).png")) }
