@@ -137,7 +137,7 @@ Location is read only while the camera screen is open and is optional. Subject d
 
 ### 9.1 App 隐私
 
-- 隐私政策网址不变；内容已更新（docs/privacy.md「Online features」一节）。**要先合并到 main，页面才会更新**。
+- 隐私政策网址不变；内容已更新（docs/privacy.md「Online features」一节），2026-11-19 已在 main 上线。
 - 数据收集改为「**是**」。全部**不用于跟踪**。线上数据都挂在匿名游客 ID 上，所以选「**与用户身份关联**」；诊断数据不含任何标识，选「不关联」。
 - 用途：会用于统计阶段 1 成功指标（发布过至少 1 张的用户比例、哪些城市有内容，06 §8）的三项同时勾「**分析**」；其余只勾「App 功能」。崩溃 / 性能数据属于 Apple 定义的「App 功能」（减少崩溃、提升性能），不勾分析。
 
