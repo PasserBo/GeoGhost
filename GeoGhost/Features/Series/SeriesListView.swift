@@ -6,12 +6,15 @@ struct SeriesListView: View {
     @Query(sort: \ArtSeries.createdAt, order: .reverse) private var series: [ArtSeries]
     @Environment(\.modelContext) private var context
 
+    @Environment(\.openCapture) private var openCapture
+
     var body: some View {
         NavigationStack {
             Group {
                 if series.isEmpty {
                     EmptyStateView(systemImage: "rectangle.stack", title: "No series yet",
-                                   message: "When you collect the same sticker in two places, GeoGhost links them here automatically.")
+                                   message: "When you collect the same sticker in two places, GeoGhost links them here automatically.",
+                                   action: (label: "Collect a piece", run: { openCapture() }))
                 } else {
                     List {
                         ForEach(series.sorted { $0.encounterCount > $1.encounterCount }) { s in

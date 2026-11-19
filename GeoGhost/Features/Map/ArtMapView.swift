@@ -2,20 +2,47 @@ import MapKit
 import SwiftData
 import SwiftUI
 
-/// Every collected piece on a map, clustered by screen-space grid.
+/// The map page: one's own pieces (clustered on the phone) or, when online features exist, everyone's
+/// public pieces (clustered by the server) — spec: explore-map.
 struct ArtMapView: View {
+    enum Mode: String { case mine, world }
+
     @Query private var artworks: [Artwork]
-    @State private var position: MapCameraPosition = .automatic
+    @Services private var services
+    /// Opens on the world map after every launch; a switch lasts until the app is relaunched (spec: first-run).
+    @State private var modeRaw: String
+    @State private var explore: ExploreModel?
+    @State private var selectedPost: ExplorePost?
+    @State private var position: MapCameraPosition
     @State private var visibleRegion: MKCoordinateRegion?
+    @State private var hasFramed = false
     @State private var selected: Artwork?
     @State private var selectedCluster: Cluster?
     @State private var showUserLocation = false
     @Environment(\.openCapture) private var openCapture
 
+    /// `position` is where the map opens; UI snapshots use it to open the world map on a known area.
+    init(mode: Mode = .world, position: MapCameraPosition = .automatic) {
+        _modeRaw = State(initialValue: mode.rawValue)
+        _position = State(initialValue: position)
+    }
+
     var body: some View {
         NavigationStack {
             Map(position: $position, interactionModes: .all) {
                 if showUserLocation { UserAnnotation() }
+                if isWorldLive, let explore, let config = services.online?.config {
+                    ForEach(explore.posts) { post in
+                        Annotation("", coordinate: post.coordinate) {
+                            if post.cellCount > 1 {
+                                ExploreClusterPin(post: post, config: config).onTapGesture { zoom(into: post.coordinate) }
+                            } else {
+                                ExplorePostPin(post: post, config: config).onTapGesture { selectedPost = post }
+                            }
+                        }
+                        .annotationTitles(.hidden)
+                    }
+                } else {
                 ForEach(clusters) { cluster in
                     Annotation("", coordinate: cluster.center) {
                         if cluster.artworks.count == 1, let a = cluster.artworks.first {
@@ -26,12 +53,36 @@ struct ArtMapView: View {
                     }
                     .annotationTitles(.hidden)
                 }
+                }
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
             .mapControls { MapCompass(); MapUserLocationButton() }
-            .onMapCameraChange(frequency: .onEnd) { ctx in visibleRegion = ctx.region }
+            .onMapCameraChange(frequency: .onEnd) { ctx in
+                visibleRegion = ctx.region
+                // Automatic framing is for opening the map only. Left on, it follows the pins: grouping
+                // them for the new zoom moves them, the map frames them again, and that regroups them
+                // once more — with pieces far apart it never settles.
+                if !hasFramed {
+                    hasFramed = true
+                    position = .region(ctx.region)
+                }
+                if isWorldLive { explore?.regionChanged(ctx.region) }
+            }
+            .overlay(alignment: .bottom) {
+                if isWorldLive {
+                    VStack(spacing: 8) {
+                        if let notice = services.onlineState?.appConfig.notice() {
+                            OnlineNoticeView(text: notice).padding(.horizontal, 16)
+                        }
+                        if let explore { WorldStatusBanner(model: explore) }
+                    }
+                }
+            }
             .overlay {
-                if artworks.isEmpty {
+                if isWorld {
+                    // Too old for online features: say so instead of loading anything (spec: online-availability).
+                    if worldNeedsUpdate { UpdateRequiredView().frame(maxWidth: .infinity, maxHeight: .infinity).background(.ultraThinMaterial) }
+                } else if artworks.isEmpty {
                     EmptyStateView(systemImage: "map", title: "Nothing on the map yet", message: "Pieces with a location appear here as you collect them.",
                                    action: (label: "Collect a piece", run: { openCapture() }))
                         .background(.ultraThinMaterial)
@@ -50,10 +101,78 @@ struct ArtMapView: View {
                 ClusterSheet(cluster: c) { a in selectedCluster = nil; selected = a }
                     .presentationDetents([.medium, .large])
             }
+            .sheet(item: $selectedPost) { post in
+                if let config = services.online?.config {
+                    RemotePostSheet(post: post, config: config, state: services.onlineState)
+                        .presentationDetents([.medium, .large])
+                }
+            }
             .navigationTitle("Map")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                if services.online != nil {
+                    ToolbarItem(placement: .principal) {
+                        Picker("Map", selection: $modeRaw) {
+                            Text("Mine").tag(Mode.mine.rawValue)
+                            Text("World").tag(Mode.world.rawValue)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 200)
+                    }
+                }
+            }
+            .onChange(of: modeRaw) { startWorldIfNeeded() }
+            .onChange(of: worldNeedsUpdate) { startWorldIfNeeded() }
+            .onReceive(NotificationCenter.default.publisher(for: .onlineBlocksChanged)) { note in
+                if let author = note.object as? UUID { explore?.authorBlocked(author) } else { explore?.invalidate() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .onlinePostReported)) { note in
+                if let post = note.object as? UUID { explore?.postReported(post) }
+            }
+            .task { startWorldIfNeeded() }
             .toolbarBackground(.visible, for: .navigationBar)
-            .onAppear { showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse }
+            .onAppear {
+                showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse
+                frameOwnPieces()
+            }
+        }
+    }
+
+    private var isWorld: Bool { modeRaw == Mode.world.rawValue && services.online != nil }
+    private var worldNeedsUpdate: Bool { services.onlineState?.appConfig.updateRequired ?? false }
+    /// The world map loads only when this version may use online features.
+    private var isWorldLive: Bool { isWorld && !worldNeedsUpdate }
+
+    private func startWorldIfNeeded() {
+        guard isWorldLive, let online = services.online else { return }
+        if explore == nil { explore = ExploreModel(client: ExploreClient(services: online)) }
+        if let visibleRegion { explore?.regionChanged(visibleRegion) }
+    }
+
+    /// Opens on all of one's own pieces. Framed from the pieces themselves, not from the pins: before
+    /// the first camera event every piece is in one pin, and framing that single point would zoom
+    /// in on the middle of nowhere between them.
+    private func frameOwnPieces() {
+        guard !hasFramed, !isWorld else { return }
+        let coordinates = artworks.compactMap(\.coordinate)
+        guard let first = coordinates.first else { return }
+        var minLat = first.latitude, maxLat = first.latitude, minLon = first.longitude, maxLon = first.longitude
+        for c in coordinates {
+            minLat = min(minLat, c.latitude); maxLat = max(maxLat, c.latitude)
+            minLon = min(minLon, c.longitude); maxLon = max(maxLon, c.longitude)
+        }
+        let center = CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2)
+        let span = MKCoordinateSpan(latitudeDelta: min(170, max(0.01, (maxLat - minLat) * 1.6)),
+                                    longitudeDelta: min(350, max(0.01, (maxLon - minLon) * 1.6)))
+        position = .region(MKCoordinateRegion(center: center, span: span))
+    }
+
+    /// Tapping a cluster zooms into its cell.
+    private func zoom(into center: CLLocationCoordinate2D) {
+        let span = visibleRegion?.span ?? MKCoordinateSpan(latitudeDelta: 1, longitudeDelta: 1)
+        withAnimation {
+            position = .region(MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: span.latitudeDelta / 4,
+                                                                                         longitudeDelta: span.longitudeDelta / 4)))
         }
     }
 
@@ -121,5 +240,29 @@ struct ClusterSheet: View {
             .navigationTitle("\(cluster.artworks.count) pieces here")
             .navigationBarTitleDisplayMode(.inline)
         }
+    }
+}
+
+/// Loading, empty and error states of the world map, at the bottom so the map stays usable.
+struct WorldStatusBanner: View {
+    let model: ExploreModel
+
+    var body: some View {
+        Group {
+            if let error = model.error {
+                HStack(spacing: 10) {
+                    Text(OnlineMessage.text(for: error)).font(.footnote)
+                    Button("Try again") { model.reload() }.font(.footnote.weight(.semibold))
+                }
+            } else if model.isLoading {
+                ProgressView().controlSize(.small)
+            } else if model.hasLoaded, model.posts.isEmpty {
+                Text("No public pieces here yet.").font(.footnote)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(.ultraThinMaterial, in: Capsule())
+        .padding(.bottom, 100)
+        .opacity(model.error != nil || model.isLoading || (model.hasLoaded && model.posts.isEmpty) ? 1 : 0)
     }
 }

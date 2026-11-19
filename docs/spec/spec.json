@@ -1,0 +1,10 @@
+{
+  "language": "zh-Hans",
+  "baselineBranch": "main",
+  "mechanismWords": [
+    "SwiftData", "SwiftUI", "Vision", "MapKit", "StoreKit", "CloudKit", "Keychain",
+    "Supabase", "Postgres", "PostgREST", "RLS", "RPC", "JWT",
+    "Cloudflare", "R2", "Worker", "App Attest", "DeviceCheck",
+    "HEIC", "EXIF", "UUID"
+  ]
+}

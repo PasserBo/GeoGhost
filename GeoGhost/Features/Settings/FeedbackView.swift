@@ -4,7 +4,7 @@ import SwiftUI
 /// Settings → Send feedback: a message, an optional screenshot and an optional email for a reply.
 /// Sent as a report (ReportQueue); if offline it waits on the device and goes out later.
 struct FeedbackView: View {
-    private enum Outcome { case sent, queued }
+    enum Outcome { case sent, queued }
 
     @Environment(\.dismiss) private var dismiss
     @State private var message = ""
@@ -13,6 +13,11 @@ struct FeedbackView: View {
     @State private var screenshot: UIImage?
     @State private var isSending = false
     @State private var outcome: Outcome?
+
+    /// `outcome` opens on the result of sending, for UI snapshots.
+    init(outcome: Outcome? = nil) {
+        _outcome = State(initialValue: outcome)
+    }
     @FocusState private var messageFocused: Bool
 
     private var trimmedMessage: String { message.trimmingCharacters(in: .whitespacesAndNewlines) }

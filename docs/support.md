@@ -13,8 +13,8 @@ You can also open an issue at [github.com/PasserBo/GeoGhost/issues](https://gith
 
 ## Frequently asked
 
-**The piece I hold on isn't selected.**
-Zoom in so the piece fills more of the screen, then hold again. Detection re-runs on what's visible. While holding, drag right to select more of the surrounding colour or left to select less. As a last resort, use *Crop by hand* from the menu.
+**The piece I tap isn't selected.**
+Draw a loop around it with one finger — that works best for stickers with text or several colours. You can also zoom in so the piece fills more of the screen and tap again; detection re-runs on what's visible. Holding instead of tapping lets you drag right to select more of the surrounding colour or left to select less. If it still won't work, use *Crop by hand*, which can also keep the whole photo.
 
 **No location was saved.**
 GeoGhost needs location permission *while using the app* and a GPS fix at the moment you press the shutter. Photos imported from the library use the location stored in the photo; screenshots and downloaded images have none.
@@ -24,6 +24,21 @@ Open the piece → menu → *Edit details* → *Remove from series*. You can als
 
 **How do I move my collection to a new phone?**
 Your collection is included in your iPhone's iCloud or computer backup, so restoring a new phone from that backup brings GeoGhost along. You can also keep your own copy with *Settings → Export everything*, which saves every photo, cutout and location as a ZIP.
+
+**I published a piece by mistake.**
+Open it and tap *Retract*. It disappears from the world map for everyone at once and becomes private again; the post you used this month is not given back. *Settings → Online → Retract all published pieces* takes everything down.
+
+**My piece says "In review" or "In re-review".**
+New publishers' first posts are checked before others can see them, usually within a day. *In re-review* means several people reported it; it is hidden from others until it has been checked again.
+
+**My piece was not approved, or I can no longer publish.**
+If you think a decision was wrong, send it to us from *Settings → Send feedback* (or open an issue below) with the area and day of the piece. Please read the [Community Rules](community-rules.md) first.
+
+**I saw something on the world map that shouldn't be there.**
+Open it → *···* → *Report*. It disappears for you right away and we look at every report within 24 hours. If it is urgent (for example someone's private information), also tell us through *Settings → Send feedback*.
+
+**How do I delete what I put online?**
+*Settings → Online → Delete my online data* deletes your published pieces, blocks, nickname and guest identity from our servers. Your collection stays on your phone.
 
 ## Privacy
 

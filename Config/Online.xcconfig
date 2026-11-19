@@ -1,0 +1,9 @@
+// Online backend (docs/spec/changes/setup-online-backend/design.md §2).
+// Public values only: the anon key is meant to ship inside the app, and what it may do is decided
+// by the server's rules. Never put the service role key here — it lives only in the Worker's secrets.
+// Leave a value empty to build without online features.
+// xcconfig reads "//" as a comment, so write URLs as https:/$()/host.
+GG_SUPABASE_URL = https:/$()/kqanscutffrltxvsahbg.supabase.co
+GG_SUPABASE_ANON_KEY = sb_publishable_vqPaWBSHJSWwBlyJZwjmBg_ws9h6UBc
+GG_ONLINE_API_URL = https:/$()/geoghost-api.passerbo.workers.dev
+GG_IMAGE_BASE_URL = https:/$()/geoghost-api.passerbo.workers.dev/v1/images

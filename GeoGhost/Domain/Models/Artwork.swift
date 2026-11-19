@@ -47,6 +47,11 @@ final class Artwork {
     var note: String = ""
     var isFavorite: Bool = false
     var visibilityRaw: String = Visibility.privateOnly.rawValue
+    /// The public copy on the world map, if any. It is a snapshot taken when publishing:
+    /// later edits here do not change it.
+    var remotePostID: UUID?
+    var publishStateRaw: String = PublishState.unpublished.rawValue
+    var publishedAt: Date?
 
     var isSeriesManuallyAssigned: Bool = false
     var series: ArtSeries?
@@ -81,6 +86,16 @@ extension Artwork {
         set { visibilityRaw = newValue.rawValue }
     }
 
+    /// Setting it keeps `visibility` in step: anything with a copy on the server is shared.
+    var publishState: PublishState {
+        get { PublishState(rawValue: publishStateRaw) ?? .unpublished }
+        set {
+            publishStateRaw = newValue.rawValue
+            visibility = newValue.hasRemoteCopy ? .publicShared : .privateOnly
+            if newValue == .unpublished { remotePostID = nil; publishedAt = nil }
+        }
+    }
+
     var coordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }
         let c = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -95,7 +110,8 @@ extension Artwork {
     /// Best available timestamp for display and sorting.
     var displayDate: Date { capturedAt ?? createdAt }
 
-    var tagList: [Tag] { tags ?? [] }
+    /// By name: the store keeps tags in no particular order, and the UI should not reshuffle them.
+    var tagList: [Tag] { (tags ?? []).sorted { $0.name < $1.name } }
 
     /// The capture metadata this artwork was saved with (for re-editing its photo).
     var captureMetadata: CaptureMetadata {

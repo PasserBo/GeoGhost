@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftData
 import SwiftUI
 
@@ -17,11 +18,37 @@ struct CollectionView: View {
     }
 
     @Query(sort: \Artwork.createdAt, order: .reverse) private var artworks: [Artwork]
-    @State private var searchText = ""
+    @State private var searchText: String
     @State private var sort: Sort = .newest
     @State private var kindFilter: ArtworkKind?
-    @State private var favoritesOnly = false
+    @State private var favoritesOnly: Bool
+
+    /// The arguments are where the screen starts; UI snapshots use them to show a search or a filter.
+    init(searchText: String = "", kindFilter: ArtworkKind? = nil, favoritesOnly: Bool = false) {
+        _searchText = State(initialValue: searchText)
+        _kindFilter = State(initialValue: kindFilter)
+        _favoritesOnly = State(initialValue: favoritesOnly)
+    }
     @Environment(\.openCapture) private var openCapture
+
+    @State private var libraryItem: PhotosPickerItem?
+    @State private var libraryFailed = false
+
+    /// Picking from the library needs no permission, so it works for someone who isn't out on the street (spec: first-run).
+    private var libraryButton: some View {
+        PhotosPicker(selection: $libraryItem, matching: .images, photoLibrary: .shared()) {
+            Label("Choose from your photos", systemImage: "photo.on.rectangle").fontWeight(.semibold)
+        }
+        .buttonStyle(.bordered).tint(Theme.accent)
+        .onChange(of: libraryItem) { _, item in
+            guard let item else { return }
+            Task {
+                defer { libraryItem = nil }
+                if let data = try? await item.loadTransferable(type: Data.self) { openCapture(photo: data) } else { libraryFailed = true }
+            }
+        }
+        .alert("That photo could not be loaded.", isPresented: $libraryFailed) { Button("OK", role: .cancel) {} }
+    }
 
     private let columns = [GridItem(.adaptive(minimum: 104, maximum: 160), spacing: 10)]
 
@@ -30,8 +57,16 @@ struct CollectionView: View {
             Group {
                 if artworks.isEmpty {
                     EmptyStateView(systemImage: "seal", title: "Your field guide is empty",
-                                   message: "Tap the camera to collect the first sticker, graffiti or mural you spot on the street.",
-                                   action: (label: "Collect a piece", run: { openCapture() }))
+                                   message: "Photograph a sticker, graffiti or mural you spot on the street — or start with one already in your photos.",
+                                   action: (label: "Take a photo", run: { openCapture() }),
+                                   secondary: AnyView(VStack(spacing: 10) {
+                                       libraryButton
+                                       // Practise the cut-out at home, on a photo known to work (add-cutout-coaching).
+                                       Button("Try a sample photo") {
+                                           if let data = PracticeSamples.photo(0) { openCapture(photo: data, practice: true) }
+                                       }
+                                       .tint(Theme.accent)
+                                   }))
                 } else {
                     grid
                 }

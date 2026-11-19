@@ -27,8 +27,9 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         if authorization == .notDetermined { manager.requestWhenInUseAuthorization() }
     }
 
+    /// Starts updates only when already allowed; asking is left to `requestIfNeeded()`, which capture calls
+    /// at the first shutter press (spec: first-run).
     func start() {
-        requestIfNeeded()
         guard isAuthorized else { return }
         manager.startUpdatingLocation()
         if CLLocationManager.headingAvailable() { manager.startUpdatingHeading() }

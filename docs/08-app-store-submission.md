@@ -130,3 +130,120 @@ Location is read only while the camera screen is open and is optional. Subject d
 - 审核通常 1–2 天。被拒时 Resolution Center 会写明条款号，把原文发给我一起改。
 - 上线后看：App Analytics（留存、会话）、Xcode Organizer（崩溃、卡顿）、评分评论。数据来源说明见 [06](06-product-roadmap.md) §7.5。
 - 下一个版本：改代码 → 提交（构建号自动 +1）→ Archive → Upload → 新建版本 → 选新构建。
+
+## 9. 1.1.0（线上功能）提交前要改的项
+
+> 2026-11-12 起草（prepare-ugc-release T2、T4）。提交前对照 App Store Connect 当时的选项再确认一遍。
+
+### 9.1 App 隐私
+
+- 隐私政策网址不变；内容已更新（docs/privacy.md「Online features」一节）。**要先合并到 main，页面才会更新**。
+- 数据收集改为「**是**」。以下全部：**用途 = App 功能**，**不用于跟踪**。线上数据都挂在游客 ID 上，所以选「**与用户身份关联**」；诊断数据不含任何标识，选「不关联」。
+
+| 类别 › 类型 | 内容 | 关联身份 |
+|---|---|---|
+| 用户内容 › 照片或视频 | 用户主动发布的抠图 | 是 |
+| 用户内容 › 其他用户内容 | 昵称、举报原因与说明 | 是 |
+| 位置 › 粗略位置 | 发布时约 100 m 的模糊位置 | 是 |
+| 标识符 › 用户 ID | 匿名游客 ID | 是 |
+| 诊断 › 崩溃数据、性能数据、其他诊断数据 | 用户同意后才发送的崩溃 / 错误报告（1.0.1 起） | 否 |
+| 用户内容 › 客户支持 | 设置里发送的反馈（可附截图与邮箱） | 否 |
+
+- 不收集：精确位置、原照片、联系方式（邮箱只在用户自己填写反馈时发送，归在客户支持）、使用数据、购买。
+
+### 9.2 年龄分级问卷
+
+- 用户生成内容：**是**（其余项同 1.0）。按问卷给出的结果填写，预计会高于 4+。
+- 「应用内控制」不需要；审核依据是：发布前同意社区规则、新用户先审、举报（举报人立即看不到）、3 人举报自动复审、屏蔽、24 小时内处理。
+
+### 9.3 App 审核信息 · 备注（英文，原样粘贴）
+
+```
+GeoGhost is a personal field guide for street stickers, graffiti and murals. No account or sign-in is needed, and there are no in-app purchases.
+
+Collecting (on-device): tap Capture, photograph or import a sticker, hold a finger on it to cut it out, then Save. The piece appears in Collection and on Map.
+
+Online features (new in 1.1, optional):
+- Map tab → "World" shows pieces other people chose to publish (try the Tokyo area). Tap a cluster to zoom in, tap a sticker to open it.
+- Publish: open one of your pieces → "Publish to the world map". The preview shows exactly what becomes public: only the cutout, a location rounded to about 100 m, the day and a nickname. The first time, you choose a nickname and agree to the Community Rules (zero tolerance for objectionable content): https://passerbo.github.io/GeoGhost/community-rules/
+- New publishers' first posts are reviewed by us before others can see them, so a post you publish during review will show "In review".
+- Report: open someone's piece on the World map → ··· → Report. The post disappears for the reporter immediately; a post reported by three people is hidden from everyone until we review it again. Every report is reviewed within 24 hours.
+- Block: ··· → Block hides all of that person's posts at once; unblock in Settings → Online.
+- Settings → Online → "Delete my online data" removes everything the user put online.
+
+Contact for moderation questions: the email in this App Review Information.
+```
+
+### 9.4 其他
+
+- 商店描述是否提到世界地图：另起变更（prepare-ugc-release 不含商店文案）。
+- 「What's New」1.1.0：发布时写 `scripts/release-notes/1.1.0.json`。
+
+## 10. TestFlight 外部测试（Beta App Review）
+
+> 2026-11-19。App Store Connect → TestFlight → 「测试信息」（Test Information）。外部群组的第一个构建要过 Beta App Review（通常 1 天内）。
+
+**Beta 版 App 描述**（英文，原样粘贴）
+
+```
+GeoGhost is a field guide for the stickers, graffiti and murals you find on the street. Photograph a piece, cut it out on your iPhone, and it joins your collection and your map; the same design found again elsewhere is linked into a series.
+
+This beta adds optional online features: publish pieces you choose to a shared world map, browse what others found, report or block, and delete everything you put online at any time. No account is needed.
+```
+
+- **反馈邮箱**：（你的邮箱）
+- **营销网址**：`https://passerbo.github.io/GeoGhost/`
+- **隐私政策网址**：`https://passerbo.github.io/GeoGhost/privacy/`
+
+**Beta 版 App 审核信息**
+
+- 需要登录：**否**
+- 联系人：（你的姓名 / 电话 / 邮箱）
+- 备注：与 §9.3 的 App 审核备注相同（原样粘贴）。
+
+**测试内容（What to Test，每个构建都填；en / ja / zh-Hans）**
+
+```
+en:
+New in this build:
+- Map → World: browse pieces other people published. Tap a cluster to zoom in.
+- Publish one of your pieces from its page. New publishers' first posts are checked before others see them ("In review").
+- Report or block from a published piece's ··· menu.
+- New here? On an empty Collection, try "Try a sample photo" to practise cutting out.
+Please tell us where cutting out a sticker was hard, and anything that felt confusing. Settings → Send feedback, or a TestFlight screenshot.
+```
+
+```
+ja:
+このビルドの新機能:
+- マップ → ワールド：ほかの人が公開した作品を見られます。まとまりをタップすると拡大します。
+- 作品のページから公開できます。初めての方の最初の数件は、審査のあと公開されます（「審査中」）。
+- 公開された作品の「···」メニューから報告・ブロックできます。
+- 図鑑が空のときは「サンプル写真で試す」で切り抜きを練習できます。
+切り抜きが難しかったところや、わかりにくかったところを教えてください（設定 → フィードバックを送信、または TestFlight のスクリーンショット）。
+```
+
+```
+zh-Hans:
+本版本新增：
+- 地图 → 世界：浏览其他人公开的作品，点按聚合可以放大。
+- 在作品页公开作品。新用户最初的几件会先审核，通过后其他人才能看到（「审核中」）。
+- 在公开作品的「···」菜单里可以举报或屏蔽。
+- 图鉴为空时，可以点「用示例照片试试」练习抠图。
+请告诉我们哪里抠图困难、哪里让你困惑（设置 → 发送反馈，或 TestFlight 截图）。
+```
+
+## 11. 1.1.0 提交前的检查清单
+
+按顺序做，前面的会影响后面：
+
+1. ☐ **合并到 main 并推送**：社区规则页、支持页要上线，审核备注里的规则链接才打得开（现在是 404）。
+2. ☐ **世界地图有内容**：审核备注让审核员看东京附近，那里必须有已公开的贴纸（explore-map T7 种子内容）。
+3. ☐ **审核期间盯着审核后台**：审核员发布的贴纸会进「待审核」，尽快处理；他们也可能举报。
+4. ☐ **App 隐私**按 §9.1 更新（发布脚本不会改，提交前必须手动改完）。
+5. ☐ **年龄分级**按 §9.2 重答（用户生成内容 = 是）。
+6. ☐ **审核备注**换成 §9.3。
+7. ☐ **商店文案**：按 docs/07「1.1.0」一节替换描述与宣传文本；截图可沿用，建议之后补一张世界地图。
+8. ☐ **「新功能」**：`scripts/release-notes/1.1.0.json` 已写好，`scripts/release.sh` 会填入。
+9. ☐ **App Store Connect 里没有挂着的旧版本**：商店上是 1.0；如果 1.0.1 还在「准备提交 / 等待审核」，要先决定撤回或并入。
+10. ☐ **最低支持版本保持 1.1.0**（审核后台 → 设置）。

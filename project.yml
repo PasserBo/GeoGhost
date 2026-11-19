@@ -7,13 +7,21 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
   developmentLanguage: en
+packages:
+  # Test-only: renders screens to images and compares them with ui/snapshots/ (see ui/README.md).
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    exactVersion: 1.19.7
+  Yams:
+    url: https://github.com/jpsim/Yams
+    exactVersion: 5.4.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     DEVELOPMENT_TEAM: J95TRWHWYM
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "1.0.1"
+    MARKETING_VERSION: "1.1.0"
     CURRENT_PROJECT_VERSION: "1"   # overridden by the build-number script below
     ENABLE_USER_SCRIPT_SANDBOXING: NO   # the build-number script reads .git and edits the built Info.plist
     ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
@@ -42,8 +50,12 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"   # iPhone only; iPad runs it in compatibility mode (no iPad screenshots/layout for v1)
         SWIFT_OBJC_BRIDGING_HEADER: ""
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Config/Online-Info.plist   # merged into the generated plist: online backend keys
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.photography
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+    configFiles:
+      Debug: Config/Online.xcconfig
+      Release: Config/Online.xcconfig
     entitlements:
       path: GeoGhost/GeoGhost.entitlements
       properties: {}
@@ -68,6 +80,8 @@ targets:
       - path: GeoGhostTests
     dependencies:
       - target: GeoGhost
+      - package: SnapshotTesting
+      - package: Yams
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.passerbo.geoghost.tests

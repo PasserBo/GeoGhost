@@ -6,10 +6,11 @@ struct RootView: View {
 
     @State private var tab: Tab = .collection
     @State private var lastContentTab: Tab = .collection
-    @State private var showCapture = false
+    /// The open capture flow; `photo` is a library photo picked from the empty collection, opened straight in the editor.
+    @State private var capture: CaptureRequest?
     @State private var storageWarningDismissed = false
     @State private var askDiagnosticsConsent = false
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var context
@@ -27,12 +28,21 @@ struct RootView: View {
             // The middle tab is a button in disguise: open the capture flow and stay on the previous tab.
             if new == .capture {
                 tab = lastContentTab
-                showCapture = true
+                capture = CaptureRequest(photo: nil, practice: false)
             } else {
                 lastContentTab = new
             }
         }
-        .environment(\.openCapture, OpenCaptureAction { showCapture = true })
+        .environment(\.openCapture, OpenCaptureAction { photo, practice in capture = CaptureRequest(photo: photo, practice: practice) })
+        .modifier(IdentityExpiredAlert(state: services.onlineState))
+        .task(id: scenePhase) {
+            // Review results and hidden posts show up without opening each piece.
+            guard scenePhase == .active, let online = services.onlineState else { return }
+            await online.appConfig.refresh()
+            let shared = artworks.filter { $0.publishState.hasRemoteCopy }
+            guard !shared.isEmpty else { return }
+            try? await ArtworkPublisher(backend: online.services.publishing, context: context).refreshStates(shared)
+        }
         .alert("Your collection couldn't be opened",
                isPresented: Binding(get: { services.isRunningWithoutStorage && !storageWarningDismissed }, set: { if !$0 { storageWarningDismissed = true } })) {
             Button("Contact support") { openURL(URL(string: "https://passerbo.github.io/GeoGhost/support/")!) }
@@ -46,13 +56,12 @@ struct RootView: View {
         } message: {
             Text("GeoGhost is just getting started. When it crashes or something goes wrong, a short technical report helps us fix it and improve your experience. Reports contain the app version, device model, iOS version and where in the app the problem happened — never your photos, locations or notes. You can change this anytime in Settings.")
         }
-        .fullScreenCover(isPresented: $showCapture) {
-            CaptureView()
+        .fullScreenCover(item: $capture, onDismiss: askForDiagnosticsIfDue) { request in
+            CaptureView(imported: request.photo, practice: request.practice)
         }
         .task {
             await services.diagnostics.start()
-            // The storage alert matters more; ask another time.
-            if services.diagnostics.shouldAskForConsent && !services.isRunningWithoutStorage { askDiagnosticsConsent = true }
+            askForDiagnosticsIfDue()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await ReportQueue.shared.flush() } }
@@ -70,14 +79,29 @@ struct RootView: View {
             }
         }
     }
+
+    /// Asked once there is a piece in the collection (or a crash report waiting), never before (spec: first-run).
+    private func askForDiagnosticsIfDue() {
+        // The storage alert matters more; ask another time.
+        guard !services.isRunningWithoutStorage else { return }
+        if services.diagnostics.shouldAskForConsent(hasPieces: !artworks.isEmpty) { askDiagnosticsConsent = true }
+    }
+}
+
+struct CaptureRequest: Identifiable {
+    let id = UUID()
+    let photo: Data?
+    /// The photo is a bundled practice sample: the cutout is not saved.
+    let practice: Bool
 }
 
 /// Lets screens deep in the tab hierarchy (e.g. empty states) start the capture flow.
 struct OpenCaptureAction {
-    let run: @MainActor () -> Void
-    @MainActor func callAsFunction() { run() }
+    /// `photo`: a library photo to open in the editor instead of the camera; `practice`: it is a bundled sample.
+    let run: @MainActor (_ photo: Data?, _ practice: Bool) -> Void
+    @MainActor func callAsFunction(photo: Data? = nil, practice: Bool = false) { run(photo, practice) }
 }
 
 extension EnvironmentValues {
-    @Entry var openCapture = OpenCaptureAction(run: {})
+    @Entry var openCapture = OpenCaptureAction(run: { _, _ in })
 }

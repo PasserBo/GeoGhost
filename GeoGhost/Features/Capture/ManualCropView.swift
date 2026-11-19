@@ -64,9 +64,15 @@ struct ManualCropView: View {
                 .frame(width: geo.size.width, height: geo.size.height)
             }
 
-            Button { onDone(rect) } label: { Label("Use this crop", systemImage: "checkmark") }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 16).padding(.vertical, 16)
+            VStack(spacing: 8) {
+                Button { onDone(rect) } label: { Label("Use this crop", systemImage: "checkmark") }
+                    .buttonStyle(PrimaryButtonStyle())
+                // Always a way to keep the photo, even when nothing can be framed well (spec: capture-editor).
+                Button("Use the whole photo") { onDone(CGRect(x: 0, y: 0, width: 1, height: 1)) }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 16).padding(.vertical, 16)
         }
         .background(Color.black)
     }

@@ -2,7 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.modelContext) private var context
     @Query private var artworks: [Artwork]
     @State private var storageBytes: Int64 = 0
@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var showPaywall = false
     @State private var exportError: String?
     @State private var showFeedback = false
+    @State private var wipeError: String?
     /// Minimum geometrically consistent feature matches to auto-link two pieces.
     @AppStorage("seriesMinInliers") private var minInliers: Int = 8
 
@@ -19,6 +20,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 if services.pro.showsProFeatures { proSection }
+                if let online = services.onlineState { OnlineSettingsSection(state: online) }
                 Section("Series matching") {
                     VStack(alignment: .leading) {
                         HStack { Text("Strictness"); Spacer(); Text(minInliers >= 12 ? "Strict" : minInliers <= 6 ? "Loose" : "Balanced").foregroundStyle(Theme.inkSecondary) }
@@ -39,7 +41,9 @@ struct SettingsView: View {
                     Button("Delete all data", role: .destructive) { confirmWipe = true }.disabled(artworks.isEmpty)
                 }
                 Section("Privacy") {
-                    Text("Photos, cutouts and locations stay on this device. Subject detection, matching and classification run entirely on-device.")
+                    Text(services.onlineState == nil
+                         ? "Photos, cutouts and locations stay on this device. Subject detection, matching and classification run entirely on-device."
+                         : "Photos, cutouts and locations stay on this device unless you publish a piece; then only its cutout, rough area and date are shared. Subject detection, matching and classification run entirely on-device.")
                         .font(.footnote).foregroundStyle(Theme.inkSecondary)
                     if let url = URL(string: UIApplication.openSettingsURLString) { Link("Camera & location permissions", destination: url) }
                     Toggle("Share crash & error reports", isOn: Binding(
@@ -68,8 +72,17 @@ struct SettingsView: View {
             .task { storageBytes = await ImageStore.shared.totalSize() }
             .onAppear { SeriesAssigner.matcher.matchInliers = minInliers; SeriesAssigner.matcher.suggestionInliers = max(3, minInliers - 3) }
             .confirmationDialog("Delete all pieces?", isPresented: $confirmWipe, titleVisibility: .visible) {
-                Button("Delete everything", role: .destructive) { wipe() }
-            } message: { Text("This removes every piece, photo and series from GeoGhost on this device. It cannot be undone.") }
+                Button("Delete everything", role: .destructive) { requestWipe() }
+            } message: {
+                if artworks.contains(where: { $0.publishState.hasRemoteCopy }) {
+                    Text("This removes every piece, photo and series from GeoGhost on this device, and takes your published pieces off the world map. It cannot be undone.")
+                } else {
+                    Text("This removes every piece, photo and series from GeoGhost on this device. It cannot be undone.")
+                }
+            }
+            .alert("Couldn't delete everything", isPresented: Binding(get: { wipeError != nil }, set: { if !$0 { wipeError = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(wipeError ?? "") }
             .sheet(item: Binding(get: { exportURL.map { ExportItem(url: $0) } }, set: { _ in exportURL = nil })) { item in
                 ShareSheet(items: [item.url])
             }
@@ -99,6 +112,22 @@ struct SettingsView: View {
                 PurchaseStatusText()
             }
         } header: { Text("Pro") } footer: { Text("Collecting is free and unlimited.") }
+    }
+
+    /// Published pieces are taken off the world map first; if that fails (offline), nothing is deleted.
+    private func requestWipe() {
+        let shared = artworks.filter { $0.publishState.hasRemoteCopy }
+        guard !shared.isEmpty, let online = services.onlineState else { wipe(); return }
+        Task {
+            do {
+                try await ArtworkPublisher(backend: online.services.publishing, context: context).retractAll(shared)
+                wipe()
+            } catch {
+                if let shown = online.handle(error) {
+                    wipeError = String(localized: "Your published pieces couldn't be taken off the world map, so nothing was deleted.") + "\n" + OnlineMessage.text(for: shown)
+                }
+            }
+        }
     }
 
     private func wipe() {

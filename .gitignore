@@ -13,3 +13,14 @@ build/
 
 # App Store screenshots: generated (scripts/compose-screenshots.swift), contain third-party street art — not committed
 AppStoreScreenshots/
+
+# Cloudflare Worker (server/worker)
+server/worker/node_modules/
+server/worker/dist/
+.wrangler/
+server/admin/node_modules/
+server/admin/dist/
+server/admin/public/vendor/
+
+# Coaching sample photos (add-cutout-coaching): third-party street art, metadata stripped — not committed
+CoachingSamples/

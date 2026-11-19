@@ -11,6 +11,7 @@ struct SaveArtworkSheet: View {
 
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Services private var services
     @State private var kind: ArtworkKind = .sticker
     @State private var kindWasSetByUser = false
     @State private var note = ""
@@ -37,7 +38,17 @@ struct SaveArtworkSheet: View {
                     VStack(spacing: 0) {
                         row(icon: "mappin.and.ellipse", tint: .red) {
                             if let place { Text(place.placeName) }
-                            else if model.metadata.coordinate == nil { Text("No location").foregroundStyle(Theme.inkSecondary) }
+                            else if model.metadata.coordinate == nil {
+                                Text("No location").foregroundStyle(Theme.inkSecondary)
+                                if let fix = services.location.usableFix {
+                                    Spacer(minLength: 8)
+                                    Button("Use my current location") {
+                                        model.useCurrentLocation(fix)
+                                        Task { await lookupPlace() }
+                                    }
+                                    .font(.subheadline.weight(.semibold))
+                                }
+                            }
                             else if isLookingUpPlace { HStack(spacing: 6) { ProgressView().controlSize(.small); Text("Looking up place…") }.foregroundStyle(Theme.inkSecondary) }
                             else if let c = model.metadata.coordinate { Text(String(format: "%.5f, %.5f", c.latitude, c.longitude)).monospacedDigit() }
                         }

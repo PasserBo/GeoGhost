@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Explains GeoGhost Pro. Only lists what ships today; the founder note promises future perks without specifics.
 struct PaywallView: View {
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -67,7 +67,7 @@ struct PaywallView: View {
 
 /// Pending / error line under purchase controls.
 struct PurchaseStatusText: View {
-    @Environment(AppServices.self) private var services
+    @Services private var services
 
     var body: some View {
         if services.pro.isPending {
@@ -81,7 +81,7 @@ struct PurchaseStatusText: View {
 
 /// "Restore purchase" that always tells the user what happened (App Review 3.1.1).
 struct RestorePurchaseButton: View {
-    @Environment(AppServices.self) private var services
+    @Services private var services
     @State private var isRestoring = false
     @State private var outcome: ProStore.RestoreResult?
 

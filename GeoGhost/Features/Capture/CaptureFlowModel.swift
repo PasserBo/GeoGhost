@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreLocation
 import Foundation
 import Observation
 import os
@@ -72,7 +73,14 @@ final class CaptureFlowModel {
     private(set) var previewImage: CGImage?
     private(set) var isRenderingPreview = false
     private(set) var isPicking = false
-    private(set) var lastPickFailed = false
+    private(set) var lastPickFailed = false {
+        didSet { if lastPickFailed { consecutiveFailures += 1 } }
+    }
+    /// Picks that failed in a row; after two the editor offers cropping by hand (spec: capture-editor).
+    private(set) var consecutiveFailures = 0
+    /// The most likely piece, shown as a suggestion until the user picks something (spec: capture-editor).
+    private(set) var suggestion: SelectedPiece?
+    private(set) var suggestionVisual: TentativeVisual?
     /// The most recently committed piece, rendered alone so the editor can animate it.
     struct PickHighlight: Identifiable { let id = UUID(); let image: CGImage; let rect: CGRect }
     private(set) var lastPickHighlight: PickHighlight?
@@ -138,8 +146,11 @@ final class CaptureFlowModel {
                 }
                 self.undoStack = []
                 self.selectionWasAdjusted = false
+                self.consecutiveFailures = 0
                 self.stage = .editing
                 self.refreshPreview()
+                // Not when re-cutting a saved piece or picking another one from a photo already used.
+                if self.existingCutout == nil && self.savedRegions.isEmpty { self.computeSuggestion() }
             }
             // Region-growing preprocessing for the whole photo, ready before the first hold.
             let prepared = PointSegmenter.Prepared(image: image)
@@ -150,6 +161,8 @@ final class CaptureFlowModel {
     // MARK: Editing
 
     var hasSelection: Bool { !pieces.isEmpty }
+    /// "Use this cutout" works with a selection, or with the suggestion alone.
+    var canFinish: Bool { hasSelection || suggestion != nil }
     var canUndo: Bool { !undoStack.isEmpty }
     var instanceCount: Int { (scopedAnalysis ?? analysis)?.allInstances.count ?? 0 }
     var selectedArea: Double { pieces.reduce(0) { $0 + $1.area } }
@@ -206,6 +219,15 @@ final class CaptureFlowModel {
             guard !inter.isEmpty, rect.width * rect.height > 0 else { return false }
             return (inter.width * inter.height) / (rect.width * rect.height) > 0.7
         }
+    }
+
+    /// The photo has no place: attach where the phone is now, at the user's request.
+    func useCurrentLocation(_ fix: CLLocation) {
+        metadata.latitude = fix.coordinate.latitude
+        metadata.longitude = fix.coordinate.longitude
+        metadata.horizontalAccuracy = fix.horizontalAccuracy
+        metadata.altitude = fix.verticalAccuracy >= 0 ? fix.altitude : nil
+        metadata.locationSource = .manual
     }
 
     /// After a save that keeps the editor open: ghost what was saved and start a fresh selection.
@@ -273,6 +295,18 @@ final class CaptureFlowModel {
                 self.refreshPreview()
             }
         }
+    }
+
+    /// A circle around a point, about a quarter of the photo's short side across, run as a lasso.
+    private func retryWithLoop(around p: CGPoint) {
+        guard let fullImage else { lastPickFailed = true; return }
+        let w = CGFloat(fullImage.width), h = CGFloat(fullImage.height)
+        let r = 0.12 * min(w, h)
+        let points = (0..<32).map { i -> CGPoint in
+            let a = CGFloat(i) / 32 * 2 * .pi
+            return CGPoint(x: min(1, max(0, p.x + cos(a) * r / w)), y: min(1, max(0, p.y + sin(a) * r / h)))
+        }
+        lassoEnded(points)
     }
 
     // MARK: Hold gesture (press = try, release = commit, swipe down = throw away)
@@ -378,11 +412,50 @@ final class CaptureFlowModel {
         refreshPreview()
     }
 
-    /// A quick tap on a committed piece removes it. Tapping elsewhere does nothing (no accidental selects).
+    /// A tap on a committed piece removes it; on the suggestion, uses it; anywhere else it selects what is
+    /// under the finger, exactly like a hold released at once (spec: capture-editor).
     func tap(at p: CGPoint) {
-        guard let t = pieces.last(where: { $0.contains(p) }) else { return }
-        commit(pieces.filter { $0.id != t.id })
+        if let t = pieces.last(where: { $0.contains(p) }) {
+            commit(pieces.filter { $0.id != t.id })
+            refreshPreview()
+            return
+        }
+        if pieces.isEmpty, let s = suggestion, s.contains(p) {
+            acceptSuggestion()
+            return
+        }
+        beginHold(at: p)
+        endHold()
+    }
+
+    /// The suggestion becomes the selection, as if Vision's choice had simply been accepted.
+    func acceptSuggestion() {
+        guard pieces.isEmpty, let s = suggestion else { return }
+        commit([s])
+        selectionWasAdjusted = false
         refreshPreview()
+    }
+
+    /// One piece that fits (not tiny, not the whole wall), or the one in the middle of the photo.
+    private func computeSuggestion() {
+        suggestion = nil
+        suggestionVisual = nil
+        guard let a = analysis, a.hasInstances, let fullImage else { return }
+        let fits = a.allInstances.map { SelectedPiece(vision: a, instance: $0) }
+            .filter { $0.area >= 0.005 && $0.area < largeInstanceArea }
+        guard let pick = fits.count == 1 ? fits[0] : fits.first(where: { $0.contains(CGPoint(x: 0.5, y: 0.5)) }) else { return }
+        suggestion = pick
+        Task.detached(priority: .userInitiated) {
+            let small = ImageProcessing.downsample(fullImage, maxLongEdge: 1280)
+            let size = CGSize(width: small.width, height: small.height)
+            guard let mask = pick.mask(fullSize: size),
+                  let cutout = MaskCompositor.cutout(image: small, mask: mask, normalizedRect: pick.rect),
+                  let outline = MaskCompositor.outline(mask: mask, imageSize: size, normalizedRect: pick.rect, thickness: 3) else { return }
+            await MainActor.run {
+                guard self.suggestion?.id == pick.id else { return }
+                self.suggestionVisual = TentativeVisual(id: pick.id, cutout: cutout, outline: outline, rect: pick.rect)
+            }
+        }
     }
 
     private func commit(_ proposed: [SelectedPiece]) {
@@ -393,6 +466,10 @@ final class CaptureFlowModel {
         if undoStack.count > 30 { undoStack.removeFirst() }
         pieces = next
         selectionWasAdjusted = true
+        // Any choice of the user's replaces the suggestion; a successful pick ends a run of failures.
+        suggestion = nil
+        suggestionVisual = nil
+        if !next.isEmpty { consecutiveFailures = 0 }
     }
 
     func undo() {
@@ -457,7 +534,14 @@ final class CaptureFlowModel {
                 } else if let pending = self.pendingCommit, pending.generation == gen {
                     // Finger already lifted: commit (or report) now.
                     self.pendingCommit = nil
-                    if let tentative { self.apply(pending.hold, tentative: tentative) } else { self.lastPickFailed = true }
+                    if let tentative {
+                        self.apply(pending.hold, tentative: tentative)
+                    } else if pending.hold.target == nil {
+                        // A quick tap that found nothing: try a loop around the finger before giving up (spec: capture-editor).
+                        self.retryWithLoop(around: pending.hold.origin)
+                    } else {
+                        self.lastPickFailed = true
+                    }
                     self.refreshPreview()
                 }
                 _ = fullImage
@@ -547,6 +631,7 @@ final class CaptureFlowModel {
 
     /// Render the selection into a transparent cutout and open the save sheet.
     func finishAutomatic() async {
+        if pieces.isEmpty { acceptSuggestion() }
         guard let fullImage, let mask = combinedMask(of: pieces), let rect = selectionBounds() else { return }
         let adjusted = selectionWasAdjusted
         let cg = await Task.detached(priority: .userInitiated) {
@@ -577,6 +662,9 @@ final class CaptureFlowModel {
         fullPrepared = nil
         scopedPrepared = nil
         viewport = CGRect(x: 0, y: 0, width: 1, height: 1)
+        suggestion = nil
+        suggestionVisual = nil
+        consecutiveFailures = 0
         pieces = []
         undoStack = []
         savedRegions = []

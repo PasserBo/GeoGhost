@@ -128,3 +128,53 @@ GeoGhost は、街で見つけたステッカー・グラフィティ・壁画�
 ## 首个版本 What's New
 
 不需要（首发版本无此字段）。
+
+## 1.1.0 改动（线上功能）
+
+> 2026-11-19。只列要替换或新增的段落，其余沿用上面的文案。截图可沿用；之后建议补一张世界地图。关键词不变（en 已有 map / explore）。
+
+### English (U.S.)
+
+**Promotional text**（替换）
+Snap a sticker, cut it out and pin it to your map. New: share your finds on a world map and see what others discovered. Free, no account needed.
+
+**Description**：在 MAP 之后新增 WORLD MAP；替换 PRIVATE BY DESIGN。
+
+```
+WORLD MAP (OPTIONAL)
+Switch the map to World to browse pieces other collectors chose to share. Publish one of yours from its page: only the cutout, a location rounded to about 100 m, the day and a nickname are shared, after a preview. Retract any piece, or delete everything you put online, at any time. Report or block anything that shouldn't be there.
+
+PRIVATE BY DESIGN
+Subject detection, cutouts and matching all run on your iPhone. Your photos and exact locations stay on your device; nothing is shared unless you publish a piece yourself. No account, no ads, no tracking.
+```
+
+### 简体中文
+
+**宣传文本**（替换）
+拍下贴纸，一键抠出，钉在你的地图上。新功能：把发现分享到世界地图，看看别人找到了什么。免费，无需注册。
+
+**描述**：在「地图」之后新增「世界地图」；替换「隐私优先」。
+
+```
+世界地图（可选）
+把地图切换到「世界」，浏览其他收藏者分享的作品。在作品页公开自己的发现：先预览，只分享抠图、约 100 米范围的位置、日期和昵称。随时可以撤回某一件，或删除你放到线上的全部内容。不当内容可以举报或屏蔽。
+
+隐私优先
+主体识别、抠图和匹配全部在你的 iPhone 上完成。照片和精确位置只留在设备上；除非你主动公开某件作品，否则什么都不会被分享。无需账号，没有广告，不做追踪。
+```
+
+### 日本語
+
+**プロモーションテキスト**（差し替え）
+ステッカーを撮って切り抜き、マップにピン留め。新機能：見つけた作品をワールドマップで共有し、ほかの人の発見も見られます。無料・アカウント不要。
+
+**説明文**：「マップ」の後に「ワールドマップ」を追加し、「プライバシー重視」を差し替え。
+
+```
+ワールドマップ（任意）
+マップを「ワールド」に切り替えると、ほかのコレクターが共有した作品を見られます。作品のページから公開すると、プレビューのあと、切り抜き・約100mに丸めた位置・日付・ニックネームだけが共有されます。いつでも1件ずつ取り下げたり、オンラインのデータをすべて削除したりできます。不適切なものは報告・ブロックできます。
+
+プライバシー重視
+被写体の検出、切り抜き、照合はすべて iPhone 上で行われます。写真と正確な位置はデバイスに残り、自分で公開しない限り何も共有されません。アカウント不要、広告なし、トラッキングなし。
+```
+

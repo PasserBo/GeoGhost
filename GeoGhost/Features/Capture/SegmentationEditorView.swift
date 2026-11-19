@@ -19,6 +19,9 @@ struct SegmentationEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isFinishing = false
     @State private var showHint = true
+    /// How many editor sessions have shown the moving gesture demo; it stops after a few (spec: capture-editor).
+    @AppStorage("editorGestureDemoCount") private var demoCount = 0
+    @State private var showsDemo = false
 
     // Viewport transform (about the container centre).
     @State private var zoom: CGFloat = 1
@@ -46,6 +49,9 @@ struct SegmentationEditorView: View {
                                 .resizable()
                                 .frame(width: fitted.width, height: fitted.height)
                                 .position(x: fitted.midX, y: fitted.midY)
+                        }
+                        if let sv = model.suggestionVisual, model.suggestion != nil, model.hold == nil, !model.hasSelection {
+                            SuggestedPieceView(visual: sv, fitted: fitted).allowsHitTesting(false)
                         }
                         if let tv = model.tentativeVisual, model.hold != nil {
                             LiftedPieceView(visual: tv, fitted: fitted).allowsHitTesting(false)
@@ -85,7 +91,7 @@ struct SegmentationEditorView: View {
                             .padding(12)
                             .allowsHitTesting(false)
                     }
-                    if showHint && !model.hasSelection && model.hold == nil && !model.isPicking {
+                    if showHint && !model.canFinish && model.hold == nil && !model.isPicking {
                         hintBubble.allowsHitTesting(false)
                     }
                     if let hold = model.hold {
@@ -103,6 +109,13 @@ struct SegmentationEditorView: View {
         .sensoryFeedback(.impact(weight: .medium), trigger: model.pieces.count)
         .sensoryFeedback(.error, trigger: model.lastPickFailed) { _, new in new }
         .sensoryFeedback(.selection, trigger: model.hold?.intent)
+        .onAppear {
+            if demoCount < 3 { showsDemo = true; demoCount += 1 }
+        }
+        .onChange(of: model.consecutiveFailures) { _, n in
+            // After a failed pick, bring the two basic gestures back once.
+            if n == 1 && !model.hasSelection { showsDemo = true; withAnimation { showHint = true } }
+        }
     }
 
     // MARK: Coordinate mapping
@@ -218,8 +231,8 @@ struct SegmentationEditorView: View {
 
     private var hintBubble: some View {
         VStack(spacing: 6) {
-            Image(systemName: "hand.tap.fill").font(.title2)
-            Text("Hold on the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
+            if showsDemo { GestureDemoView().frame(width: 72, height: 72) } else { Image(systemName: "hand.tap.fill").font(.title2) }
+            Text("Tap the piece, or draw a loop around it").font(.subheadline.weight(.semibold))
             Text("Pinch to zoom · two fingers to move").font(.caption).foregroundStyle(.white.opacity(0.7))
         }
         .foregroundStyle(.white)
@@ -255,8 +268,10 @@ struct SegmentationEditorView: View {
                 .accessibilityLabel("Retake")
             Spacer()
             VStack(spacing: 2) {
-                Text(model.isEditingExisting ? "Hold or loop to re-select this piece" : model.hasSelection ? "Hold or loop to add · tap a piece to remove" : "Hold on the piece, or loop around it").font(.subheadline.weight(.semibold))
-                if model.lastPickFailed {
+                Text(headline).font(.subheadline.weight(.semibold))
+                if model.consecutiveFailures >= 2 && !model.hasSelection {
+                    Text("Still not right? Crop it by hand below").font(.caption).foregroundStyle(.yellow)
+                } else if model.lastPickFailed {
                     Text("Couldn't isolate that — try drawing a loop around it").font(.caption).foregroundStyle(.yellow)
                 } else if model.isEditingExisting && model.pieces.first?.isStored == true {
                     Text("Showing the current cutout · a new selection replaces it").font(.caption).foregroundStyle(.white.opacity(0.7))
@@ -290,8 +305,20 @@ struct SegmentationEditorView: View {
         .padding(.top, 4)
     }
 
+    private var headline: LocalizedStringKey {
+        if model.isEditingExisting { return "Hold or loop to re-select this piece" }
+        if model.hasSelection { return "Tap or loop to add · tap a piece to remove" }
+        if model.suggestion != nil { return "Is this the piece? Use it, or tap another" }
+        return "Tap the piece, or loop around it"
+    }
+
     private var footer: some View {
         VStack(spacing: 10) {
+            if model.consecutiveFailures >= 2 && !model.hasSelection {
+                Button { model.switchToManualCrop() } label: { Label("Crop by hand instead", systemImage: "crop") }
+                    .font(.subheadline.weight(.semibold))
+                    .buttonStyle(.bordered).tint(.white)
+            }
             if model.selectedArea > 0 && model.selectedArea < 0.005 {
                 Label("Quite small — zoom in for a sharper cutout", systemImage: "plus.magnifyingglass")
                     .font(.caption).foregroundStyle(.yellow)
@@ -322,8 +349,8 @@ struct SegmentationEditorView: View {
                         }
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    .disabled(isFinishing || !model.hasSelection || model.isRenderingPreview || model.hold != nil)
-                    .opacity(model.hasSelection ? 1 : 0.5)
+                    .disabled(isFinishing || !model.canFinish || model.isRenderingPreview || model.hold != nil)
+                    .opacity(model.canFinish ? 1 : 0.5)
                 }
             }
         }
@@ -360,6 +387,11 @@ private struct ToleranceBar: View {
 struct GestureHelpView: View {
     var body: some View {
         List {
+            Section("The basics") {
+                row("hand.tap.fill", "Tap a piece", "Selects it. Tap it again to remove it.")
+                row("lasso", "Draw a loop around a piece", "Everything inside that doesn't match the background is selected — best for busy stickers with text.")
+                row("crop", "Crop by hand", "When nothing else works: frame the piece with a rectangle, or keep the whole photo.")
+            }
             Section("Selecting") {
                 row("hand.tap.fill", "Hold on a piece", "Shows what will be selected. Release to add it.")
                 row("lasso", "Draw a loop around a piece", "Everything inside that doesn't match the background is selected — best for busy stickers with text.")
@@ -526,6 +558,59 @@ private struct LiftedPieceView: View {
             .position(x: frame.midX, y: frame.midY)
         }
         .onAppear { withAnimation(.spring(duration: 0.3)) { appeared = true } }
+        .transition(.opacity)
+    }
+}
+
+/// A finger that taps, then draws a loop: the two gestures a first-time user needs.
+private struct GestureDemoView: View {
+    var body: some View {
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3.2)
+            let looping = t > 1.2
+            let progress = looping ? min(1, (t - 1.2) / 1.6) : 0
+            let angle = -Double.pi / 2 + progress * 2 * .pi
+            let r: CGFloat = 24
+            let pos = looping ? CGPoint(x: 36 + r * cos(angle), y: 36 + r * sin(angle)) : CGPoint(x: 36, y: 36)
+            ZStack {
+                if looping {
+                    Circle().trim(from: 0, to: progress)
+                        .stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [5, 4]))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: r * 2, height: r * 2)
+                        .position(x: 36, y: 36)
+                } else {
+                    Circle().stroke(.white.opacity(t > 0.4 && t < 0.9 ? 0.8 : 0), lineWidth: 2)
+                        .frame(width: 26, height: 26).position(x: 36, y: 36)
+                }
+                Image(systemName: "hand.point.up.left.fill")
+                    .font(.title2)
+                    .scaleEffect(!looping && t > 0.4 && t < 0.9 ? 0.85 : 1)
+                    .position(x: pos.x + 8, y: pos.y + 12)
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The suggested piece: its outline breathing on the dimmed-free photo, so it reads as "maybe", not "chosen".
+private struct SuggestedPieceView: View {
+    let visual: CaptureFlowModel.TentativeVisual
+    let fitted: CGRect
+
+    var body: some View {
+        let r = visual.rect
+        let frame = CGRect(x: fitted.minX + r.minX * fitted.width, y: fitted.minY + r.minY * fitted.height,
+                           width: r.width * fitted.width, height: r.height * fitted.height)
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            Image(decorative: visual.outline, scale: 1)
+                .resizable()
+                .opacity(0.45 + 0.4 * (0.5 + 0.5 * sin(t * 3)))
+                .shadow(color: .black.opacity(0.5), radius: 2)
+                .frame(width: frame.width, height: frame.height)
+                .position(x: frame.midX, y: frame.midY)
+        }
         .transition(.opacity)
     }
 }
