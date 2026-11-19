@@ -1,6 +1,70 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Nice cut!" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "うまく切り抜けました！"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "抠得漂亮！"
+          }
+        }
+      }
+    },
+    "Practice pieces aren't added to your collection. Now try one you find on the street." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "練習の作品はコレクションに入りません。次は街で見つけたものを撮ってみましょう。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "练习的作品不会加入收藏。接下来去街上拍一张你自己发现的吧。"
+          }
+        }
+      }
+    },
+    "Try a sample photo" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サンプル写真で試す"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用示例照片试试"
+          }
+        }
+      }
+    },
+    "Try another sample" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のサンプルで試す"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "换一张示例试试"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },

@@ -15,6 +15,8 @@ struct CaptureView: View {
     var stored: StoredPhoto?
     /// A library photo picked before the capture flow opened (empty collection): goes straight to the editor.
     var imported: Data?
+    /// `imported` is a bundled practice sample (PracticeSamples): show a practice ending instead of saving.
+    var practice = false
 
     @Environment(\.dismiss) private var dismiss
     @Services private var services
@@ -22,6 +24,9 @@ struct CaptureView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var isCapturing = false
     @State private var errorMessage: String?
+    @State private var practicing: Bool?
+    @State private var sampleIndex = 0
+    private var isPracticing: Bool { practicing ?? practice }
 
     var body: some View {
         ZStack {
@@ -52,7 +57,19 @@ struct CaptureView: View {
         .statusBarHidden(model.stage == .camera)
         .sheet(isPresented: Bindable(model).showSaveSheet) {
             if let cutout = model.cutout {
-                if let target = stored?.replacing {
+                if isPracticing {
+                    PracticeDoneSheet(cutout: cutout, hasNextSample: sampleIndex + 1 < PracticeSamples.names.count) {
+                        // Leave practice for the real thing: the camera, in this same flow.
+                        model.showSaveSheet = false
+                        practicing = false
+                        model.reset()
+                    } onNextSample: {
+                        model.showSaveSheet = false
+                        sampleIndex += 1
+                        if let data = PracticeSamples.photo(sampleIndex) { model.receiveImportedPhoto(data) }
+                    } onDone: { dismiss() }
+                    .interactiveDismissDisabled()
+                } else if let target = stored?.replacing {
                     RecutConfirmSheet(model: model, cutout: cutout, artwork: target) { dismiss() }
                         .interactiveDismissDisabled()
                 } else {
@@ -80,7 +97,8 @@ struct CaptureView: View {
         .onChange(of: model.stage) { _, new in
             if new == .camera {
                 // Reopened and pre-picked photos have no camera to go back to.
-                if stored != nil || imported != nil { dismiss() } else { Task { await services.camera.start() } }
+                // A finished practice continues to the camera.
+                if stored != nil || (imported != nil && !(practice && practicing == false)) { dismiss() } else { Task { await services.camera.start() } }
             } else {
                 services.camera.stop()
             }

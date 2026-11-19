@@ -59,7 +59,14 @@ struct CollectionView: View {
                     EmptyStateView(systemImage: "seal", title: "Your field guide is empty",
                                    message: "Photograph a sticker, graffiti or mural you spot on the street — or start with one already in your photos.",
                                    action: (label: "Take a photo", run: { openCapture() }),
-                                   secondary: AnyView(libraryButton))
+                                   secondary: AnyView(VStack(spacing: 10) {
+                                       libraryButton
+                                       // Practise the cut-out at home, on a photo known to work (add-cutout-coaching).
+                                       Button("Try a sample photo") {
+                                           if let data = PracticeSamples.photo(0) { openCapture(photo: data, practice: true) }
+                                       }
+                                       .tint(Theme.accent)
+                                   }))
                 } else {
                     grid
                 }

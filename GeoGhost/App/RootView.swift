@@ -28,12 +28,12 @@ struct RootView: View {
             // The middle tab is a button in disguise: open the capture flow and stay on the previous tab.
             if new == .capture {
                 tab = lastContentTab
-                capture = CaptureRequest(photo: nil)
+                capture = CaptureRequest(photo: nil, practice: false)
             } else {
                 lastContentTab = new
             }
         }
-        .environment(\.openCapture, OpenCaptureAction { photo in capture = CaptureRequest(photo: photo) })
+        .environment(\.openCapture, OpenCaptureAction { photo, practice in capture = CaptureRequest(photo: photo, practice: practice) })
         .modifier(IdentityExpiredAlert(state: services.onlineState))
         .task(id: scenePhase) {
             // Review results and hidden posts show up without opening each piece.
@@ -57,7 +57,7 @@ struct RootView: View {
             Text("GeoGhost is just getting started. When it crashes or something goes wrong, a short technical report helps us fix it and improve your experience. Reports contain the app version, device model, iOS version and where in the app the problem happened — never your photos, locations or notes. You can change this anytime in Settings.")
         }
         .fullScreenCover(item: $capture, onDismiss: askForDiagnosticsIfDue) { request in
-            CaptureView(imported: request.photo)
+            CaptureView(imported: request.photo, practice: request.practice)
         }
         .task {
             await services.diagnostics.start()
@@ -91,15 +91,17 @@ struct RootView: View {
 struct CaptureRequest: Identifiable {
     let id = UUID()
     let photo: Data?
+    /// The photo is a bundled practice sample: the cutout is not saved.
+    let practice: Bool
 }
 
 /// Lets screens deep in the tab hierarchy (e.g. empty states) start the capture flow.
 struct OpenCaptureAction {
-    /// `photo`: a library photo to open in the editor instead of the camera.
-    let run: @MainActor (_ photo: Data?) -> Void
-    @MainActor func callAsFunction(photo: Data? = nil) { run(photo) }
+    /// `photo`: a library photo to open in the editor instead of the camera; `practice`: it is a bundled sample.
+    let run: @MainActor (_ photo: Data?, _ practice: Bool) -> Void
+    @MainActor func callAsFunction(photo: Data? = nil, practice: Bool = false) { run(photo, practice) }
 }
 
 extension EnvironmentValues {
-    @Entry var openCapture = OpenCaptureAction(run: { _ in })
+    @Entry var openCapture = OpenCaptureAction(run: { _, _ in })
 }
