@@ -24,6 +24,6 @@
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
 | 10 | [improve-cutout-defaults](changes/improve-cutout-defaults/proposal.md) | in-progress | T1–T6 完成；剩 T7 真机基准照片（建议是否正确、点一下 / 自动画圈是否成功），并重录 UI 快照 | me |
-| 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | accepted | 等 10；示例照片已选（本地 `CoachingSamples/`），待定是否可打包进 App | agent |
+| 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | accepted | 等 10；原创示例照片已做好（本地 `CoachingSamples/brand/`，macOS Vision 三张都能抠出），me 真机确认后可打包进 App | agent |
 | 12 | [improve-first-run](changes/improve-first-run/proposal.md) | in-progress | T1–T7 完成；剩 T8 真机走查，并重录 UI 快照基准图 | me |
 | 13 | [add-library-scan-import](changes/add-library-scan-import/proposal.md) | idea | 暂不做，只保留提案（工作量大）；重启时先回答开放问题 | me |
