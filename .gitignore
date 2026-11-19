@@ -21,3 +21,6 @@ server/worker/dist/
 server/admin/node_modules/
 server/admin/dist/
 server/admin/public/vendor/
+
+# Coaching sample photos (add-cutout-coaching): third-party street art, metadata stripped — not committed
+CoachingSamples/
