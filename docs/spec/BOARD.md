@@ -34,4 +34,4 @@
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
-| 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | agent 的任务全部完成并在模拟器验证（含定位小图）；剩 T11 真机走查、T12 读许可协议的地图附件，然后合并、归档 | me |
+| 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | 已合并 main，1.2.0 (112) 已上传 TestFlight；剩 T11 真机走查（装这个构建）、T12 读许可协议的地图附件，然后归档 | me |
