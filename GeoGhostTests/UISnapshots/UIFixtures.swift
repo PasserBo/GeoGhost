@@ -32,6 +32,12 @@ final class UIFixture {
         return series
     }
 
+    /// The name a piece was added under.
+    func key(of artwork: Artwork) -> String {
+        guard let key = artworks.first(where: { $0.value.id == artwork.id })?.key else { fatalError("Fixture \(name) doesn't hold this artwork") }
+        return key
+    }
+
     /// The sticker picture of a piece, as the share card wants it.
     func sticker(_ key: String) -> UIImage {
         let artwork = artwork(key)

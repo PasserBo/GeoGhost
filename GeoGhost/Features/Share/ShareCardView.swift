@@ -43,7 +43,7 @@ struct ShareCardContent {
 
 /// A 4:5 card (1080×1350 at render scale) laid out in points at 360×450.
 struct ShareCardView: View {
-    static let size = CGSize(width: 360, height: 450)
+    static let size = ShareCardLayout.size
 
     let content: ShareCardContent
     let style: ShareCardStyle
@@ -143,30 +143,11 @@ struct ShareCardView: View {
             .shadow(color: .black.opacity(style == .poster ? 0 : 0.18), radius: 6, y: 4)
     }
 
-    private var credit: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "seal.fill").font(.system(size: 9))
-            Text("GeoGhost").font(.system(size: 11, weight: .bold, design: .rounded))
-        }
-        .opacity(0.7)
-    }
+    private var credit: some View { ShareCardCredit() }
 
-    // Fixed light palette so cards look the same whatever the device appearance.
-    private static let paper = Color(red: 0.965, green: 0.945, blue: 0.905)
-    private static let ink = Color(red: 0.12, green: 0.11, blue: 0.10)
-    private static let inkSecondary = Color(red: 0.42, green: 0.40, blue: 0.37)
-}
-
-extension ShareCardView {
-    /// Renders the card to a 1080×1350 PNG in the temporary directory.
-    @MainActor static func renderPNG(content: ShareCardContent, style: ShareCardStyle, showsCredit: Bool) -> URL? {
-        let renderer = ImageRenderer(content: ShareCardView(content: content, style: style, showsCredit: showsCredit))
-        renderer.scale = 3
-        guard let image = renderer.uiImage, let data = image.pngData() else { return nil }
-        let url = FileManager.default.temporaryDirectory.appending(path: "GeoGhost-card-\(style.rawValue).png")
-        do { try data.write(to: url, options: .atomic) } catch { return nil }
-        return url
-    }
+    private static let paper = ShareCardPalette.paper
+    private static let ink = ShareCardPalette.ink
+    private static let inkSecondary = ShareCardPalette.inkSecondary
 }
 
 private extension String {

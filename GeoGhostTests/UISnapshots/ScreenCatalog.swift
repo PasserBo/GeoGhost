@@ -84,6 +84,12 @@ enum ScreenCatalog {
         "share_card.poster": { c in shareCard(c, .poster) },
         "share_card.minimal": { c in shareCard(c, .minimal) },
 
+        "series_share_card.distance": { c in seriesCard(c, "cat", .distance) },
+        "series_share_card.encounters": { c in seriesCard(c, "cat", .encounters) },
+        "series_share_card.no_location": { c in seriesCard(c, "ghost", .encounters) },
+        // The two Tokyo sightings alone: close enough for the map to need the country locator.
+        "series_share_card.same_city": { c in seriesCard(c, "cat", .encounters, members: 2) },
+
         "publish_status.unpublished": { c in publishStatus(c, .unpublished) },
         "publish_status.uploading": { c in publishStatus(c, .uploading) },
         "publish_status.pending": { c in publishStatus(c, .pending) },
@@ -155,6 +161,45 @@ enum ScreenCatalog {
         let content = ShareCardContent(artwork: context.fixture.artwork("cat-1"), sticker: context.fixture.sticker("cat-1"))
         return component(ShareCardView(content: content, style: style, showsCredit: true)
             .frame(width: ShareCardView.size.width, height: ShareCardView.size.height))
+    }
+
+    /// A series card over a stand-in map: plain colour with every stop where a real map would put
+    /// it, so the route layer is compared without loading map tiles.
+    private static func seriesCard(_ context: Context, _ key: String, _ lead: SeriesShareCard.Lead, members count: Int? = nil) -> AnyView {
+        let series = context.fixture.series(key)
+        let members = Array(series.members.prefix(count ?? series.members.count))
+        let stats = SeriesStats(encounters: members.map { a in
+            SeriesStats.Encounter(latitude: a.coordinate?.latitude, longitude: a.coordinate?.longitude, placeName: a.placeName,
+                                  localityName: a.localityName, countryCode: a.countryCode, date: a.displayDate)
+        })
+        let cover = members.last!
+        let content = SeriesCardContent(
+            number: key == "cat" ? 1 : 2,
+            title: series.title,
+            kind: cover.kind,
+            picture: context.fixture.sticker(context.fixture.key(of: cover)),
+            stats: stats,
+            map: standInMap(for: stats),
+            countryOutline: CountryOutlines.shared.outline(for: stats.countryCode))
+        return component(SeriesShareCard(content: content, lead: lead))
+    }
+
+    private static func standInMap(for stats: SeriesStats) -> RouteMapImage? {
+        guard !stats.stops.isEmpty else { return nil }
+        let size = SeriesShareCard.mapSize
+        let region = RouteMapSnapshotter.region(for: stats.stops.map(\.coordinate))
+        // Fit the region into the map's shape the way a map would, longitude squeezed by latitude.
+        let squeeze = cos(region.center.latitude * .pi / 180)
+        let scale = min(size.width / (region.span.longitudeDelta * squeeze), size.height / region.span.latitudeDelta)
+        let points = stats.stops.map { stop in
+            CGPoint(x: 0.5 + (stop.longitude - region.center.longitude) * squeeze * scale / size.width,
+                    y: 0.5 - (stop.latitude - region.center.latitude) * scale / size.height)
+        }
+        let image = UIGraphicsImageRenderer(size: size).image { context in
+            UIColor(red: 0.86, green: 0.89, blue: 0.86, alpha: 1).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+        }
+        return RouteMapImage(image: image, points: points)
     }
 
     private static func publishStatus(_ context: Context, _ state: PublishState) -> AnyView {
