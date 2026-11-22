@@ -8,6 +8,7 @@ struct SeriesDetailView: View {
     @Environment(\.modelContext) private var context
     @State private var isRenaming = false
     @State private var draftTitle = ""
+    @State private var showShareCard = false
 
     var body: some View {
         ScrollView {
@@ -22,10 +23,18 @@ struct SeriesDetailView: View {
         .navigationTitle(series.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // One encounter has no route or distance to show; its piece has its own share card.
+            if series.encounterCount >= 2 {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showShareCard = true } label: { Image(systemName: "rectangle.portrait.on.rectangle.portrait.angled") }
+                        .accessibilityLabel(Text("Share card"))
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { draftTitle = series.title; isRenaming = true } label: { Image(systemName: "pencil") }
             }
         }
+        .sheet(isPresented: $showShareCard) { SeriesShareSheet(series: series) }
         .alert("Name this series", isPresented: $isRenaming) {
             TextField("e.g. Pink cat sticker", text: $draftTitle)
             Button("Save") { series.title = draftTitle.trimmingCharacters(in: .whitespaces); context.saveReportingErrors("SeriesDetail.rename") }

@@ -140,6 +140,17 @@ screens:
       poster: { title: 海报, fixture: typical }
       minimal: { title: 极简, fixture: typical }
 
+  series_share_card:
+    title: 系列分享卡片
+    kind: component
+    spec: share-card
+    default: distance
+    states:
+      distance: { title: 距离卡（地图为占位底图）, fixture: typical }
+      encounters: { title: 次数卡（地图为占位底图）, fixture: typical }
+      no_location: { title: 成员都没有位置, fixture: typical }
+      same_city: { title: 同城，带定位小图, fixture: typical }
+
   publish_status:
     title: 发布状态卡片
     kind: component

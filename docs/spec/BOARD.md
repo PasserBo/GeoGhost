@@ -1,6 +1,6 @@
 # Board
 
-> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-19
+> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-23
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
@@ -27,3 +27,11 @@
 | 11 | [add-cutout-coaching](changes/add-cutout-coaching/proposal.md) | in-progress | T1–T6 完成（示例照片已打包进 App，空图鉴可练习）；剩 T7 真机确认三张能抠出 | me |
 | 12 | [improve-first-run](changes/improve-first-run/proposal.md) | in-progress | T1–T7 完成；剩 T8 真机走查，并重录 UI 快照基准图 | me |
 | 13 | [add-library-scan-import](changes/add-library-scan-import/proposal.md) | idea | 暂不做，只保留提案（工作量大）；重启时先回答开放问题 | me |
+
+### 宣传与分享（2026-11-23 讨论）
+
+> 宣传先走 Reddit：像自发分享的用户那样发在日本拍到的贴纸（原图配分享卡），不发下载链接。区域合集卡暂缓，以后单独讨论。
+
+| # | 变更 | 状态 | 下一步 | 负责 |
+|---|---|---|---|---|
+| 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | agent 的任务全部完成并在模拟器验证（含定位小图）；剩 T11 真机走查、T12 读许可协议的地图附件，然后合并、归档 | me |
