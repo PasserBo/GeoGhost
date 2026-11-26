@@ -5,6 +5,8 @@ import UIKit
 /// can be drawn over it without asking MapKit again.
 struct RouteMapImage: @unchecked Sendable {
     let image: UIImage
+    /// The size in points the map was made for, and must be shown at for the points to line up.
+    let size: CGSize
     let points: [CGPoint]
 }
 
@@ -61,7 +63,7 @@ enum RouteMapSnapshotter {
                         let point = snapshot.point(for: coordinate)
                         return CGPoint(x: point.x / size.width, y: point.y / size.height)
                     }
-                    continuation.resume(returning: RouteMapImage(image: snapshot.image, points: points))
+                    continuation.resume(returning: RouteMapImage(image: snapshot.image, size: size, points: points))
                 }
             }
         }

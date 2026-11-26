@@ -236,6 +236,32 @@ enum FixturePicture {
         return context.makeImage()!
     }
 
+    /// A long sticker — a strip of tape, a bumper sticker — for checking how cards cope with
+    /// pictures that are far from square.
+    static func strip(width: Int, height: Int, hex: String) -> UIImage {
+        let size = CGSize(width: width, height: height)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            let short = CGFloat(min(width, height))
+            let outer = UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: short * 0.22)
+            UIColor.white.setFill()
+            outer.fill()
+            let inset = short * 0.09
+            (UIColor(hex: hex) ?? .gray).setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset), cornerRadius: short * 0.16).fill()
+            // Dots along the long side, so stretching or cropping would show.
+            UIColor.white.withAlphaComponent(0.85).setFill()
+            let long = CGFloat(max(width, height)), count = 5
+            for i in 0..<count {
+                let along = long * (CGFloat(i) + 1) / CGFloat(count + 1), radius = short * 0.14
+                let center = width > height ? CGPoint(x: along, y: size.height / 2) : CGPoint(x: size.width / 2, y: along)
+                UIBezierPath(ovalIn: CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)).fill()
+            }
+        }
+    }
+
     /// A photo for the capture flow: two stickers on a tiled wall.
     static func photo() -> CGImage {
         let width = 1200, height = 1600

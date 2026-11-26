@@ -73,6 +73,8 @@ en:
         polaroid: Polaroid
         poster: Poster
         minimal: Minimal
+        tall_sticker: Field note, tall sticker
+        wide_sticker: Field note, wide sticker
     series_share_card:
       title: Series share card
       states:
@@ -80,6 +82,8 @@ en:
         encounters: Encounters card (stand-in map)
         no_location: No member has a location
         same_city: Same city, with the country locator
+        tall_sticker: Tall sticker
+        wide_sticker: Wide sticker
     publish_status:
       title: Publish status card
       states:
@@ -211,6 +215,8 @@ ja:
         polaroid: ポラロイド
         poster: ポスター
         minimal: ミニマル
+        tall_sticker: フィールドノート、縦長のステッカー
+        wide_sticker: フィールドノート、横長のステッカー
     series_share_card:
       title: シリーズのシェアカード
       states:
@@ -218,6 +224,8 @@ ja:
         encounters: 遭遇回数カード（地図は仮の下地）
         no_location: どの作品にも位置がない
         same_city: 同じ都市、国の位置図つき
+        tall_sticker: 縦長のステッカー
+        wide_sticker: 横長のステッカー
     publish_status:
       title: 公開ステータスカード
       states:

@@ -51,7 +51,8 @@ struct SeriesShareSheet: View {
             controls
         }
         .task(id: PictureRequest(artworkID: cover?.id, usesPhoto: usesPhoto)) { await loadPicture() }
-        .task { await loadMap() }
+        // The map's height follows the picture's shape, so a cover of another shape asks again.
+        .task(id: picture.map { SeriesShareCard.mapSize(for: $0.image, isPhoto: $0.isPhoto) }) { await loadMap() }
         .onDisappear { context.saveReportingErrors("SeriesShare.rename") }
     }
 
@@ -99,6 +100,12 @@ struct SeriesShareSheet: View {
     }
 
     private func loadMap() async {
-        map = await RouteMapSnapshotter.snapshot(coordinates: stats.stops.map(\.coordinate), size: SeriesShareCard.mapSize)
+        guard let picture else { return }
+        let size = SeriesShareCard.mapSize(for: picture.image, isPhoto: picture.isPhoto)
+        guard map?.size != size else { return }
+        let loaded = await RouteMapSnapshotter.snapshot(coordinates: stats.stops.map(\.coordinate), size: size)
+        guard !Task.isCancelled else { return }
+        // Keep a map of the old size rather than none when the new one can't be loaded.
+        if loaded != nil || map == nil { map = loaded }
     }
 }
