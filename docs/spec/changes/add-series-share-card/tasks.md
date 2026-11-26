@@ -1,10 +1,9 @@
 # Tasks: add-series-share-card
 
 ## Now
-2026-11-23：agent 的任务都做完了，包括定位小图。系列页有分享入口，两种卡可以左右滑，封面、原图、命名都能用，同城的系列在地图一角有国家轮廓，导出是 1080×1350 的 PNG。
-已合并到 main，并以 1.2.0 (112) 上传到 TestFlight（1.1.0 已过审，不能再传构建，所以升了版本号）。
-还差 me 的两件：T11 真机走查（装 TestFlight 的 1.2.0 (112)）；T12 读许可协议的地图附件。
-另外两件不属于这次改动、但跑快照时碰到的事：`series_list.empty`、`collection.empty`、`feedback.empty` 的基准图与现在的界面不一致（看板 10、12 里写了要重录）；只跑 `series_detail.` 这一组快照时测试进程会在结束时崩溃（地图图钉在数据销毁后还在刷新），和其他状态一起跑不会。
+2026-11-26：系列卡的版面改成随贴纸形状调整（T14），在分支 `fix/share-card-sticker-shapes` 上，没有提交。1.2.0 (112) 里还是旧版面，要再传一个构建才能在真机上看到。
+还差 me 的：T11 真机走查；T12 读许可协议的地图附件。
+跑快照时碰到、不属于这个变更的两件事仍在：`series_list.empty`、`collection.empty`、`feedback.empty` 的基准图与现在的界面不一致（看板 10、12）；只跑 `series_detail.` 这一组快照时测试进程会在结束时崩溃。
 
 ## M1 · 通用分享页
 - [x] T1 `ShareCardOption`、`ShareCardDeck`、`ShareCardRenderer`：左右滑动预览、页码和名字、分享按钮、导出 PNG、失败提示 — owner: agent · verify: 构建通过；模拟器里滑动和导出 · done 2026-11-23
@@ -39,3 +38,7 @@
 ## 附带
 - [x] T13 调试用的演示数据：启动参数 `-seedDemoSeries YES` 生成两个画出来的系列（跨城市一个、同城一个），只在 Debug 构建里有 — owner: agent · verify: 模拟器 · done 2026-11-23
   - evidence: iOS 26.3 模拟器里生成了 Orange cat 和一个未命名系列
+
+## M5 · 版面随贴纸形状调整
+- [x] T14 竖长的贴纸左图右文，扁宽的贴纸把高度让给地图；长条贴纸的快照状态（系列卡和单件卡各两种） — owner: agent · verify: 单元测试 SeriesShareCardLayoutTests；快照 series_share_card.tall_sticker / wide_sticker · done 2026-11-26
+  - evidence: 两项版面测试通过；新快照已录，原有的 series_share_card.* 和 share_card.* 基准图没有变化。真实地图在变高之后的样子没有在模拟器里看过

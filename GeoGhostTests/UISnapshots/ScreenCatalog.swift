@@ -83,9 +83,13 @@ enum ScreenCatalog {
         "share_card.polaroid": { c in shareCard(c, .polaroid) },
         "share_card.poster": { c in shareCard(c, .poster) },
         "share_card.minimal": { c in shareCard(c, .minimal) },
+        "share_card.tall_sticker": { c in shareCard(c, .fieldNote, picture: tallSticker) },
+        "share_card.wide_sticker": { c in shareCard(c, .fieldNote, picture: wideSticker) },
 
         "series_share_card.distance": { c in seriesCard(c, "cat", .distance) },
         "series_share_card.encounters": { c in seriesCard(c, "cat", .encounters) },
+        "series_share_card.tall_sticker": { c in seriesCard(c, "cat", .distance, picture: tallSticker) },
+        "series_share_card.wide_sticker": { c in seriesCard(c, "cat", .distance, picture: wideSticker) },
         "series_share_card.no_location": { c in seriesCard(c, "ghost", .encounters) },
         // The two Tokyo sightings alone: close enough for the map to need the country locator.
         "series_share_card.same_city": { c in seriesCard(c, "cat", .encounters, members: 2) },
@@ -157,15 +161,19 @@ enum ScreenCatalog {
         AnyView(view.padding(16).frame(maxWidth: .infinity, maxHeight: .infinity).background(PaperBackground()))
     }
 
-    private static func shareCard(_ context: Context, _ style: ShareCardStyle) -> AnyView {
-        let content = ShareCardContent(artwork: context.fixture.artwork("cat-1"), sticker: context.fixture.sticker("cat-1"))
+    private static var tallSticker: UIImage { FixturePicture.strip(width: 220, height: 900, hex: "#219E8C") }
+    private static var wideSticker: UIImage { FixturePicture.strip(width: 900, height: 220, hex: "#8C5CF5") }
+
+    private static func shareCard(_ context: Context, _ style: ShareCardStyle, picture: UIImage? = nil) -> AnyView {
+        let content = ShareCardContent(artwork: context.fixture.artwork("cat-1"), sticker: picture ?? context.fixture.sticker("cat-1"))
         return component(ShareCardView(content: content, style: style, showsCredit: true)
             .frame(width: ShareCardView.size.width, height: ShareCardView.size.height))
     }
 
     /// A series card over a stand-in map: plain colour with every stop where a real map would put
     /// it, so the route layer is compared without loading map tiles.
-    private static func seriesCard(_ context: Context, _ key: String, _ lead: SeriesShareCard.Lead, members count: Int? = nil) -> AnyView {
+    private static func seriesCard(_ context: Context, _ key: String, _ lead: SeriesShareCard.Lead, members count: Int? = nil,
+                                   picture: UIImage? = nil) -> AnyView {
         let series = context.fixture.series(key)
         let members = Array(series.members.prefix(count ?? series.members.count))
         let stats = SeriesStats(encounters: members.map { a in
@@ -173,20 +181,20 @@ enum ScreenCatalog {
                                   localityName: a.localityName, countryCode: a.countryCode, date: a.displayDate)
         })
         let cover = members.last!
+        let picture = picture ?? context.fixture.sticker(context.fixture.key(of: cover))
         let content = SeriesCardContent(
             number: key == "cat" ? 1 : 2,
             title: series.title,
             kind: cover.kind,
-            picture: context.fixture.sticker(context.fixture.key(of: cover)),
+            picture: picture,
             stats: stats,
-            map: standInMap(for: stats),
+            map: standInMap(for: stats, size: SeriesShareCard.mapSize(for: picture, isPhoto: false)),
             countryOutline: CountryOutlines.shared.outline(for: stats.countryCode))
         return component(SeriesShareCard(content: content, lead: lead))
     }
 
-    private static func standInMap(for stats: SeriesStats) -> RouteMapImage? {
+    private static func standInMap(for stats: SeriesStats, size: CGSize) -> RouteMapImage? {
         guard !stats.stops.isEmpty else { return nil }
-        let size = SeriesShareCard.mapSize
         let region = RouteMapSnapshotter.region(for: stats.stops.map(\.coordinate))
         // Fit the region into the map's shape the way a map would, longitude squeezed by latitude.
         let squeeze = cos(region.center.latitude * .pi / 180)
@@ -199,7 +207,7 @@ enum ScreenCatalog {
             UIColor(red: 0.86, green: 0.89, blue: 0.86, alpha: 1).setFill()
             context.fill(CGRect(origin: .zero, size: size))
         }
-        return RouteMapImage(image: image, points: points)
+        return RouteMapImage(image: image, size: size, points: points)
     }
 
     private static func publishStatus(_ context: Context, _ state: PublishState) -> AnyView {

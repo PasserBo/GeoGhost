@@ -90,3 +90,28 @@ final class SeriesStatsTests: XCTestCase {
         XCTAssertEqual(wide.center.latitude, 35.205, accuracy: 0.001)
     }
 }
+
+final class SeriesShareCardLayoutTests: XCTestCase {
+    private func picture(_ width: CGFloat, _ height: CGFloat) -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: width, height: height)).image { _ in }
+    }
+
+    func testTallCutoutGoesDownTheSide() {
+        XCTAssertEqual(SeriesShareCard.arrangement(for: picture(220, 900), isPhoto: false), .sideBySide)
+        XCTAssertEqual(SeriesShareCard.arrangement(for: picture(600, 600), isPhoto: false), .stacked)
+        XCTAssertEqual(SeriesShareCard.arrangement(for: picture(900, 220), isPhoto: false), .stacked)
+        XCTAssertEqual(SeriesShareCard.arrangement(for: picture(220, 900), isPhoto: true), .stacked, "A photo fills its box whatever its shape")
+    }
+
+    func testWideCutoutGivesItsHeightToTheMap() {
+        let square = SeriesShareCard.mapSize(for: picture(600, 600), isPhoto: false)
+        let wide = SeriesShareCard.mapSize(for: picture(900, 220), isPhoto: false)
+        let ribbon = SeriesShareCard.mapSize(for: picture(2000, 100), isPhoto: false)
+        XCTAssertEqual(square.height, 112)
+        XCTAssertEqual(square.width, 320)
+        XCTAssertGreaterThan(wide.height, square.height)
+        XCTAssertEqual(ribbon.height, 176, "The map stops growing at its tallest")
+        XCTAssertEqual(SeriesShareCard.mapSize(for: picture(220, 900), isPhoto: false).height, 112)
+        XCTAssertEqual(SeriesShareCard.mapSize(for: picture(900, 220), isPhoto: true).height, 112)
+    }
+}
