@@ -91,6 +91,35 @@ screens:
       world: { title: 世界地图, fixture: typical }
       empty: { title: 还没有任何贴纸, fixture: empty }
 
+  world_strip:
+    title: 世界地图下方的卡片条
+    kind: component
+    spec: explore-map
+    default: latest
+    states:
+      latest: { title: 最新发现, fixture: typical }
+      group: { title: 一个图钉里的作品, fixture: typical }
+      loading: { title: 加载中, fixture: typical }
+
+  world_empty_area:
+    title: 世界地图的空白区域
+    kind: component
+    spec: explore-map
+    default: invitation
+    states:
+      invitation: { title: 邀请：这一带有自己的收藏, fixture: typical }
+      in_review: { title: 自己的收藏正在审核, fixture: typical }
+      nothing_of_mine: { title: 这一带没有自己的收藏, fixture: typical }
+
+  world_top_notice:
+    title: 世界地图顶部的提示
+    kind: component
+    spec: explore-map
+    default: pointer
+    states:
+      pointer: { title: 指向自己的区域, fixture: typical }
+      error: { title: 加载失败, fixture: typical }
+
   remote_post:
     title: 他人的贴纸
     kind: sheet

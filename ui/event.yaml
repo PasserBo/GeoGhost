@@ -117,3 +117,21 @@ events:
     properties:
       has_screenshot: bool
       has_email: bool
+
+  world_map_opened:
+    title: 打开世界地图
+    screen: map
+    properties:
+      had_content: bool   # 打开时是否已经有公开作品可以显示
+
+  world_post_opened:
+    title: 在世界地图上点开一件作品
+    screen: world_strip
+    properties:
+      source: string   # latest | group | area
+
+  world_invitation_started:
+    title: 从世界地图的提示开始发布
+    screen: world_empty_area
+    properties:
+      piece_count: int

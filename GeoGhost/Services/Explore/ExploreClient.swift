@@ -3,7 +3,7 @@ import Foundation
 import MapKit
 
 /// One public post, or one grid cell standing for several (design.md §10 `explore` columns).
-struct ExplorePost: Decodable, Identifiable, Sendable, Equatable {
+struct ExplorePost: Codable, Identifiable, Sendable, Equatable {
     let id: UUID
     let authorId: UUID
     let authorNickname: String?

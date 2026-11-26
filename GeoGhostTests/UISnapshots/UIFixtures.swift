@@ -75,8 +75,13 @@ enum UIFixtures {
         default: throw UnknownFixture(name: name)
         }
         try fixture.context.save()
+        // Kept for the life of the test process. A map goes on redrawing its pins for a moment
+        // after its screen was captured, and a pin reading a piece whose store is gone is a crash.
+        alive.append(fixture)
         return fixture
     }
+
+    private static var alive: [UIFixture] = []
 
     struct UnknownFixture: Error { let name: String }
 
