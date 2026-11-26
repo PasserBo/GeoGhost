@@ -25,6 +25,9 @@ struct WorldMapView: View {
     @State private var explore: ExploreModel?
     @State private var scope: WorldStripScope = .latest
     @State private var scopedPosts: [ExplorePost] = []
+    /// The rest of a pin's pieces are being fetched.
+    @State private var scopedLoading = false
+    @State private var showAll = false
     @State private var focusedID: UUID?
     /// The focus was set by tapping the map, so the camera needn't follow it.
     @State private var focusCameFromMap = false
@@ -120,11 +123,18 @@ struct WorldMapView: View {
         .onReceive(NotificationCenter.default.publisher(for: .onlinePostReported)) { note in
             guard let post = note.object as? UUID else { return }
             feed.remove { $0.id == post }
+            scopedPosts.removeAll { $0.id == post }
+            if scope != .latest, scopedPosts.isEmpty { backToLatest() }
             explore?.postReported(post)
         }
         .sheet(item: $openedPost) { post in
             RemotePostSheet(post: post, config: online.config, state: state)
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showAll) {
+            WorldPostGrid(scope: scope, posts: scopedPosts, isLoading: scopedLoading, config: online.config, state: state, onOpen: focusFromGrid)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showPicker) {
             OwnPiecesPicker(pieces: invitedPieces) { artwork in
@@ -240,12 +250,26 @@ struct WorldMapView: View {
         } else {
             WorldStrip(scope: scope, posts: stripPosts, isLoading: feed.phase == .loading || feed.phase == .idle,
                        config: online.config, offersThisArea: offersThisArea, focusedID: $focusedID,
-                       onOpen: { openedPost = $0 }, onBackToLatest: backToLatest, onThisArea: showThisArea, onZoomIn: zoomIntoScope)
+                       onOpen: { openedPost = $0 }, onBackToLatest: backToLatest, onThisArea: showThisArea, onZoomIn: zoomIntoScope,
+                       onSeeAll: scopedCount > WorldStrip.swipeableCount ? { showAll = true } : nil)
         }
     }
 
     /// Offered once the user has moved the map and there is something public in view.
     private var offersThisArea: Bool { userMovedMap && !groups.isEmpty && scope == .latest }
+
+    /// How many pieces the strip stands for, including those of a pin not fetched yet.
+    private var scopedCount: Int {
+        if case .group(_, let total) = scope { return max(total, scopedPosts.count) }
+        return scope == .area ? scopedPosts.count : 0
+    }
+
+    /// A piece was opened from the grid: the strip ends up on it, and the map stays where it is.
+    private func focusFromGrid(_ post: ExplorePost) {
+        guard post.id != focusedID else { return }
+        focusCameFromMap = true
+        focusedID = post.id
+    }
 
     private func select(_ group: WorldPinLayout.Group) {
         focusCameFromMap = true
@@ -253,6 +277,7 @@ struct WorldMapView: View {
         scope = .group(id: group.id, total: group.count)
         scopedPosts = group.members
         focusedID = group.representative.id
+        scopedLoading = false
         guard !group.isFullyKnown, let region = visibleRegion else { return }
         // A server cell knows only its newest piece: ask for the rest of that cell.
         let cell = ExploreGrid.cellDegrees(forLatitudeSpan: ExploreBounds(region: region).latitudeSpan)
@@ -261,15 +286,20 @@ struct WorldMapView: View {
         // Just inside the cell, since the server's range includes both ends.
         let bounds = ExploreBounds(minLat: lat, minLng: lng, maxLat: lat + cell - 1e-9, maxLng: lng + cell - 1e-9)
         let client = ExploreClient(services: online), id = group.id
+        scopedLoading = true
         Task {
-            guard let members = try? await client.posts(in: bounds, cellDegrees: 0), case .group(id, _) = scope else { return }
-            scopedPosts = members
+            let members = try? await client.posts(in: bounds, cellDegrees: 0)
+            guard case .group(id, _) = scope else { return }
+            scopedLoading = false
+            if let members { scopedPosts = members }
         }
     }
 
     private func backToLatest() {
         scope = .latest
         scopedPosts = []
+        scopedLoading = false
+        showAll = false
         focusedID = nil
         userMovedMap = false
     }
@@ -279,6 +309,7 @@ struct WorldMapView: View {
         regionWhenScoped = region
         scopedPosts = groups.flatMap(\.members).sorted { ($0.publishedAt ?? .distantPast) > ($1.publishedAt ?? .distantPast) }
         scope = .area
+        scopedLoading = false
         focusCameFromMap = true
         focusedID = scopedPosts.first?.id
     }

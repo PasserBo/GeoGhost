@@ -41,6 +41,19 @@ enum ScreenCatalog {
 
         "world_strip.latest": { _ in worldStrip(.latest, focused: 0) },
         "world_strip.group": { _ in worldStrip(.group(id: UIFixtures.id(post: 1), total: 4), focused: 1) },
+        "world_strip.many": { _ in worldStrip(.group(id: UIFixtures.id(post: 1), total: 23), focused: 0, count: 23) },
+        "world_post_grid.typical": { c in
+            AnyView(WorldPostGrid(scope: .group(id: UIFixtures.id(post: 1), total: 23), posts: worldPosts(23), isLoading: false,
+                                  config: UIOnlineFixture.config, state: c.online, onOpen: { _ in }))
+        },
+        "world_post_grid.loading": { c in
+            AnyView(WorldPostGrid(scope: .group(id: UIFixtures.id(post: 1), total: 23), posts: worldPosts(1), isLoading: true,
+                                  config: UIOnlineFixture.config, state: c.online, onOpen: { _ in }))
+        },
+        "world_post_grid.capped": { c in
+            AnyView(WorldPostGrid(scope: .group(id: UIFixtures.id(post: 1), total: 340), posts: worldPosts(8), isLoading: false,
+                                  config: UIOnlineFixture.config, state: c.online, onOpen: { _ in }))
+        },
         "world_strip.loading": { _ in
             component(WorldStrip(scope: .latest, posts: [], isLoading: true, config: UIOnlineFixture.config, offersThisArea: false,
                                  focusedID: .constant(nil), onOpen: { _ in }, onBackToLatest: {}, onThisArea: {}, onZoomIn: {}))
@@ -237,16 +250,22 @@ enum ScreenCatalog {
         return RouteMapImage(image: image, size: size, points: points)
     }
 
-    private static func worldStrip(_ scope: WorldStripScope, focused: Int) -> AnyView {
+    private static func worldPosts(_ count: Int) -> [ExplorePost] {
         let base = UIOnlineFixture.post
         let places = [("杉並区", "sticker", "cat.png"), ("渋谷区", "tag", "ghost.png"), ("千代田区", "graffiti", "star.png")]
-        let posts = places.enumerated().map { index, place in
-            ExplorePost(id: UIFixtures.id(post: index + 1), authorId: base.authorId, authorNickname: base.authorNickname, kind: place.1,
-                        lat: base.lat, lng: base.lng, locality: place.0, countryCode: "JP", capturedOn: "2026-06-2\(index + 1)",
-                        width: 600, height: 600, imageKey: place.2, thumbKey: place.2, likeCount: 0, publishedAt: nil, cellCount: 1)
+        return (0..<count).map { index in
+            let place = places[index % places.count]
+            return ExplorePost(id: UIFixtures.id(post: index + 1), authorId: base.authorId, authorNickname: base.authorNickname, kind: place.1,
+                               lat: base.lat, lng: base.lng, locality: place.0, countryCode: "JP", capturedOn: "2026-06-2\(index % 9 + 1)",
+                               width: 600, height: 600, imageKey: place.2, thumbKey: place.2, likeCount: 0, publishedAt: nil, cellCount: 1)
         }
+    }
+
+    private static func worldStrip(_ scope: WorldStripScope, focused: Int, count: Int = 3) -> AnyView {
+        let posts = worldPosts(count)
         return component(WorldStrip(scope: scope, posts: posts, isLoading: false, config: UIOnlineFixture.config, offersThisArea: scope == .latest,
-                                    focusedID: .constant(posts[focused].id), onOpen: { _ in }, onBackToLatest: {}, onThisArea: {}, onZoomIn: {}))
+                                    focusedID: .constant(posts[focused].id), onOpen: { _ in }, onBackToLatest: {}, onThisArea: {}, onZoomIn: {},
+                                    onSeeAll: count > WorldStrip.swipeableCount ? {} : nil))
     }
 
     private static func publishStatus(_ context: Context, _ state: PublishState) -> AnyView {

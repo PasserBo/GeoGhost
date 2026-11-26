@@ -33,3 +33,6 @@
 ## 附带
 - [x] T12 快照测试的数据在整个测试过程中保持存活 — owner: agent · verify: 单独跑 map. 和 series_detail. 两组 · done 2026-11-27
   - evidence: 之前只跑其中一组时测试进程会崩溃（地图图钉在数据销毁后还在刷新），现在两组都通过
+- [x] T13 一处作品很多时的网格面板：`WorldPostGrid`、卡片条的「查看全部」、两条新文字的翻译、图库状态 world_strip.many / world_post_grid.* — owner: agent · verify: 快照 + 模拟器 · done 2026-11-27
+  - evidence: 141 项测试通过；iOS 26.3 模拟器、线上后端：缩小到一个写着 9 的标记，点它和「只看这片区域」都出现「See all」，网格显示 9 件，点鸟居那张打开详情，关掉后卡片条停在这一件、地图没动。超过 200 件和加载中的样子只有快照，没有真实数据
+- [ ] T14 真机看网格面板：半屏拉到全屏、几十件时滚动是否顺、从详情回来的位置 — owner: me · after: T13 · verify: me 确认，或告诉 agent 哪里要调
