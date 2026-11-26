@@ -34,4 +34,4 @@
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
-| 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | 1.2.0 (112) 已在 TestFlight；版面随贴纸形状调整已做（分支 fix/share-card-sticker-shapes，未提交、未进构建）；剩 T11 真机走查、T12 读许可协议的地图附件 | me |
+| 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | 1.2.0 (115) 已在 TestFlight，含随贴纸形状调整的版面；剩 T11 真机走查、T12 读许可协议的地图附件，然后归档 | me |
