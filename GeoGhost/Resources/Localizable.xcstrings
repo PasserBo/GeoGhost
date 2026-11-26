@@ -7104,6 +7104,38 @@
           }
         }
       }
+    },
+    "See all" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看全部"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべて見る"
+          }
+        }
+      }
+    },
+    "Showing the newest %lld" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只显示最新的 %lld 件"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新の %lld 点のみ表示"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -9,11 +9,22 @@ enum WorldStripScope: Equatable {
     case group(id: UUID, total: Int)
     /// The pieces in the part of the map that was on screen when the user asked for it.
     case area
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .latest: "Latest finds"
+        case .group(_, let total): "\(total) pieces here"
+        case .area: "In this area"
+        }
+    }
 }
 
 /// The strip of cards under the world map. The card in front is the piece marked on the map, so
 /// the list and the map never disagree about what is selected.
 struct WorldStrip: View {
+    /// Up to this many pieces, swiping through the cards is enough; beyond it the strip offers the grid.
+    static let swipeableCount = 5
+
     let scope: WorldStripScope
     let posts: [ExplorePost]
     let isLoading: Bool
@@ -25,19 +36,24 @@ struct WorldStrip: View {
     let onBackToLatest: () -> Void
     let onThisArea: () -> Void
     let onZoomIn: () -> Void
+    /// Opens the grid of everything the strip lists; nil when the cards are few enough to swipe.
+    var onSeeAll: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text(title).font(.footnote.weight(.semibold)).foregroundStyle(Theme.inkSecondary)
+                Text(scope.title).font(.footnote.weight(.semibold)).foregroundStyle(Theme.inkSecondary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
                 Spacer(minLength: 8)
                 switch scope {
                 case .latest:
                     if offersThisArea { headerButton("Only this area", action: onThisArea) }
                 case .group(_, let total):
                     if total > 1 { headerButton("Zoom in here", action: onZoomIn) }
+                    if let onSeeAll { headerButton("See all", action: onSeeAll) }
                     closeButton
                 case .area:
+                    if let onSeeAll { headerButton("See all", action: onSeeAll) }
                     closeButton
                 }
             }
@@ -68,19 +84,12 @@ struct WorldStrip: View {
         .shadow(color: .black.opacity(0.12), radius: 10, y: 3)
     }
 
-    private var title: LocalizedStringKey {
-        switch scope {
-        case .latest: "Latest finds"
-        case .group(_, let total): "\(total) pieces here"
-        case .area: "In this area"
-        }
-    }
-
     private func headerButton(_ label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(label, action: action)
             .font(.footnote.weight(.semibold))
             .buttonStyle(.plain)
             .foregroundStyle(Theme.accent)
+            .lineLimit(1).fixedSize()
     }
 
     private var closeButton: some View {

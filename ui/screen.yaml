@@ -99,7 +99,18 @@ screens:
     states:
       latest: { title: 最新发现, fixture: typical }
       group: { title: 一个图钉里的作品, fixture: typical }
+      many: { title: 一个图钉里有很多作品, fixture: typical }
       loading: { title: 加载中, fixture: typical }
+
+  world_post_grid:
+    title: 一个图钉或一片区域里的全部作品
+    kind: sheet
+    spec: explore-map
+    default: typical
+    states:
+      typical: { title: 23 件作品, fixture: typical }
+      loading: { title: 其余的还在加载, fixture: typical }
+      capped: { title: 超过能取回的数量, fixture: typical }
 
   world_empty_area:
     title: 世界地图的空白区域
