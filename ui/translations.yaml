@@ -43,6 +43,23 @@ en:
         mine: My pieces
         world: World map
         empty: Nothing collected yet
+    world_strip:
+      title: Strip under the world map
+      states:
+        latest: Latest finds
+        group: The pieces behind one pin
+        loading: Loading
+    world_empty_area:
+      title: Empty area of the world map
+      states:
+        invitation: "Invitation: own pieces around here"
+        in_review: Own pieces in review
+        nothing_of_mine: No pieces of one's own here
+    world_top_notice:
+      title: Notice at the top of the world map
+      states:
+        pointer: Pointer to one's own area
+        error: Loading failed
     remote_post:
       title: Someone else's piece
       states:
@@ -134,6 +151,9 @@ en:
     collection_filtered: The collection is filtered or sorted
     series_opened: A series is opened
     share_card_exported: A share card is exported
+    world_map_opened: The world map is opened
+    world_post_opened: A piece is opened from the world map
+    world_invitation_started: Publishing starts from a world map prompt
     publish_started: Publish is tapped
     publish_finished: Publishing ends
     publish_retracted: A published piece is retracted
@@ -185,6 +205,23 @@ ja:
         mine: 自分の作品
         world: ワールドマップ
         empty: まだ何も集めていない
+    world_strip:
+      title: ワールドマップ下のカード列
+      states:
+        latest: 最新の発見
+        group: ひとつのピンの中の作品
+        loading: 読み込み中
+    world_empty_area:
+      title: ワールドマップの空白エリア
+      states:
+        invitation: 招待：このあたりに自分の作品がある
+        in_review: 自分の作品が審査中
+        nothing_of_mine: このあたりに自分の作品がない
+    world_top_notice:
+      title: ワールドマップ上部の通知
+      states:
+        pointer: 自分のエリアへの案内
+        error: 読み込み失敗
     remote_post:
       title: 他の人の作品
       states:
@@ -276,6 +313,9 @@ ja:
     collection_filtered: 図鑑を絞り込み・並べ替えした
     series_opened: シリーズを開いた
     share_card_exported: シェアカードを書き出した
+    world_map_opened: ワールドマップを開いた
+    world_post_opened: ワールドマップから作品を開いた
+    world_invitation_started: ワールドマップの案内から公開を始めた
     publish_started: 公開をタップした
     publish_finished: 公開処理が終わった
     publish_retracted: 公開した作品を取り下げた

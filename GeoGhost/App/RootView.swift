@@ -39,6 +39,8 @@ struct RootView: View {
             // Review results and hidden posts show up without opening each piece.
             guard scenePhase == .active, let online = services.onlineState else { return }
             await online.appConfig.refresh()
+            // Ahead of the map being opened, so it has somewhere to open (spec: explore-map).
+            if !online.appConfig.updateRequired { services.worldFeed?.refreshIfNeeded() }
             let shared = artworks.filter { $0.publishState.hasRemoteCopy }
             guard !shared.isEmpty else { return }
             try? await ArtworkPublisher(backend: online.services.publishing, context: context).refreshStates(shared)

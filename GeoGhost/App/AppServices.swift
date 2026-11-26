@@ -13,11 +13,14 @@ final class AppServices {
     /// nil hides every online feature.
     let onlineState: OnlineState?
     var online: OnlineServices? { onlineState?.services }
+    /// The newest public pieces, loaded in the background so the world map opens on something.
+    let worldFeed: WorldFeed?
     /// The on-disk store failed to open and the app is running on an in-memory store: nothing will persist.
     var isRunningWithoutStorage = false
 
     /// `onlineState` defaults to the backend this build is configured for; UI snapshots pass their own.
     init(onlineState: OnlineState? = OnlineConfig.current.map { OnlineState(services: OnlineServices(config: $0)) }) {
         self.onlineState = onlineState
+        worldFeed = onlineState.map { WorldFeed(client: ExploreClient(services: $0.services)) }
     }
 }

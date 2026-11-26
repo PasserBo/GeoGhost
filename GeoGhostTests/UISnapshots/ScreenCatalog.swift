@@ -39,6 +39,33 @@ enum ScreenCatalog {
         "map.empty": { _ in map(.mine) },
         "map.world": { _ in map(.world) },
 
+        "world_strip.latest": { _ in worldStrip(.latest, focused: 0) },
+        "world_strip.group": { _ in worldStrip(.group(id: UIFixtures.id(post: 1), total: 4), focused: 1) },
+        "world_strip.loading": { _ in
+            component(WorldStrip(scope: .latest, posts: [], isLoading: true, config: UIOnlineFixture.config, offersThisArea: false,
+                                 focusedID: .constant(nil), onOpen: { _ in }, onBackToLatest: {}, onThisArea: {}, onZoomIn: {}))
+        },
+
+        "world_empty_area.invitation": { c in
+            let pieces = ["cat-1", "sticker-2", "graffiti-1", "poster-1"].map { c.fixture.artwork($0) }
+            return component(WorldEmptyArea(invitation: .share(pieces.map(\.id)), pieces: pieces, hasPiecesElsewhere: true,
+                                            onShare: {}, onDismiss: {}, onNearest: {}))
+        },
+        "world_empty_area.in_review": { _ in
+            component(WorldEmptyArea(invitation: .inReview(2), pieces: [], hasPiecesElsewhere: true, onShare: {}, onDismiss: {}, onNearest: {}))
+        },
+        "world_empty_area.nothing_of_mine": { _ in
+            component(WorldEmptyArea(invitation: nil, pieces: [], hasPiecesElsewhere: true, onShare: {}, onDismiss: {}, onNearest: {}))
+        },
+
+        "world_top_notice.pointer": { _ in
+            let pointer = OwnAreaPrompts.Pointer(placeName: "杉並区", pieceCount: 12, latitude: 35.70, longitude: 139.65)
+            return component(WorldTopNotice(content: .pointer(pointer), onRetry: {}, onPointer: {}, onDismissPointer: {}))
+        },
+        "world_top_notice.error": { _ in
+            component(WorldTopNotice(content: .error(OnlineMessage.text(for: .offline)), onRetry: {}, onPointer: {}, onDismissPointer: {}))
+        },
+
         "remote_post.typical": { c in
             AnyView(RemotePostSheet(post: UIOnlineFixture.post, config: UIOnlineFixture.config, state: c.online))
         },
@@ -208,6 +235,18 @@ enum ScreenCatalog {
             context.fill(CGRect(origin: .zero, size: size))
         }
         return RouteMapImage(image: image, size: size, points: points)
+    }
+
+    private static func worldStrip(_ scope: WorldStripScope, focused: Int) -> AnyView {
+        let base = UIOnlineFixture.post
+        let places = [("杉並区", "sticker", "cat.png"), ("渋谷区", "tag", "ghost.png"), ("千代田区", "graffiti", "star.png")]
+        let posts = places.enumerated().map { index, place in
+            ExplorePost(id: UIFixtures.id(post: index + 1), authorId: base.authorId, authorNickname: base.authorNickname, kind: place.1,
+                        lat: base.lat, lng: base.lng, locality: place.0, countryCode: "JP", capturedOn: "2026-06-2\(index + 1)",
+                        width: 600, height: 600, imageKey: place.2, thumbKey: place.2, likeCount: 0, publishedAt: nil, cellCount: 1)
+        }
+        return component(WorldStrip(scope: scope, posts: posts, isLoading: false, config: UIOnlineFixture.config, offersThisArea: scope == .latest,
+                                    focusedID: .constant(posts[focused].id), onOpen: { _ in }, onBackToLatest: {}, onThisArea: {}, onZoomIn: {}))
     }
 
     private static func publishStatus(_ context: Context, _ state: PublishState) -> AnyView {

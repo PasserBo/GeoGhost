@@ -1,6 +1,6 @@
 # Board
 
-> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-26
+> 阶段 1 线上 MVP。按顺序做；同一行内 agent 与 me 的任务可以并行。最后更新：2026-11-27
 
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
@@ -35,3 +35,4 @@
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
 | 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | 1.2.0 (115) 已在 TestFlight，含随贴纸形状调整的版面；剩 T11 真机走查、T12 读许可协议的地图附件，然后归档 | me |
+| 15 | [improve-world-map](changes/improve-world-map/proposal.md) | in-progress | 五项都已实现，模拟器里用线上数据走过主要流程；分支 feature/improve-world-map，未提交。剩 T11 真机走查；统计事件没有接，等 me 决定要不要另开变更 | me |
