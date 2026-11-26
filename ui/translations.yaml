@@ -151,6 +151,9 @@ en:
     collection_filtered: The collection is filtered or sorted
     series_opened: A series is opened
     share_card_exported: A share card is exported
+    world_map_opened: The world map is opened
+    world_post_opened: A piece is opened from the world map
+    world_invitation_started: Publishing starts from a world map prompt
     publish_started: Publish is tapped
     publish_finished: Publishing ends
     publish_retracted: A published piece is retracted
@@ -310,6 +313,9 @@ ja:
     collection_filtered: 図鑑を絞り込み・並べ替えした
     series_opened: シリーズを開いた
     share_card_exported: シェアカードを書き出した
+    world_map_opened: ワールドマップを開いた
+    world_post_opened: ワールドマップから作品を開いた
+    world_invitation_started: ワールドマップの案内から公開を始めた
     publish_started: 公開をタップした
     publish_finished: 公開処理が終わった
     publish_retracted: 公開した作品を取り下げた
