@@ -35,4 +35,4 @@
 | # | 变更 | 状态 | 下一步 | 负责 |
 |---|---|---|---|---|
 | 14 | [add-series-share-card](changes/add-series-share-card/proposal.md) | in-progress | 1.2.0 (115) 已在 TestFlight，含随贴纸形状调整的版面；剩 T11 真机走查、T12 读许可协议的地图附件，然后归档 | me |
-| 15 | [improve-world-map](changes/improve-world-map/proposal.md) | in-progress | 1.2.0 (119) 在 TestFlight；me 真机反馈流畅，但一处作品多时没法靠滑动挑选 → 加了网格面板和自己位置的圆点，已合并 main，1.2.0 (125) 已上传 TestFlight；剩 T11、T14 真机走查；统计事件等 me 决定 | me |
+| 15 | [improve-world-map](changes/improve-world-map/proposal.md) | in-progress | 1.2.0 (119) 在 TestFlight；me 真机反馈流畅，但一处作品多时没法靠滑动挑选 → 加了网格面板和自己位置的圆点，已合并 main；1.2.0 (125) 于 2026-11-27 提交 App Store 审核，等待审核中；剩 T11、T14 真机走查；统计事件等 me 决定 | me |
