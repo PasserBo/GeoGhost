@@ -37,6 +37,9 @@ struct WorldMapView: View {
     @State private var invitation: OwnAreaPrompts.Invitation?
     @State private var dismissedAreas: Set<String> = []
     @State private var showPicker = false
+    /// The permission was already given (while capturing), so the map may show where the user is.
+    /// The map draws it on the device; this view never reads the coordinate.
+    @State private var showUserLocation = false
     @State private var publishing: Artwork?
 
     /// The pointer appears at most once per launch.
@@ -71,6 +74,7 @@ struct WorldMapView: View {
         GeometryReader { geometry in
         MapReader { proxy in
             Map(position: $position, interactionModes: [.pan, .zoom]) {
+                if showUserLocation { UserAnnotation() }
                 ForEach(groups) { group in
                     Annotation("", coordinate: group.coordinate) {
                         Group {
@@ -86,6 +90,8 @@ struct WorldMapView: View {
                 }
             }
             .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+            // Only with the permission in hand, so the button can never be what asks for it.
+            .mapControls { if showUserLocation { MapUserLocationButton() } }
             .onMapCameraChange(frequency: .onEnd) { context in
                 mapSize = geometry.size
                 cameraSettled(context.region, proxy: proxy)
@@ -107,6 +113,7 @@ struct WorldMapView: View {
             }
         }
         .animation(.easeOut(duration: 0.25), value: topNotice)
+        .onAppear { showUserLocation = CLLocationManager().authorizationStatus == .authorizedWhenInUse }
         .task { await open() }
         .task(id: pointerInputs) { await considerPointer() }
         .onChange(of: focusedID) { _, id in followFocus(id) }
