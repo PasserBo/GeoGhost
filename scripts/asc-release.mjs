@@ -6,6 +6,11 @@
 //     (or reuses it), sets "What's New" per locale from notes.json, attaches the build.
 //   node scripts/asc-release.mjs submit <version>
 //     submits that version for review.
+//   node scripts/asc-release.mjs show <version>
+//     prints that version's state and store texts per locale (changes nothing).
+//   node scripts/asc-release.mjs listing <version> <listing.json>
+//     sets the promotional text and description per locale from listing.json
+//     ({ "<locale>": { "promotionalText": "…", "description": "…" }, … }; either may be left out).
 //
 // Key and issuer live outside the repo: ~/.config/geoghost-release/config.json
 // ({ "keyId", "issuerId", optional "keyPath" }), overridable with ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH.
@@ -130,12 +135,45 @@ async function submit(version) {
   log(`${version} submitted for review`);
 }
 
+const TEXTS = ["promotionalText", "description", "whatsNew"];
+
+async function localizations(version) {
+  const v = await findVersion(await appId(), version);
+  if (!v) throw new Error(`No App Store version ${version}.`);
+  const locs = (await asc("GET", `/appStoreVersions/${v.id}/appStoreVersionLocalizations?fields[appStoreVersionLocalizations]=locale,${TEXTS.join(",")}`)).data;
+  return { v, locs };
+}
+
+async function show(version) {
+  const { v, locs } = await localizations(version);
+  console.log(`${version}: ${v.attributes.appStoreState}`);
+  for (const loc of locs) {
+    for (const key of TEXTS) console.log(`\n=== ${loc.attributes.locale} · ${key}\n${loc.attributes[key] ?? "(empty)"}`);
+  }
+}
+
+async function listing(version, path) {
+  const wanted = JSON.parse(readFileSync(path, "utf8"));
+  const { locs } = await localizations(version);
+  for (const [locale, texts] of Object.entries(wanted)) {
+    const loc = locs.find((l) => l.attributes.locale === locale);
+    if (!loc) throw new Error(`Version ${version} has no ${locale} localization.`);
+    const attributes = Object.fromEntries(Object.entries(texts).filter(([key]) => key === "promotionalText" || key === "description"));
+    if (attributes.promotionalText?.length > 170) throw new Error(`${locale}: promotional text is ${attributes.promotionalText.length} characters (limit 170).`);
+    if (attributes.description?.length > 4000) throw new Error(`${locale}: description is ${attributes.description.length} characters (limit 4000).`);
+    await asc("PATCH", `/appStoreVersionLocalizations/${loc.id}`, { type: "appStoreVersionLocalizations", id: loc.id, attributes });
+    log(`${Object.keys(attributes).join(" and ")} set for ${locale}`);
+  }
+}
+
 const [cmd, ...args] = process.argv.slice(2);
 try {
   if (cmd === "prepare" && args.length === 3) await prepare(...args);
   else if (cmd === "submit" && args.length === 1) await submit(...args);
+  else if (cmd === "show" && args.length === 1) await show(...args);
+  else if (cmd === "listing" && args.length === 2) await listing(...args);
   else {
-    console.error("usage: asc-release.mjs prepare <version> <build> <notes.json> | submit <version>");
+    console.error("usage: asc-release.mjs prepare <version> <build> <notes.json> | submit <version> | show <version> | listing <version> <listing.json>");
     process.exit(2);
   }
 } catch (e) {

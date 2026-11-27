@@ -7,7 +7,7 @@
 #   4. App Store Connect: wait for processing, create the version, What's New, attach the build
 #   5. with --submit: submit for review
 # What's New comes from scripts/release-notes/<version>.json ({ "<locale>": "<text>", … }, every locale
-# the version has). Key and issuer: ~/.config/geoghost-release/config.json (see asc-release.mjs).
+# the version has). Promotional text and description come from scripts/store-listing/<version>.json when it exists. Key and issuer: ~/.config/geoghost-release/config.json (see asc-release.mjs).
 # App Privacy answers have no API: update them in App Store Connect before --submit when collected data changes.
 set -e
 cd "$(dirname "$0")/.."
@@ -62,6 +62,9 @@ xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$EXPORT/E
   -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER_ID"
 
 node scripts/asc-release.mjs prepare "$VERSION" "$BUILD" "$NOTES"
+# Promotional text and description, when this version changes them.
+LISTING=scripts/store-listing/$VERSION.json
+[ ! -f "$LISTING" ] || node scripts/asc-release.mjs listing "$VERSION" "$LISTING"
 
 if [ $SUBMIT = 1 ]; then
   node scripts/asc-release.mjs submit "$VERSION"
